@@ -1,0 +1,28 @@
+{
+    "extends": "@tsconfig/svelte/tsconfig.json",
+    "compilerOptions": {
+      "target": "ES2022",
+      "module": "ESNext",
+      "moduleResolution": "bundler",
+      "resolveJsonModule": true,
+      "allowJs": true,
+      "checkJs": true,
+      "isolatedModules": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUncheckedIndexedAccess": false,
+      "lib": ["ES2022", "DOM", "DOM.Iterable"],
+      "paths": {
+        "$lib": ["./src/lib"],
+        "$lib/*": ["./src/lib/*"]
+      }
+    },
+    "include": ["src/**/*.ts", "src/**/*.svelte", "src/lib/plugin-api.tsx"],
+    "exclude": ["node_modules", "dist", "src-tauri"]
+  }

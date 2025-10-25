@@ -1,0 +1,31 @@
+{
+  "id": "python",
+  "extensions": [".py", ".pyw"],
+  "tokenizer": "tree-sitter-python",
+  "config": {
+    "comments": {
+      "line": "#",
+      "block": ["'''", "'''"]
+    },
+    "brackets": [
+      ["(", ")"],
+      ["[", "]"],
+      ["{", "}"]
+    ],
+    "autoClosingPairs": [
+      { "open": "'", "close": "'" },
+      { "open": "\"", "close": "\"" },
+      { "open": "(", "close": ")" },
+      { "open": "[", "close": "]" },
+      { "open": "{", "close": "}" }
+    ]
+  },
+  "theme_mapping": {
+    "keyword": "syntax.keyword",
+    "string": "syntax.string",
+    "function": "syntax.function",
+    "comment": "syntax.comment",
+    "number": "syntax.number",
+    "variable": "syntax.variable"
+  }
+}

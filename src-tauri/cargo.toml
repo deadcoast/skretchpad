@@ -1,0 +1,43 @@
+[package]
+name = "skretchpad"
+version = "0.1.0"
+description = "A minimal, modern text editor for developers"
+authors = ["heat"]
+license = "MIT"
+repository = "https://github.com/yourusername/skretchpad"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+tokio = { version = "1", features = ["full"] }
+palette = "0.7"  # Color manipulation
+deno_core = "0.230"  # Plugin sandboxing
+notify = "6.0"  # File system watching
+walkdir = "2.4"  # Directory traversal
+regex = "1.10"
+thiserror = "1.0"
+anyhow = "1.0"
+
+[dependencies.tauri-plugin-fs]
+version = "2.0"
+
+[features]
+# This feature is used for production builds or when a `--release` flag is passed during build.
+default = ["custom-protocol"]
+# This feature enables the custom protocol for production builds
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"   # Strip expensive panic clean-up logic
+codegen-units = 1 # Compile crates one after another for better optimization
+lto = true        # Enable link-time optimization
+opt-level = "s"   # Optimize for binary size
+strip = true      # Remove debug symbols

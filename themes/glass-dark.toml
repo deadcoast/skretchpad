@@ -1,0 +1,47 @@
+[metadata]
+name = "Liquid Glass Dark"
+author = "heat"
+version = "1.0.0"
+base = "dark"
+
+[window]
+background.base = "rgba(18, 18, 18, 0.85)"
+background.blur = 20
+border.radius = 12
+border.width = 1
+border.color = "rgba(255, 255, 255, 0.1)"
+
+[chrome]
+background = "rgba(28, 28, 28, 0.95)"
+background.blur = 10
+height = 32
+foreground = "rgba(228, 228, 228, 0.9)"
+
+[editor]
+background = "transparent"
+foreground = "#e4e4e4"
+cursor.color = "#00d9ff"
+cursor.width = 2
+selection.background = "rgba(0, 217, 255, 0.2)"
+
+[syntax]
+comment = { color = "#6a737d", style = "italic" }
+keyword = { color = "#ff79c6", style = "bold" }
+string = { color = "#50fa7b" }
+number = { color = "#bd93f9" }
+operator = { color = "#ff79c6" }
+function = { color = "#8be9fd" }
+variable = { color = "#f8f8f2" }
+type = { color = "#8be9fd", style = "italic" }
+constant = { color = "#bd93f9", style = "bold" }
+
+[ui]
+status_bar.background = "rgba(28, 28, 28, 0.95)"
+status_bar.foreground = "rgba(228, 228, 228, 0.7)"
+status_bar.height = 24
+
+[transitions]
+chrome_toggle = 200
+theme_switch = 300
+hover = 100
+easing = "cubic-bezier(0.4, 0.0, 0.2, 1)"

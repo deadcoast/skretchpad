@@ -1,0 +1,27 @@
+# plugins/git/plugin.toml
+name = "git"
+version = "1.0.0"
+author = "skretchpad"
+trust = "first-party"
+
+[permissions]
+filesystem = "WorkspaceReadWrite"
+commands = { allowlist = ["git"], require_confirmation = false }
+
+[hooks]
+on_file_open = "check_git_status"
+on_file_save = "update_git_status"
+on_workspace_change = "refresh_repository"
+
+[ui]
+status_bar = true
+sidebar = true
+notifications = true
+
+[commands]
+"git.status" = { key = "Ctrl+G", label = "Git Status" }
+"git.diff" = { key = "Ctrl+Shift+G", label = "Git Diff" }
+"git.commit" = { key = "Ctrl+K", label = "Quick Commit" }
+"git.push" = { key = "Ctrl+Shift+P", label = "Push" }
+"git.pull" = { key = "Ctrl+Shift+L", label = "Pull" }
+"git.branch" = { key = "Ctrl+B", label = "Branch Manager" }

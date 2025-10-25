@@ -1,0 +1,61 @@
+/* src/styles/theme-transitions.css */
+body {
+    /* Smooth color transitions */
+    transition: 
+      background-color var(--transition-slow) var(--transition-easing),
+      color var(--transition-slow) var(--transition-easing);
+  }
+  
+  .theme-transitioning * {
+    /* Apply transitions to all elements during theme switch */
+    transition: 
+      background-color var(--transition-slow) var(--transition-easing),
+      color var(--transition-slow) var(--transition-easing),
+      border-color var(--transition-slow) var(--transition-easing) !important;
+  }
+  
+  /* Editor-specific transitions */
+  .cm-editor {
+    transition: background-color var(--transition-slow) var(--transition-easing);
+  }
+  
+  .cm-content,
+  .cm-line {
+    transition: color var(--transition-slow) var(--transition-easing);
+  }
+  
+  /* Syntax highlighting transitions */
+  .cm-keyword,
+  .cm-string,
+  .cm-function,
+  .cm-comment,
+  .cm-variable {
+    transition: color var(--transition-slow) var(--transition-easing);
+  }
+  
+  /* Glass effect */
+  .glass-panel {
+    background: var(--window-bg);
+    backdrop-filter: blur(var(--window-blur));
+    border: var(--window-border-width, 1px) solid var(--window-border-color);
+    border-radius: var(--window-border-radius);
+    
+    /* Smooth glass transitions */
+    transition: 
+      backdrop-filter var(--transition-medium) var(--transition-easing),
+      background var(--transition-medium) var(--transition-easing);
+  }
+  
+  /* Chrome toggle animation */
+  .chrome {
+    transform-origin: top;
+    transition: 
+      transform var(--transition-medium) var(--transition-easing),
+      opacity var(--transition-fast) var(--transition-easing);
+  }
+  
+  .chrome.hidden {
+    transform: scaleY(0);
+    opacity: 0;
+    pointer-events: none;
+  }

@@ -1,0 +1,20 @@
+# plugins/git-status/plugin.toml
+name = "git-status"
+version = "0.1.0"
+author = "heat"
+
+[permissions]
+filesystem = ["read"]
+commands = ["git"]
+
+[hooks]
+on_file_open = "check_git_status"
+on_save = "update_git_status"
+
+[ui]
+status_bar = true
+sidebar = false
+
+[commands]
+git.status = { key = "Ctrl+G", label = "Git Status" }
+git.diff = { key = "Ctrl+Shift+G", label = "Git Diff" }

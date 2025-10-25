@@ -1,0 +1,375 @@
+# keybindings.toml
+# Keybinding configuration for skretchpad
+
+# ============================================================================
+# METADATA
+# ============================================================================
+
+[metadata]
+version = "1.0.0"
+author = "skretchpad"
+description = "Default keybinding schemes for skretchpad"
+
+# ============================================================================
+# DEFAULT SCHEME
+# ============================================================================
+
+[schemes.default]
+name = "Default"
+description = "Default keybindings for skretchpad"
+author = "skretchpad"
+
+# ----------------------------------------------------------------------------
+# FILE OPERATIONS
+# ----------------------------------------------------------------------------
+
+[schemes.default.file]
+"Ctrl+O" = { command = "file.open", description = "Open file" }
+"Ctrl+S" = { command = "file.save", description = "Save file" }
+"Ctrl+Shift+S" = { command = "file.saveAs", description = "Save file as" }
+"Ctrl+W" = { command = "file.close", description = "Close file" }
+"Ctrl+N" = { command = "file.new", description = "New file" }
+"Ctrl+Shift+N" = { command = "file.newWindow", description = "New window" }
+"Ctrl+Shift+W" = { command = "file.closeWindow", description = "Close window" }
+"Ctrl+Alt+O" = { command = "file.openRecent", description = "Open recent file" }
+
+# ----------------------------------------------------------------------------
+# EDIT OPERATIONS
+# ----------------------------------------------------------------------------
+
+[schemes.default.edit]
+"Ctrl+Z" = { command = "edit.undo", description = "Undo" }
+"Ctrl+Y" = { command = "edit.redo", description = "Redo" }
+"Ctrl+Shift+Z" = { command = "edit.redo", description = "Redo (alternate)" }
+"Ctrl+C" = { command = "edit.copy", description = "Copy" }
+"Ctrl+X" = { command = "edit.cut", description = "Cut" }
+"Ctrl+V" = { command = "edit.paste", description = "Paste" }
+"Ctrl+A" = { command = "edit.selectAll", description = "Select all" }
+"Ctrl+/" = { command = "edit.toggleComment", description = "Toggle comment" }
+"Ctrl+Shift+/" = { command = "edit.toggleBlockComment", description = "Toggle block comment" }
+"Ctrl+D" = { command = "edit.duplicateLine", description = "Duplicate line" }
+"Ctrl+Shift+K" = { command = "edit.deleteLine", description = "Delete line" }
+"Alt+Up" = { command = "edit.moveLineUp", description = "Move line up" }
+"Alt+Down" = { command = "edit.moveLineDown", description = "Move line down" }
+"Ctrl+Shift+D" = { command = "edit.duplicateSelection", description = "Duplicate selection" }
+"Ctrl+L" = { command = "edit.selectLine", description = "Select line" }
+"Ctrl+Shift+L" = { command = "edit.selectAllOccurrences", description = "Select all occurrences" }
+"Ctrl+]" = { command = "edit.indent", description = "Indent" }
+"Ctrl+[" = { command = "edit.outdent", description = "Outdent" }
+"Ctrl+Enter" = { command = "edit.insertLineBelow", description = "Insert line below" }
+"Ctrl+Shift+Enter" = { command = "edit.insertLineAbove", description = "Insert line above" }
+"Ctrl+Backspace" = { command = "edit.deleteWordLeft", description = "Delete word left" }
+"Ctrl+Delete" = { command = "edit.deleteWordRight", description = "Delete word right" }
+
+# ----------------------------------------------------------------------------
+# SEARCH OPERATIONS
+# ----------------------------------------------------------------------------
+
+[schemes.default.search]
+"Ctrl+F" = { command = "search.find", description = "Find" }
+"Ctrl+H" = { command = "search.replace", description = "Replace" }
+"Ctrl+Shift+F" = { command = "search.findInFiles", description = "Find in files" }
+"Ctrl+Shift+H" = { command = "search.replaceInFiles", description = "Replace in files" }
+"F3" = { command = "search.findNext", description = "Find next" }
+"Shift+F3" = { command = "search.findPrevious", description = "Find previous" }
+"Ctrl+F3" = { command = "search.findCurrentSelection", description = "Find current selection" }
+"Escape" = { command = "search.closeFind", description = "Close find widget", when = "findWidgetVisible" }
+
+# ----------------------------------------------------------------------------
+# VIEW OPERATIONS
+# ----------------------------------------------------------------------------
+
+[schemes.default.view]
+"Ctrl+Shift+H" = { command = "view.toggleChrome", description = "Toggle chrome" }
+"Ctrl+P" = { command = "view.togglePin", description = "Toggle pin mode" }
+"Ctrl+," = { command = "view.openSettings", description = "Open settings" }
+"Ctrl+Shift+P" = { command = "view.commandPalette", description = "Command palette" }
+"Ctrl+B" = { command = "view.toggleSidebar", description = "Toggle sidebar" }
+"Ctrl+J" = { command = "view.togglePanel", description = "Toggle panel" }
+"Ctrl+Shift+E" = { command = "view.showExplorer", description = "Show explorer" }
+"Ctrl+Shift+G" = { command = "view.showGit", description = "Show git" }
+"Ctrl+Shift+D" = { command = "view.showDebug", description = "Show debug" }
+"Ctrl+Shift+X" = { command = "view.showExtensions", description = "Show extensions" }
+"Ctrl+Shift+Y" = { command = "view.showOutput", description = "Show output" }
+"Ctrl+Shift+U" = { command = "view.showProblems", description = "Show problems" }
+"Ctrl+=" = { command = "view.zoomIn", description = "Zoom in" }
+"Ctrl+-" = { command = "view.zoomOut", description = "Zoom out" }
+"Ctrl+0" = { command = "view.resetZoom", description = "Reset zoom" }
+"F11" = { command = "view.toggleFullscreen", description = "Toggle fullscreen" }
+"Ctrl+K Z" = { command = "view.toggleZenMode", description = "Toggle zen mode" }
+
+# ----------------------------------------------------------------------------
+# NAVIGATION
+# ----------------------------------------------------------------------------
+
+[schemes.default.navigation]
+"Ctrl+G" = { command = "navigation.gotoLine", description = "Go to line" }
+"Ctrl+Tab" = { command = "navigation.nextTab", description = "Next tab" }
+"Ctrl+Shift+Tab" = { command = "navigation.previousTab", description = "Previous tab" }
+"Ctrl+PageDown" = { command = "navigation.nextEditor", description = "Next editor" }
+"Ctrl+PageUp" = { command = "navigation.previousEditor", description = "Previous editor" }
+"Alt+Left" = { command = "navigation.back", description = "Go back" }
+"Alt+Right" = { command = "navigation.forward", description = "Go forward" }
+"Ctrl+Shift+O" = { command = "navigation.gotoSymbol", description = "Go to symbol" }
+"Ctrl+T" = { command = "navigation.gotoSymbolInWorkspace", description = "Go to symbol in workspace" }
+"F12" = { command = "navigation.gotoDefinition", description = "Go to definition" }
+"Ctrl+K F12" = { command = "navigation.openDefinitionSide", description = "Open definition to side" }
+"Alt+F12" = { command = "navigation.peekDefinition", description = "Peek definition" }
+"Shift+F12" = { command = "navigation.gotoReferences", description = "Go to references" }
+
+# ----------------------------------------------------------------------------
+# FORMATTING
+# ----------------------------------------------------------------------------
+
+[schemes.default.format]
+"Shift+Alt+F" = { command = "format.document", description = "Format document" }
+"Ctrl+K Ctrl+F" = { command = "format.selection", description = "Format selection" }
+"Ctrl+Shift+I" = { command = "format.indentDocument", description = "Indent document" }
+
+# ----------------------------------------------------------------------------
+# GIT COMMANDS
+# ----------------------------------------------------------------------------
+
+[schemes.default.git]
+"Ctrl+Shift+G" = { command = "git.status", description = "Git status" }
+"Ctrl+K" = { command = "git.commit", description = "Git commit", when = "gitAvailable" }
+"Ctrl+Shift+K" = { command = "git.push", description = "Git push", when = "gitAvailable" }
+"Ctrl+Shift+L" = { command = "git.pull", description = "Git pull", when = "gitAvailable" }
+"Ctrl+Shift+B" = { command = "git.branch", description = "Git branch", when = "gitAvailable" }
+"Ctrl+Shift+C" = { command = "git.checkout", description = "Git checkout", when = "gitAvailable" }
+"Ctrl+K D" = { command = "git.showDiff", description = "Show git diff", when = "gitAvailable" }
+
+# ----------------------------------------------------------------------------
+# TERMINAL
+# ----------------------------------------------------------------------------
+
+[schemes.default.terminal]
+"Ctrl+`" = { command = "terminal.toggle", description = "Toggle terminal" }
+"Ctrl+Shift+`" = { command = "terminal.new", description = "New terminal" }
+"Ctrl+Shift+C" = { command = "terminal.copy", description = "Copy terminal selection", when = "terminalFocus" }
+"Ctrl+Shift+V" = { command = "terminal.paste", description = "Paste to terminal", when = "terminalFocus" }
+"Ctrl+Shift+K" = { command = "terminal.clear", description = "Clear terminal", when = "terminalFocus" }
+
+# ----------------------------------------------------------------------------
+# DEBUG
+# ----------------------------------------------------------------------------
+
+[schemes.default.debug]
+"F5" = { command = "debug.start", description = "Start debugging" }
+"Shift+F5" = { command = "debug.stop", description = "Stop debugging" }
+"Ctrl+Shift+F5" = { command = "debug.restart", description = "Restart debugging" }
+"F9" = { command = "debug.toggleBreakpoint", description = "Toggle breakpoint" }
+"F10" = { command = "debug.stepOver", description = "Step over" }
+"F11" = { command = "debug.stepInto", description = "Step into" }
+"Shift+F11" = { command = "debug.stepOut", description = "Step out" }
+"Ctrl+F10" = { command = "debug.runToCursor", description = "Run to cursor" }
+
+# ----------------------------------------------------------------------------
+# GLOBAL
+# ----------------------------------------------------------------------------
+
+[schemes.default.global]
+"F1" = { command = "global.help", description = "Show help" }
+"Ctrl+K Ctrl+T" = { command = "global.changeTheme", description = "Change theme" }
+"Ctrl+K Ctrl+S" = { command = "global.openKeyboardShortcuts", description = "Open keyboard shortcuts" }
+
+# ============================================================================
+# VIM SCHEME
+# ============================================================================
+
+[schemes.vim]
+name = "Vim"
+description = "Vim-style keybindings"
+author = "skretchpad"
+
+# ----------------------------------------------------------------------------
+# NORMAL MODE - MOTION
+# ----------------------------------------------------------------------------
+
+[schemes.vim.motion]
+"h" = { command = "vim.moveLeft", description = "Move left", when = "vim.normalMode" }
+"j" = { command = "vim.moveDown", description = "Move down", when = "vim.normalMode" }
+"k" = { command = "vim.moveUp", description = "Move up", when = "vim.normalMode" }
+"l" = { command = "vim.moveRight", description = "Move right", when = "vim.normalMode" }
+"w" = { command = "vim.moveWordForward", description = "Move word forward", when = "vim.normalMode" }
+"b" = { command = "vim.moveWordBackward", description = "Move word backward", when = "vim.normalMode" }
+"e" = { command = "vim.moveWordEnd", description = "Move to word end", when = "vim.normalMode" }
+"0" = { command = "vim.moveLineStart", description = "Move to line start", when = "vim.normalMode" }
+"$" = { command = "vim.moveLineEnd", description = "Move to line end", when = "vim.normalMode" }
+"^" = { command = "vim.moveFirstNonBlank", description = "Move to first non-blank", when = "vim.normalMode" }
+"gg" = { command = "vim.moveFileStart", description = "Move to file start", when = "vim.normalMode" }
+"G" = { command = "vim.moveFileEnd", description = "Move to file end", when = "vim.normalMode" }
+"{" = { command = "vim.moveParagraphUp", description = "Move paragraph up", when = "vim.normalMode" }
+"}" = { command = "vim.moveParagraphDown", description = "Move paragraph down", when = "vim.normalMode" }
+
+# ----------------------------------------------------------------------------
+# NORMAL MODE - EDITING
+# ----------------------------------------------------------------------------
+
+[schemes.vim.edit]
+"i" = { command = "vim.insertMode", description = "Enter insert mode", when = "vim.normalMode" }
+"I" = { command = "vim.insertLineStart", description = "Insert at line start", when = "vim.normalMode" }
+"a" = { command = "vim.appendMode", description = "Enter append mode", when = "vim.normalMode" }
+"A" = { command = "vim.appendLineEnd", description = "Append at line end", when = "vim.normalMode" }
+"o" = { command = "vim.openLineBelow", description = "Open line below", when = "vim.normalMode" }
+"O" = { command = "vim.openLineAbove", description = "Open line above", when = "vim.normalMode" }
+"x" = { command = "vim.deleteChar", description = "Delete character", when = "vim.normalMode" }
+"X" = { command = "vim.deleteCharBefore", description = "Delete character before", when = "vim.normalMode" }
+"dd" = { command = "vim.deleteLine", description = "Delete line", when = "vim.normalMode" }
+"D" = { command = "vim.deleteToLineEnd", description = "Delete to line end", when = "vim.normalMode" }
+"cc" = { command = "vim.changeLine", description = "Change line", when = "vim.normalMode" }
+"C" = { command = "vim.changeToLineEnd", description = "Change to line end", when = "vim.normalMode" }
+"yy" = { command = "vim.yankLine", description = "Yank line", when = "vim.normalMode" }
+"Y" = { command = "vim.yankToLineEnd", description = "Yank to line end", when = "vim.normalMode" }
+"p" = { command = "vim.paste", description = "Paste", when = "vim.normalMode" }
+"P" = { command = "vim.pasteBefore", description = "Paste before", when = "vim.normalMode" }
+"u" = { command = "vim.undo", description = "Undo", when = "vim.normalMode" }
+"Ctrl+r" = { command = "vim.redo", description = "Redo", when = "vim.normalMode" }
+"." = { command = "vim.repeat", description = "Repeat last command", when = "vim.normalMode" }
+
+# ----------------------------------------------------------------------------
+# VISUAL MODE
+# ----------------------------------------------------------------------------
+
+[schemes.vim.visual]
+"v" = { command = "vim.visualMode", description = "Enter visual mode", when = "vim.normalMode" }
+"V" = { command = "vim.visualLineMode", description = "Enter visual line mode", when = "vim.normalMode" }
+"Ctrl+v" = { command = "vim.visualBlockMode", description = "Enter visual block mode", when = "vim.normalMode" }
+"Escape" = { command = "vim.normalMode", description = "Exit to normal mode", when = "vim.visualMode" }
+
+# ----------------------------------------------------------------------------
+# SEARCH
+# ----------------------------------------------------------------------------
+
+[schemes.vim.search]
+"/" = { command = "vim.search", description = "Search forward", when = "vim.normalMode" }
+"?" = { command = "vim.searchBackward", description = "Search backward", when = "vim.normalMode" }
+"n" = { command = "vim.searchNext", description = "Next search result", when = "vim.normalMode" }
+"N" = { command = "vim.searchPrevious", description = "Previous search result", when = "vim.normalMode" }
+"*" = { command = "vim.searchWordUnderCursor", description = "Search word under cursor", when = "vim.normalMode" }
+"#" = { command = "vim.searchWordUnderCursorBackward", description = "Search word backward", when = "vim.normalMode" }
+
+# ----------------------------------------------------------------------------
+# MODE SWITCHING
+# ----------------------------------------------------------------------------
+
+[schemes.vim.mode]
+"Escape" = { command = "vim.normalMode", description = "Normal mode", when = "vim.insertMode" }
+"Ctrl+[" = { command = "vim.normalMode", description = "Normal mode (alternate)", when = "vim.insertMode" }
+
+# ============================================================================
+# EMACS SCHEME
+# ============================================================================
+
+[schemes.emacs]
+name = "Emacs"
+description = "Emacs-style keybindings"
+author = "skretchpad"
+
+# ----------------------------------------------------------------------------
+# MOTION
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.motion]
+"Ctrl+f" = { command = "emacs.moveForward", description = "Move forward" }
+"Ctrl+b" = { command = "emacs.moveBackward", description = "Move backward" }
+"Ctrl+n" = { command = "emacs.moveDown", description = "Move down" }
+"Ctrl+p" = { command = "emacs.moveUp", description = "Move up" }
+"Ctrl+a" = { command = "emacs.moveLineStart", description = "Move to line start" }
+"Ctrl+e" = { command = "emacs.moveLineEnd", description = "Move to line end" }
+"Alt+f" = { command = "emacs.moveWordForward", description = "Move word forward" }
+"Alt+b" = { command = "emacs.moveWordBackward", description = "Move word backward" }
+"Alt+<" = { command = "emacs.moveFileStart", description = "Move to file start" }
+"Alt+>" = { command = "emacs.moveFileEnd", description = "Move to file end" }
+
+# ----------------------------------------------------------------------------
+# EDITING
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.edit]
+"Ctrl+d" = { command = "emacs.deleteChar", description = "Delete character" }
+"Alt+d" = { command = "emacs.deleteWord", description = "Delete word" }
+"Ctrl+k" = { command = "emacs.killLine", description = "Kill line" }
+"Ctrl+w" = { command = "emacs.killRegion", description = "Kill region" }
+"Alt+w" = { command = "emacs.copyRegion", description = "Copy region" }
+"Ctrl+y" = { command = "emacs.yank", description = "Yank" }
+"Alt+y" = { command = "emacs.yankPop", description = "Yank pop" }
+"Ctrl+/" = { command = "emacs.undo", description = "Undo" }
+"Ctrl+_" = { command = "emacs.undo", description = "Undo (alternate)" }
+"Ctrl+t" = { command = "emacs.transpose", description = "Transpose characters" }
+"Alt+t" = { command = "emacs.transposeWords", description = "Transpose words" }
+"Alt+u" = { command = "emacs.uppercaseWord", description = "Uppercase word" }
+"Alt+l" = { command = "emacs.lowercaseWord", description = "Lowercase word" }
+"Alt+c" = { command = "emacs.capitalizeWord", description = "Capitalize word" }
+
+# ----------------------------------------------------------------------------
+# MARK AND REGION
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.mark]
+"Ctrl+Space" = { command = "emacs.setMark", description = "Set mark" }
+"Ctrl+x h" = { command = "emacs.markWholeBuffer", description = "Mark whole buffer" }
+"Ctrl+x Ctrl+x" = { command = "emacs.exchangePointAndMark", description = "Exchange point and mark" }
+
+# ----------------------------------------------------------------------------
+# SEARCH
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.search]
+"Ctrl+s" = { command = "emacs.isearchForward", description = "Incremental search forward" }
+"Ctrl+r" = { command = "emacs.isearchBackward", description = "Incremental search backward" }
+"Alt+%" = { command = "emacs.queryReplace", description = "Query replace" }
+
+# ----------------------------------------------------------------------------
+# FILES AND BUFFERS
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.file]
+"Ctrl+x Ctrl+f" = { command = "emacs.findFile", description = "Find file" }
+"Ctrl+x Ctrl+s" = { command = "emacs.saveBuffer", description = "Save buffer" }
+"Ctrl+x s" = { command = "emacs.saveAllBuffers", description = "Save all buffers" }
+"Ctrl+x Ctrl+w" = { command = "emacs.writeFile", description = "Write file" }
+"Ctrl+x k" = { command = "emacs.killBuffer", description = "Kill buffer" }
+"Ctrl+x b" = { command = "emacs.switchBuffer", description = "Switch buffer" }
+"Ctrl+x Ctrl+b" = { command = "emacs.listBuffers", description = "List buffers" }
+
+# ----------------------------------------------------------------------------
+# WINDOWS
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.window]
+"Ctrl+x 0" = { command = "emacs.deleteWindow", description = "Delete window" }
+"Ctrl+x 1" = { command = "emacs.deleteOtherWindows", description = "Delete other windows" }
+"Ctrl+x 2" = { command = "emacs.splitWindowVertically", description = "Split window vertically" }
+"Ctrl+x 3" = { command = "emacs.splitWindowHorizontally", description = "Split window horizontally" }
+"Ctrl+x o" = { command = "emacs.otherWindow", description = "Other window" }
+
+# ----------------------------------------------------------------------------
+# MISC
+# ----------------------------------------------------------------------------
+
+[schemes.emacs.misc]
+"Ctrl+g" = { command = "emacs.keyboardQuit", description = "Keyboard quit" }
+"Ctrl+x Ctrl+c" = { command = "emacs.saveBuffersKillEmacs", description = "Exit" }
+"Alt+x" = { command = "emacs.executeExtendedCommand", description = "Execute command" }
+
+# ============================================================================
+# CONTEXT CONDITIONS
+# ============================================================================
+
+[contexts]
+vim_normalMode = "vim.mode == 'normal'"
+vim_insertMode = "vim.mode == 'insert'"
+vim_visualMode = "vim.mode == 'visual'"
+gitAvailable = "git.available"
+terminalFocus = "terminal.focused"
+findWidgetVisible = "findWidget.visible"
+
+# ============================================================================
+# CUSTOM USER BINDINGS
+# ============================================================================
+# Add your custom keybindings below. These will override scheme bindings.
+
+[custom]
+# Example:
+# "Ctrl+Shift+Z" = { command = "custom.myCommand", description = "My custom command" }
