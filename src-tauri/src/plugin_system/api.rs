@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
-use tauri::{AppHandle, Manager, State, Window};
+use tauri::{AppHandle, Emitter, Listener, Manager, State, Window};
 use tokio::sync::RwLock;
 
 // ============================================================================
@@ -311,9 +311,9 @@ pub async fn plugin_read_file(
 
     // Get workspace root
     let workspace_root = app
-        .path_resolver()
+        .path()
         .app_data_dir()
-        .ok_or_else(|| ApiError::InternalError("Failed to get workspace root".to_string()))?;
+        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -358,9 +358,9 @@ pub async fn plugin_write_file(
 
     // Get workspace root
     let workspace_root = app
-        .path_resolver()
+        .path()
         .app_data_dir()
-        .ok_or_else(|| ApiError::InternalError("Failed to get workspace root".to_string()))?;
+        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -417,9 +417,9 @@ pub async fn plugin_list_directory(
 
     // Get workspace root
     let workspace_root = app
-        .path_resolver()
+        .path()
         .app_data_dir()
-        .ok_or_else(|| ApiError::InternalError("Failed to get workspace root".to_string()))?;
+        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -485,9 +485,9 @@ pub async fn plugin_watch_path(
 
     // Get workspace root
     let workspace_root = app
-        .path_resolver()
+        .path()
         .app_data_dir()
-        .ok_or_else(|| ApiError::InternalError("Failed to get workspace root".to_string()))?;
+        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -521,7 +521,7 @@ pub async fn plugin_watch_path(
                 // Emit event to frontend
                 let _ = window_clone.emit(
                     &format!("plugin:{}:file_change", plugin_id_clone),
-                    event,
+                    serde_json::to_value(event).unwrap_or_default(),
                 );
             }
         }
@@ -981,7 +981,7 @@ pub async fn plugin_get_active_file(
 
     // Request from frontend
     let file_info = window
-        .emit_and_wait("plugin:editor:get_active_file", ())
+        .emit_and_wait("plugin:editor:get_active_file", serde_json::Value::Null)
         .await
         .map_err(|e| ApiError::InternalError(e.to_string()))?;
 
@@ -1061,8 +1061,7 @@ pub async fn plugin_execute_hook(
 
     // Get sandbox
     let sandbox = registry
-        .get(&params.plugin_id)
-        .await
+        .get_sandbox(&params.plugin_id)
         .ok_or_else(|| ApiError::PluginNotFound {
             plugin_id: params.plugin_id.clone(),
         })?;
@@ -1146,10 +1145,10 @@ impl WindowExt for Window {
             if let Some(payload) = event.payload() {
                 let _ = tx.send(payload.to_string());
             }
-        })?;
+        });
 
         // Emit request
-        self.emit(event, payload)?;
+        self.emit(event, payload.clone())?;
 
         // Wait for response with timeout
         let response = tokio::time::timeout(std::time::Duration::from_secs(5), rx)
@@ -1158,7 +1157,7 @@ impl WindowExt for Window {
             .map_err(|_| tauri::Error::FailedToReceiveMessage)?;
 
         // Parse response
-        serde_json::from_str(&response).map_err(|e| tauri::Error::InvalidArgs(e.to_string()))
+        serde_json::from_str(&response).map_err(|e| tauri::Error::InvalidArgs("", "", e))
     }
 }
 

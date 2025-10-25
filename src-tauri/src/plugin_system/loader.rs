@@ -1,212 +1,165 @@
-// src-tauri/src/main.rs
+// src-tauri/src/plugin_system/loader.rs
 
-// Prevent console window on Windows in release mode
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use crate::plugin_system::trust::TrustLevel;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
-mod plugin_system;
-
-use plugin_system::{
-    api::{
-        AuditLogger, clear_audit_logs, get_audit_logs, plugin_add_status_bar_item,
-        plugin_emit_event, plugin_execute_command, plugin_execute_hook, plugin_fetch,
-        plugin_get_active_file, plugin_get_editor_content, plugin_hide_panel,
-        plugin_list_directory, plugin_read_file, plugin_register_event,
-        plugin_remove_status_bar_item, plugin_set_editor_content, plugin_show_notification,
-        plugin_show_panel, plugin_watch_path, plugin_write_file,
-    },
-    manager::PluginManager,
-    sandbox::SandboxRegistry,
-};
-use std::path::PathBuf;
-use std::sync::Arc;
-use tauri::{Manager, State};
-use tokio::sync::RwLock;
-
-// ============================================================================
-// STATE INITIALIZATION
-// ============================================================================
-
-struct AppState {
-    plugin_manager: Arc<RwLock<PluginManager>>,
-    sandbox_registry: Arc<SandboxRegistry>,
-    audit_logger: Arc<AuditLogger>,
+#[derive(Debug, thiserror::Error)]
+pub enum LoaderError {
+    #[error("Plugin manifest not found: {0}")]
+    ManifestNotFound(String),
+    
+    #[error("Invalid plugin manifest: {0}")]
+    InvalidManifest(String),
+    
+    #[error("Plugin already loaded: {0}")]
+    AlreadyLoaded(String),
+    
+    #[error("Plugin not found: {0}")]
+    PluginNotFound(String),
+    
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+    
+    #[error("TOML parsing error: {0}")]
+    Toml(#[from] toml::de::Error),
 }
 
-// ============================================================================
-// PLUGIN MANAGEMENT COMMANDS
-// ============================================================================
-
-#[tauri::command]
-async fn discover_plugins(
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<Vec<String>, String> {
-    let mut manager = state.write().await;
-    manager.discover().map_err(|e| e.to_string())
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluginManifest {
+    pub name: String,
+    pub version: String,
+    pub description: String,
+    pub author: String,
+    pub license: String,
+    pub main: String,
+    pub capabilities: crate::plugin_system::capabilities::PluginCapabilities,
+    pub dependencies: Vec<String>,
+    pub source: String,
+    pub signature: Option<PluginSignature>,
+    pub trust: TrustLevel,
 }
 
-#[tauri::command]
-async fn load_plugin(
-    plugin_id: String,
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<(), String> {
-    let mut manager = state.write().await;
-    manager.load(&plugin_id).map_err(|e| e.to_string())?;
-    Ok(())
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluginSignature {
+    pub public_key: String,
+    pub signature: Vec<u8>,
+    pub timestamp: SystemTime,
 }
 
-#[tauri::command]
-async fn activate_plugin(
-    plugin_id: String,
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<(), String> {
-    let mut manager = state.write().await;
-    manager.activate(&plugin_id).await.map_err(|e| e.to_string())
+#[derive(Debug, Clone)]
+pub struct PluginInfo {
+    pub manifest: PluginManifest,
+    pub path: PathBuf,
+    pub loaded_at: SystemTime,
 }
 
-#[tauri::command]
-async fn deactivate_plugin(
-    plugin_id: String,
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<(), String> {
-    let mut manager = state.write().await;
-    manager
-        .deactivate(&plugin_id)
-        .await
-        .map_err(|e| e.to_string())
+pub struct PluginLoader {
+    plugins_dir: PathBuf,
+    plugins: HashMap<String, PluginInfo>,
+    first_party_plugins: std::collections::HashSet<String>,
 }
 
-#[tauri::command]
-async fn reload_plugin(
-    plugin_id: String,
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<(), String> {
-    let mut manager = state.write().await;
-    manager.reload(&plugin_id).await.map_err(|e| e.to_string())
-}
+impl PluginLoader {
+    pub fn new(plugins_dir: PathBuf) -> Self {
+        let mut first_party_plugins = std::collections::HashSet::new();
+        first_party_plugins.insert("git".to_string());
+        first_party_plugins.insert("git-status".to_string());
+        
+        Self {
+            plugins_dir,
+            plugins: HashMap::new(),
+            first_party_plugins,
+        }
+    }
 
-#[tauri::command]
-async fn get_plugin_status(
-    plugin_id: String,
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<serde_json::Value, String> {
-    let manager = state.read().await;
-    let status = manager
-        .get_status(&plugin_id)
-        .ok_or_else(|| format!("Plugin not found: {}", plugin_id))?;
-    serde_json::to_value(status).map_err(|e| e.to_string())
-}
+    pub fn discover(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+        let mut plugin_ids = Vec::new();
+        
+        if !self.plugins_dir.exists() {
+            return Ok(plugin_ids);
+        }
 
-#[tauri::command]
-async fn get_all_plugin_statuses(
-    state: State<'_, Arc<RwLock<PluginManager>>>,
-) -> Result<Vec<serde_json::Value>, String> {
-    let manager = state.read().await;
-    let statuses = manager.get_all_statuses();
-    statuses
-        .into_iter()
-        .map(|s| serde_json::to_value(s).map_err(|e| e.to_string()))
-        .collect()
-}
-
-// ============================================================================
-// MAIN FUNCTION
-// ============================================================================
-
-fn main() {
-    tauri::Builder::default()
-        .setup(|app| {
-            // Get app data directory
-            let app_dir = app
-                .path_resolver()
-                .app_data_dir()
-                .expect("Failed to get app data directory");
-
-            // Create plugins directory
-            let plugins_dir = app_dir.join("plugins");
-            std::fs::create_dir_all(&plugins_dir)
-                .expect("Failed to create plugins directory");
-
-            // Initialize plugin system
-            let sandbox_registry = Arc::new(SandboxRegistry::new());
-            let plugin_manager = Arc::new(RwLock::new(PluginManager::new(
-                plugins_dir,
-                sandbox_registry.clone(),
-            )));
-            let audit_logger = Arc::new(AuditLogger::new(10000));
-
-            // Store state
-            app.manage(plugin_manager.clone());
-            app.manage(sandbox_registry.clone());
-            app.manage(audit_logger.clone());
-
-            // Auto-discover and load plugins
-            tauri::async_runtime::spawn(async move {
-                let mut manager = plugin_manager.write().await;
-                
-                if let Ok(plugins) = manager.discover() {
-                    println!("Discovered {} plugins", plugins.len());
-                    
-                    for plugin_id in plugins {
-                        // Load plugin
-                        if let Err(e) = manager.load(&plugin_id) {
-                            eprintln!("Failed to load plugin {}: {}", plugin_id, e);
-                            continue;
-                        }
-
-                        // Auto-activate first-party plugins
-                        if let Some(info) = manager.loader().get(&plugin_id) {
-                            if matches!(
-                                info.manifest.trust,
-                                plugin_system::loader::TrustLevel::FirstParty
-                            ) {
-                                if let Err(e) = manager.activate(&plugin_id).await {
-                                    eprintln!("Failed to activate plugin {}: {}", plugin_id, e);
-                                }
-                            }
-                        }
+        for entry in std::fs::read_dir(&self.plugins_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            
+            if path.is_dir() {
+                let plugin_toml = path.join("plugin.toml");
+                if plugin_toml.exists() {
+                    if let Some(plugin_id) = path.file_name().and_then(|n| n.to_str()) {
+                        plugin_ids.push(plugin_id.to_string());
                     }
                 }
-            });
+            }
+        }
+        
+        Ok(plugin_ids)
+    }
 
-            Ok(())
-        })
-        .invoke_handler(tauri::generate_handler![
-            // Plugin management
-            discover_plugins,
-            load_plugin,
-            activate_plugin,
-            deactivate_plugin,
-            reload_plugin,
-            get_plugin_status,
-            get_all_plugin_statuses,
-            // Filesystem operations
-            plugin_read_file,
-            plugin_write_file,
-            plugin_list_directory,
-            plugin_watch_path,
-            // Network operations
-            plugin_fetch,
-            // Command execution
-            plugin_execute_command,
-            // UI operations
-            plugin_show_notification,
-            plugin_add_status_bar_item,
-            plugin_remove_status_bar_item,
-            plugin_show_panel,
-            plugin_hide_panel,
-            // Editor operations
-            plugin_get_editor_content,
-            plugin_set_editor_content,
-            plugin_get_active_file,
-            // Event system
-            plugin_register_event,
-            plugin_emit_event,
-            // Plugin hooks
-            plugin_execute_hook,
-            // Audit logs
-            get_audit_logs,
-            clear_audit_logs,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    pub fn load_manifest(&self, plugin_id: &str) -> Result<PluginManifest, Box<dyn std::error::Error>> {
+        let plugin_path = self.plugins_dir.join(plugin_id);
+        let manifest_path = plugin_path.join("plugin.toml");
+        
+        if !manifest_path.exists() {
+            return Err(format!("Plugin manifest not found: {}", manifest_path.display()).into());
+        }
+
+        let manifest_content = std::fs::read_to_string(&manifest_path)?;
+        let mut manifest: PluginManifest = toml::from_str(&manifest_content)?;
+        
+        // Set trust level based on plugin type
+        manifest.trust = if self.first_party_plugins.contains(plugin_id) {
+            TrustLevel::FirstParty
+        } else if manifest.source.starts_with("file://") {
+            TrustLevel::Local
+        } else {
+            TrustLevel::Community
+        };
+        
+        Ok(manifest)
+    }
+
+    pub fn load(&mut self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let manifest = self.load_manifest(plugin_id)?;
+        let plugin_path = self.plugins_dir.join(plugin_id);
+        
+        let plugin_info = PluginInfo {
+            manifest,
+            path: plugin_path,
+            loaded_at: SystemTime::now(),
+        };
+        
+        self.plugins.insert(plugin_id.to_string(), plugin_info);
+        Ok(())
+    }
+
+    pub fn get(&self, plugin_id: &str) -> Option<&PluginInfo> {
+        self.plugins.get(plugin_id)
+    }
+
+    pub fn get_all(&self) -> &HashMap<String, PluginInfo> {
+        &self.plugins
+    }
+
+    pub fn unload(&mut self, plugin_id: &str) -> bool {
+        self.plugins.remove(plugin_id).is_some()
+    }
+
+    pub fn verify_dependencies(&self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(plugin_info) = self.plugins.get(plugin_id) {
+            for dependency in &plugin_info.manifest.dependencies {
+                if !self.plugins.contains_key(dependency) {
+                    return Err(format!("Missing dependency: {}", dependency).into());
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn is_first_party(&self, plugin_id: &str) -> bool {
+        self.first_party_plugins.contains(plugin_id)
+    }
 }

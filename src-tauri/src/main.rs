@@ -117,7 +117,7 @@ fn main() {
         .setup(|app| {
             // Get app data directory
             let app_dir = app
-                .path_resolver()
+                .path()
                 .app_data_dir()
                 .expect("Failed to get app data directory");
 
@@ -157,7 +157,7 @@ fn main() {
                         if let Some(info) = manager.loader().get(&plugin_id) {
                             if matches!(
                                 info.manifest.trust,
-                                plugin_system::loader::TrustLevel::FirstParty
+                                plugin_system::trust::TrustLevel::FirstParty
                             ) {
                                 if let Err(e) = manager.activate(&plugin_id).await {
                                     eprintln!("Failed to activate plugin {}: {}", plugin_id, e);

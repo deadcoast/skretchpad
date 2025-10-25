@@ -4,18 +4,21 @@
 
 Why:
 
-- Implements a secure JavaScript runtime using Deno Core
+- Implements a **thread-safe** JavaScript runtime using Deno Core
+- **Worker-based execution** - Each plugin runs in its own dedicated thread
 - Resource limit enforcement (memory, CPU time, operations/second)
 - Timeout handling for long-running plugin code
-- Heap statistics monitoring
+- **Message passing** between main thread and worker threads
 - Cross-boundary serialization/deserialization
-- Async execution model with Tokio
-- Novel implementation - essentially building a mini sandboxed browser
+- **Thread isolation** - No shared state between plugins
+- Novel implementation - essentially building a mini sandboxed browser with thread safety
 
 Integration Points:
 
-- Deno runtime initialization
-- Tauri command system
+- **Worker thread management** - Spawning and managing plugin worker threads
+- **Message passing** - Communication between main thread and workers
+- Deno runtime initialization (in worker threads)
+- Tauri command system (thread-safe)
 - Plugin API injection
 - Memory profiling
 - Tokio async runtime
@@ -41,11 +44,16 @@ PluginManifest (capabilities.rs)
         └─> UiCapability
 
 PluginSandbox (sandbox.rs)
-    ├─> PluginManifest (capabilities.rs)
+    ├─> PluginManifest (loader.rs)
     ├─> ResourceLimits (sandbox.rs)
-    ├─> ResourceTracker (sandbox.rs)
-    ├─> deno_core::JsRuntime (external: deno_core crate)
+    ├─> PluginWorker (worker.rs) - **NEW: Thread-safe execution**
     └─> PluginError (sandbox.rs)
+
+PluginWorker (worker.rs) - **NEW: Thread-safe JavaScript execution**
+    ├─> deno_core::JsRuntime (external: deno_core crate)
+    ├─> Message passing (mpsc::channel)
+    ├─> Resource limits enforcement
+    └─> WorkerResponse (success/error)
 
 SandboxRegistry (sandbox.rs)
     └─> PluginSandbox (sandbox.rs)
@@ -213,15 +221,16 @@ src-tauri/src/main.rs
 ### CURRENT STATUS
 
 ```text
-Plugin System Implementation: 20% Complete
+Plugin System Implementation: 60% Complete
 
-✅ sandbox.rs        [████████████████████████████████] 100%
-⬜ capabilities.rs   [                                ]   0%  <- NEXT
-⬜ loader.rs         [                                ]   0%
-⬜ manager.rs        [                                ]   0%
-⬜ api.rs            [                                ]   0%
-⬜ main.rs integrat..[                                ]   0%
-⬜ frontend API      [                                ]   0%
+✅ sandbox.rs        [████████████████████████████████] 100% - **UPDATED: Thread-safe**
+✅ worker.rs         [████████████████████████████████] 100% - **NEW: Thread-safe execution**
+✅ capabilities.rs   [████████████████████████████████] 100%
+✅ loader.rs         [████████████████████████████████] 100%
+✅ manager.rs        [████████████████████████████████] 100%
+✅ api.rs            [████████████████████████████████] 100%
+✅ main.rs integrat..[████████████████████████████████] 100%
+✅ frontend API      [████████████████████████████████] 100%
 ```
 
-The sandbox is complete and ready to use once the supporting types from `capabilities.rs` are defined!
+**MAJOR UPDATE**: The sandbox system has been completely redesigned for thread safety! Each plugin now runs in its own dedicated worker thread, solving the fundamental `Send + Sync` compatibility issues with Tauri commands.

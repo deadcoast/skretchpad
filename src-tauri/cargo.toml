@@ -18,13 +18,17 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
 tokio = { version = "1", features = ["full"] }
-palette = "0.7"  # Color manipulation
-deno_core = "0.230"  # Plugin sandboxing
-notify = "6.0"  # File system watching
-walkdir = "2.4"  # Directory traversal
+palette = "0.7"                                     # Color manipulation
+deno_core = "0.230"                                 # Plugin sandboxing
+notify = "6.0"                                      # File system watching
+walkdir = "2.4"                                     # Directory traversal
 regex = "1.10"
 thiserror = "1.0"
 anyhow = "1.0"
+async-trait = "0.1.68"
+uuid = { version = "1.0", features = ["v4"] }
+reqwest = { version = "0.11", features = ["json"] }
+url = "2.4"
 
 [dependencies.tauri-plugin-fs]
 version = "2.0"

@@ -1,22 +1,30 @@
 // src/lib/utils/ui.ts
 
-//UI utility functions for skretchpad
+/**
+ * UI utility functions for skretchpad
+ */
 
 // ============================================================================
 // ANIMATION UTILITIES
 // ============================================================================
 
-// Ease-in-out cubic animation curve
+/**
+ * Ease-in-out cubic animation curve
+ */
 export function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
 }
 
-// Ease-out exponential animation curve
+/**
+ * Ease-out exponential animation curve
+ */
 export function easeOutExpo(t: number): number {
   return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
 }
 
-// Ease-in-out exponential animation curve
+/**
+ * Ease-in-out exponential animation curve
+ */
 export function easeInOutExpo(t: number): number {
   if (t === 0) return 0;
   if (t === 1) return 1;
@@ -24,7 +32,9 @@ export function easeInOutExpo(t: number): number {
   return (2 - Math.pow(2, -20 * t + 10)) / 2;
 }
 
-// Animate a value over time
+/**
+ * Animate a value over time
+ */
 export function animate(
   from: number,
   to: number,
@@ -54,7 +64,9 @@ export function animate(
   return () => cancelAnimationFrame(rafId);
 }
 
-// Spring animation
+/**
+ * Spring animation
+ */
 export function spring(
   from: number,
   to: number,
@@ -91,7 +103,9 @@ export function spring(
 // DOM UTILITIES
 // ============================================================================
 
-// Check if element is in viewport
+/**
+ * Check if element is in viewport
+ */
 export function isInViewport(element: HTMLElement): boolean {
   const rect = element.getBoundingClientRect();
   return (
@@ -102,7 +116,9 @@ export function isInViewport(element: HTMLElement): boolean {
   );
 }
 
-// Scroll element into view smoothly
+/**
+ * Scroll element into view smoothly
+ */
 export function scrollIntoView(
   element: HTMLElement,
   options: ScrollIntoViewOptions = { behavior: 'smooth', block: 'center' }
@@ -110,7 +126,9 @@ export function scrollIntoView(
   element.scrollIntoView(options);
 }
 
-// Get element position relative to viewport
+/**
+ * Get element position relative to viewport
+ */
 export function getElementPosition(element: HTMLElement): {
   top: number;
   left: number;
@@ -126,7 +144,9 @@ export function getElementPosition(element: HTMLElement): {
   };
 }
 
-// Check if element has overflow
+/**
+ * Check if element has overflow
+ */
 export function hasOverflow(element: HTMLElement): {
   x: boolean;
   y: boolean;
@@ -137,7 +157,9 @@ export function hasOverflow(element: HTMLElement): {
   };
 }
 
-// Get scrollbar width
+/**
+ * Get scrollbar width
+ */
 export function getScrollbarWidth(): number {
   const outer = document.createElement('div');
   outer.style.visibility = 'hidden';
@@ -154,7 +176,9 @@ export function getScrollbarWidth(): number {
   return scrollbarWidth;
 }
 
-// Trap focus within element
+/**
+ * Trap focus within element
+ */
 export function trapFocus(element: HTMLElement): () => void {
   const focusableElements = element.querySelectorAll<HTMLElement>(
     'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -194,7 +218,9 @@ export function trapFocus(element: HTMLElement): () => void {
 // COLOR UTILITIES
 // ============================================================================
 
-// Convert hex color to RGB
+/**
+ * Convert hex color to RGB
+ */
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
@@ -206,7 +232,9 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } | nul
     : null;
 }
 
-// Convert RGB to hex
+/**
+ * Convert RGB to hex
+ */
 export function rgbToHex(r: number, g: number, b: number): string {
   return '#' + [r, g, b].map((x) => {
     const hex = x.toString(16);
@@ -214,7 +242,9 @@ export function rgbToHex(r: number, g: number, b: number): string {
   }).join('');
 }
 
-// Parse CSS color to RGBA
+/**
+ * Parse CSS color to RGBA
+ */
 export function parseColor(color: string): {
   r: number;
   g: number;
@@ -241,7 +271,9 @@ export function parseColor(color: string): {
   return null;
 }
 
-// Get luminance of a color
+/**
+ * Get luminance of a color
+ */
 export function getLuminance(color: string): number {
   const parsed = parseColor(color);
   if (!parsed) return 0;
@@ -257,12 +289,16 @@ export function getLuminance(color: string): number {
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
-// Check if color is dark
+/**
+ * Check if color is dark
+ */
 export function isDark(color: string): boolean {
   return getLuminance(color) < 0.5;
 }
 
-// Get contrast ratio between two colors
+/**
+ * Get contrast ratio between two colors
+ */
 export function getContrastRatio(color1: string, color2: string): number {
   const lum1 = getLuminance(color1);
   const lum2 = getLuminance(color2);
@@ -271,7 +307,9 @@ export function getContrastRatio(color1: string, color2: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-// Lighten a color
+/**
+ * Lighten a color
+ */
 export function lighten(color: string, amount: number): string {
   const parsed = parseColor(color);
   if (!parsed) return color;
@@ -284,7 +322,9 @@ export function lighten(color: string, amount: number): string {
   return `rgba(${nr}, ${ng}, ${nb}, ${a})`;
 }
 
-// Darken a color
+/**
+ * Darken a color
+ */
 export function darken(color: string, amount: number): string {
   const parsed = parseColor(color);
   if (!parsed) return color;
@@ -297,7 +337,9 @@ export function darken(color: string, amount: number): string {
   return `rgba(${nr}, ${ng}, ${nb}, ${a})`;
 }
 
-// Add alpha to color
+/**
+ * Add alpha to color
+ */
 export function withAlpha(color: string, alpha: number): string {
   const parsed = parseColor(color);
   if (!parsed) return color;
@@ -310,7 +352,9 @@ export function withAlpha(color: string, alpha: number): string {
 // FORMAT UTILITIES
 // ============================================================================
 
-// Format file size
+/**
+ * Format file size
+ */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
 
@@ -321,7 +365,9 @@ export function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
-// Format date relative to now
+/**
+ * Format date relative to now
+ */
 export function formatRelativeTime(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
@@ -345,7 +391,9 @@ export function formatRelativeTime(timestamp: number): string {
   return 'just now';
 }
 
-// Format duration (milliseconds to readable string)
+/**
+ * Format duration (milliseconds to readable string)
+ */
 export function formatDuration(ms: number): string {
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
@@ -360,13 +408,17 @@ export function formatDuration(ms: number): string {
   }
 }
 
-// Truncate string with ellipsis
+/**
+ * Truncate string with ellipsis
+ */
 export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength - 3) + '...';
 }
 
-// Truncate path to fit in given width (shows start and end)
+/**
+ * Truncate path to fit in given width (shows start and end)
+ */
 export function truncatePath(path: string, maxLength: number): string {
   if (path.length <= maxLength) return path;
 
@@ -387,7 +439,9 @@ export function truncatePath(path: string, maxLength: number): string {
 // CLIPBOARD UTILITIES
 // ============================================================================
 
-// Copy text to clipboard
+/**
+ * Copy text to clipboard
+ */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
@@ -398,7 +452,9 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-// Read text from clipboard
+/**
+ * Read text from clipboard
+ */
 export async function readFromClipboard(): Promise<string | null> {
   try {
     return await navigator.clipboard.readText();
@@ -412,17 +468,23 @@ export async function readFromClipboard(): Promise<string | null> {
 // KEYBOARD UTILITIES
 // ============================================================================
 
-// Check if modifier key is pressed
+/**
+ * Check if modifier key is pressed
+ */
 export function isModifierPressed(event: KeyboardEvent): boolean {
   return event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
 }
 
-// Get modifier key string (Ctrl/Cmd depending on platform)
+/**
+ * Get modifier key string (Ctrl/Cmd depending on platform)
+ */
 export function getModifierKey(): string {
   return navigator.platform.toLowerCase().includes('mac') ? '⌘' : 'Ctrl';
 }
 
-// Format keyboard shortcut for display
+/**
+ * Format keyboard shortcut for display
+ */
 export function formatShortcut(shortcut: string): string {
   const isMac = navigator.platform.toLowerCase().includes('mac');
   
@@ -453,7 +515,9 @@ export interface NotificationOptions {
   };
 }
 
-// Show notification (to be implemented with notification system)
+/**
+ * Show notification (to be implemented with notification system)
+ */
 export function showNotification(
   message: string,
   options: NotificationOptions = {}
@@ -466,22 +530,30 @@ export function showNotification(
 // PLATFORM DETECTION
 // ============================================================================
 
-// Check if running on macOS
+/**
+ * Check if running on macOS
+ */
 export function isMac(): boolean {
   return navigator.platform.toLowerCase().includes('mac');
 }
 
-// Check if running on Windows
+/**
+ * Check if running on Windows
+ */
 export function isWindows(): boolean {
   return navigator.platform.toLowerCase().includes('win');
 }
 
-// Check if running on Linux
+/**
+ * Check if running on Linux
+ */
 export function isLinux(): boolean {
   return navigator.platform.toLowerCase().includes('linux');
 }
 
-// Get platform name
+/**
+ * Get platform name
+ */
 export function getPlatform(): 'mac' | 'windows' | 'linux' | 'unknown' {
   const platform = navigator.platform.toLowerCase();
   
@@ -496,12 +568,16 @@ export function getPlatform(): 'mac' | 'windows' | 'linux' | 'unknown' {
 // ASYNC UTILITIES
 // ============================================================================
 
-// Sleep for specified milliseconds
+/**
+ * Sleep for specified milliseconds
+ */
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Retry async operation with exponential backoff
+/**
+ * Retry async operation with exponential backoff
+ */
 export async function retry<T>(
   fn: () => Promise<T>,
   options: {
@@ -537,7 +613,9 @@ export async function retry<T>(
   throw lastError!;
 }
 
-// Race with timeout
+/**
+ * Race with timeout
+ */
 export async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,

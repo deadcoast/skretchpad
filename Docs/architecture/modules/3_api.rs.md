@@ -141,7 +141,7 @@ api.rs (THIS FILE - 1,200 lines)
 
 ## Required Files to Create
 
-### 🔴 CRITICAL - Must exist before api.rs compiles:
+### 🔴 CRITICAL - Must exist before api.rs compiles
 
 ```plaintext
 1. src-tauri/src/plugin_system/capabilities.rs (ALREADY COMPLETE ✅)
@@ -158,7 +158,7 @@ api.rs (THIS FILE - 1,200 lines)
        └─> register_event_listener()
 ```
 
-### 🟡 IMPORTANT - Backend integration:
+### 🟡 IMPORTANT - Backend integration
 
 ```rust
 4. src-tauri/src/plugin_system/mod.rs
@@ -176,7 +176,7 @@ api.rs (THIS FILE - 1,200 lines)
        └─> Register all #[tauri::command] functions
 ```
 
-### 🟢 OPTIONAL - Enhanced features:
+### 🟢 OPTIONAL - Enhanced features
 
 ```plaintext
 6. src-tauri/src/commands/mod.rs
