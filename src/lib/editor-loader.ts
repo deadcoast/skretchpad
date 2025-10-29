@@ -3,10 +3,10 @@
 import { EditorView, ViewUpdate, keymap, highlightActiveLine, drawSelection } from '@codemirror/view';
 import { EditorState, Compartment, Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { 
-  indentOnInput, 
-  bracketMatching, 
-  foldGutter, 
+import {
+  indentOnInput,
+  bracketMatching,
+  foldGutter,
   foldKeymap,
   indentUnit,
   syntaxHighlighting,
@@ -76,19 +76,19 @@ class LanguageRegistry {
       name: string;
       extensions: string[];
     }> = [
-      { name: 'javascript', extensions: ['js', 'jsx', 'mjs', 'cjs'] },
-      { name: 'typescript', extensions: ['ts', 'tsx', 'mts', 'cts'] },
-      { name: 'python', extensions: ['py', 'pyw', 'pyi'] },
-      { name: 'rust', extensions: ['rs'] },
-      { name: 'json', extensions: ['json', 'jsonc'] },
-      { name: 'markdown', extensions: ['md', 'markdown'] },
-      { name: 'html', extensions: ['html', 'htm'] },
-      { name: 'css', extensions: ['css'] },
-      { name: 'yaml', extensions: ['yaml', 'yml'] },
-      { name: 'toml', extensions: ['toml'] },
-      { name: 'xml', extensions: ['xml', 'svg'] },
-      { name: 'sql', extensions: ['sql'] },
-    ];
+        { name: 'javascript', extensions: ['js', 'jsx', 'mjs', 'cjs'] },
+        { name: 'typescript', extensions: ['ts', 'tsx', 'mts', 'cts'] },
+        { name: 'python', extensions: ['py', 'pyw', 'pyi'] },
+        { name: 'rust', extensions: ['rs'] },
+        { name: 'json', extensions: ['json', 'jsonc'] },
+        { name: 'markdown', extensions: ['md', 'markdown'] },
+        { name: 'html', extensions: ['html', 'htm'] },
+        { name: 'css', extensions: ['css'] },
+        { name: 'yaml', extensions: ['yaml', 'yml'] },
+        { name: 'toml', extensions: ['toml'] },
+        { name: 'xml', extensions: ['xml', 'svg'] },
+        { name: 'sql', extensions: ['sql'] },
+      ];
 
     for (const def of languageDefinitions) {
       this.languages.set(def.name, {
@@ -402,17 +402,17 @@ export async function createEditor(
     closeBrackets(),
     autocompletion(),
     highlightSelectionMatches(),
-    
+
     // UI elements
     foldGutter(),
     EditorView.lineWrapping,
-    
+
     // Syntax highlighting
     syntaxHighlighting(defaultHighlightStyle),
-    
+
     // Indentation
     indentUnit.of('  '), // 2 spaces
-    
+
     // Keymaps (order matters - later ones override earlier ones)
     keymap.of([
       ...closeBracketsKeymap,
@@ -423,14 +423,14 @@ export async function createEditor(
       ...completionKeymap,
       ...lintKeymap,
     ]),
-    
+
     // Compartments for hot-swapping
     languageCompartment.of([]),
     themeCompartment.of(createThemeExtension(theme)),
     keybindingCompartment.of([]),
     readOnlyCompartment.of(EditorState.readOnly.of(readOnly)),
     pluginHooksCompartment.of(pluginHooksManager.createExtension()),
-    
+
     // Custom event handlers
     EditorView.updateListener.of((update) => {
       if (update.docChanged && onChange) {
@@ -441,7 +441,7 @@ export async function createEditor(
         if (onSelection) onSelection(update);
       }
     }),
-    
+
     // User-provided extensions
     ...extensions,
   ];
@@ -725,7 +725,7 @@ export function getSelection(view: EditorView): string {
 
 export function insertText(view: EditorView, text: string): void {
   const { from, to } = view.state.selection.main;
-  
+
   view.dispatch({
     changes: {
       from,
@@ -740,7 +740,7 @@ export function insertText(view: EditorView, text: string): void {
 
 export function replaceSelection(view: EditorView, text: string): void {
   const { from, to } = view.state.selection.main;
-  
+
   view.dispatch({
     changes: {
       from,
@@ -752,7 +752,7 @@ export function replaceSelection(view: EditorView, text: string): void {
 
 export function gotoLine(view: EditorView, lineNumber: number): void {
   const line = view.state.doc.line(Math.max(1, Math.min(lineNumber, view.state.doc.lines)));
-  
+
   view.dispatch({
     selection: { anchor: line.from },
     scrollIntoView: true,
@@ -774,7 +774,7 @@ export function blur(view: EditorView): void {
 export function destroyEditor(view: EditorView): void {
   // Clear plugin hooks
   pluginHooksManager.clear();
-  
+
   // Destroy view
   view.destroy();
 }
@@ -783,7 +783,7 @@ export function destroyEditor(view: EditorView): void {
 // CUSTOM EXTENSIONS
 // ============================================================================
 
-/
+/*
  * Extension to show line length indicator
  */
 export function lineLengthIndicator(maxLength: number = 80): Extension {
@@ -791,9 +791,9 @@ export function lineLengthIndicator(maxLength: number = 80): Extension {
     const decorations = [];
     const { from, to } = view.viewport;
 
-    for (let pos = from; pos <= to; ) {
+    for (let pos = from; pos <= to;) {
       const line = view.state.doc.lineAt(pos);
-      
+
       if (line.length > maxLength) {
         const decoration = Decoration.mark({
           class: 'cm-line-too-long',
@@ -801,7 +801,7 @@ export function lineLengthIndicator(maxLength: number = 80): Extension {
             style: 'text-decoration: underline wavy red;',
           },
         }).range(line.from + maxLength, line.to);
-        
+
         decorations.push(decoration);
       }
 
@@ -812,7 +812,7 @@ export function lineLengthIndicator(maxLength: number = 80): Extension {
   });
 }
 
-/
+/*
  * Extension to highlight trailing whitespace
  */
 export function highlightTrailingWhitespace(): Extension {
@@ -820,7 +820,7 @@ export function highlightTrailingWhitespace(): Extension {
     const decorations = [];
     const { from, to } = view.viewport;
 
-    for (let pos = from; pos <= to; ) {
+    for (let pos = from; pos <= to;) {
       const line = view.state.doc.lineAt(pos);
       const text = line.text;
       const match = text.match(/\s+$/);
@@ -843,7 +843,7 @@ export function highlightTrailingWhitespace(): Extension {
   });
 }
 
-/
+/*
  * Extension for read-only regions
  */
 export function readOnlyRanges(ranges: Array<{ from: number; to: number }>): Extension {

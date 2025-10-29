@@ -7,10 +7,10 @@
     import { markdown } from '@codemirror/lang-markdown';
     import { javascript } from '@codemirror/lang-javascript';
     import { json } from '@codemirror/lang-json';
-    import { onMount, onDestroy, tick } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { invoke } from '@tauri-apps/api/core';
     import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-    import { EditorView } from 'codemirror';
+    import { EditorView } from '@codemirror/view';
     import type { ViewUpdate } from '@codemirror/view';
     import { debounce } from '../lib/utils/debounce';
     import { createEditor, destroyEditor, setLanguage, updateTheme } from '../lib/editor-loader';

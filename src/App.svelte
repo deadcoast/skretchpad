@@ -45,7 +45,7 @@
     <Editor />
   </div>
   
-  <StatusBar {currentFile} />
+  <StatusBar />
 </div>
 
 <style>

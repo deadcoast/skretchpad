@@ -1,7 +1,7 @@
 <!-- src/lib/components/CommandPalette.svelte -->
 
 <script lang="ts">
-    import { pluginsStore, commandsByCategory } from '$lib/stores/plugins';
+    import { commandsByCategory } from '$lib/stores/plugins';
     import { formatShortcut } from '$lib/utils/ui';
     import { createEventDispatcher } from 'svelte';
   
@@ -36,7 +36,7 @@
       }
       acc[cmd.category].push(cmd);
       return acc;
-    }, {} as Record<string, any[]>);
+    }, {} as Record<string, PaletteCommand[]>);
   
     $: if (visible && inputElement) {
       inputElement.focus();
@@ -103,7 +103,7 @@
               <div class="command-category">
                 <div class="command-category__title">{category}</div>
   
-                {#each commands as command, index (command.id)}
+                {#each commands as command (command.id)}
                   {@const globalIndex = filteredCommands.indexOf(command)}
                   <button
                     class="command-item"
