@@ -3,32 +3,44 @@
   import Chrome from './components/Chrome.svelte';
   import StatusBar from './components/StatusBar.svelte';
   import { onMount } from 'svelte';
-  
+  import { themeStore } from './lib/stores/theme';
+  import { pluginsStore } from './lib/stores/plugins';
+  import { keybindingStore } from './lib/stores/keybindings';
+
   let chromeVisible = true;
   let alwaysOnTop = false;
   let currentFile = '';
-  
-  onMount(() => {
-    // Apply default glass theme
-    applyGlassTheme();
+
+  onMount(async () => {
+    try {
+      // Initialize stores
+      await initializeApp();
+    } catch (error) {
+      console.error('Failed to initialize app:', error);
+    }
   });
-  
+
+  async function initializeApp() {
+    // Theme and keybinding stores auto-initialize on import
+    // Apply default theme to document
+    if ($themeStore.current) {
+      // Theme is already applied in store initialization
+      console.log('Theme loaded:', $themeStore.current.metadata.name);
+    }
+
+    // Initialize plugin system (discover and load plugins)
+    await pluginsStore.initialize();
+
+    console.log('App initialized successfully');
+  }
+
   function toggleChrome() {
     chromeVisible = !chromeVisible;
   }
-  
+
   function toggleAlwaysOnTop() {
     alwaysOnTop = !alwaysOnTop;
     // TODO: Implement Tauri command
-  }
-  
-  function applyGlassTheme() {
-    // Apply liquid glass theme CSS variables
-    document.documentElement.style.setProperty('--window-bg', 'rgba(18, 18, 18, 0.85)');
-    document.documentElement.style.setProperty('--window-blur', '20px');
-    document.documentElement.style.setProperty('--editor-bg', 'transparent');
-    document.documentElement.style.setProperty('--editor-fg', '#e4e4e4');
-    document.documentElement.style.setProperty('--cursor-color', '#00d9ff');
   }
 </script>
 

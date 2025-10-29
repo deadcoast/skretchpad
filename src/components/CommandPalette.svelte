@@ -1,24 +1,26 @@
 <!-- src/lib/components/CommandPalette.svelte -->
 
 <script lang="ts">
-    import { commandsByCategory } from '$lib/stores/plugins';
+    import { commandsByCategory, type PluginCommand } from '$lib/stores/plugins';
     import { formatShortcut } from '$lib/utils/ui';
     import { createEventDispatcher } from 'svelte';
-  
+
     export let visible = false;
-  
+
     const dispatch = createEventDispatcher();
-  
+
     let searchQuery = '';
     let selectedIndex = 0;
     let inputElement: HTMLInputElement;
-  
+
+    type PaletteCommand = PluginCommand & { category: string };
+
     // Get all commands
     $: allCommands = Array.from($commandsByCategory.entries()).flatMap(
       ([category, commands]) =>
         commands.map((cmd) => ({ ...cmd, category }))
     );
-  
+
     // Filter commands based on search
     $: filteredCommands = allCommands.filter((cmd) => {
       const query = searchQuery.toLowerCase();
@@ -28,7 +30,7 @@
         cmd.category.toLowerCase().includes(query)
       );
     });
-  
+
     // Group filtered commands by category
     $: groupedCommands = filteredCommands.reduce((acc, cmd) => {
       if (!acc[cmd.category]) {

@@ -1,18 +1,18 @@
 <!-- src/components/PluginPermissionDialog.svelte -->
 <script lang="ts">
-    import { invoke } from '@tauri-apps/api/core';
-    
-    export let plugin: PluginManifest;
+    import type { PluginStatus } from '$lib/stores/plugins';
+
+    export let plugin: PluginStatus;
     export let onApprove: () => void;
     export let onDeny: () => void;
-    
-    const riskLevels = {
+
+    const riskLevels: Record<string, string> = {
       filesystem: 'high',
       network: 'critical',
       commands: 'critical',
       ui: 'low',
     };
-    
+
     function getRiskColor(capability: string) {
       const level = riskLevels[capability];
       return level === 'critical' ? 'text-red-500' : 
@@ -28,32 +28,32 @@
     <div class="permissions-list">
       <h3>Requested Permissions:</h3>
       
-      {#if plugin.permissions.filesystem !== 'None'}
+      {#if plugin.capabilities.filesystem !== 'None'}
         <div class="permission-item">
           <span class={getRiskColor('filesystem')}>⚠</span>
-          <span>Filesystem Access: {plugin.permissions.filesystem}</span>
+          <span>Filesystem Access: {plugin.capabilities.filesystem}</span>
         </div>
       {/if}
-      
-      {#if plugin.permissions.network !== 'None'}
+
+      {#if plugin.capabilities.network !== 'None'}
         <div class="permission-item">
           <span class={getRiskColor('network')}>🔴</span>
           <span>Network Access</span>
-          {#if plugin.permissions.network.DomainAllowlist}
+          {#if plugin.capabilities.network.DomainAllowlist}
             <ul class="domain-list">
-              {#each plugin.permissions.network.DomainAllowlist as domain}
+              {#each plugin.capabilities.network.DomainAllowlist as domain}
                 <li>{domain}</li>
               {/each}
             </ul>
           {/if}
         </div>
       {/if}
-      
-      {#if plugin.permissions.commands.allowlist.length > 0}
+
+      {#if plugin.capabilities.commands.allowlist.length > 0}
         <div class="permission-item">
           <span class={getRiskColor('commands')}>🔴</span>
           <span>Command Execution:</span>
-          <code>{plugin.permissions.commands.allowlist.join(', ')}</code>
+          <code>{plugin.capabilities.commands.allowlist.join(', ')}</code>
         </div>
       {/if}
     </div>

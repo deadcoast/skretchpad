@@ -621,7 +621,7 @@ export async function withTimeout<T>(
   timeoutMs: number,
   timeoutError?: Error
 ): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout>;
+  let timeoutId!: ReturnType<typeof setTimeout>;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(

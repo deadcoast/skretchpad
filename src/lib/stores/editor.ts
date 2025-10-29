@@ -1,9 +1,9 @@
 // src/lib/stores/editor.ts
 
 import { writable, derived, get } from 'svelte/store';
-import type { EditorView } from '@codemirror/view';
-import { invoke } from '@tauri-apps/api/tauri';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import type { EditorView, ViewUpdate } from '@codemirror/view';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import {
   createEditor,
   setLanguage,
@@ -16,7 +16,7 @@ import {
   saveEditorState,
   restoreEditorState,
   type EditorStateSnapshot,
-} from './editor-loader';
+} from '../editor-loader';
 import { themeStore } from './theme';
 import { debounce } from '../utils/debounce';
 
@@ -126,7 +126,7 @@ function createEditorStore() {
 
         const view = await createEditor(container, {
           theme: theme || undefined,
-          onChange: (viewUpdate) => {
+          onChange: (viewUpdate: ViewUpdate) => {
             const content = getEditorContent(viewUpdate.view);
             const state = get({ subscribe });
             
@@ -148,14 +148,14 @@ function createEditorStore() {
               }
             }
           },
-          onCursorMove: (viewUpdate) => {
+          onCursorMove: (viewUpdate: ViewUpdate) => {
             const position = getCursorPosition(viewUpdate.view);
             update((state) => ({
               ...state,
               cursorPosition: position,
             }));
           },
-          onSelection: (viewUpdate) => {
+          onSelection: (viewUpdate: ViewUpdate) => {
             const selection = viewUpdate.state.selection.main;
             const text = viewUpdate.state.doc.sliceString(selection.from, selection.to);
             update((state) => ({

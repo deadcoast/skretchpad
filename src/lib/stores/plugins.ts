@@ -1,7 +1,7 @@
 // src/lib/stores/plugins.ts
 
 import { writable, derived, get } from 'svelte/store';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 // ============================================================================

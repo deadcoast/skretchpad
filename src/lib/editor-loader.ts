@@ -1,7 +1,7 @@
 // src/lib/editor-loader.ts
 
 import { EditorView, ViewUpdate, keymap, highlightActiveLine, drawSelection } from '@codemirror/view';
-import { EditorState, Compartment, Extension } from '@codemirror/state';
+import { EditorState, Compartment, type Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import {
   indentOnInput,
@@ -84,10 +84,11 @@ class LanguageRegistry {
         { name: 'markdown', extensions: ['md', 'markdown'] },
         { name: 'html', extensions: ['html', 'htm'] },
         { name: 'css', extensions: ['css'] },
-        { name: 'yaml', extensions: ['yaml', 'yml'] },
-        { name: 'toml', extensions: ['toml'] },
-        { name: 'xml', extensions: ['xml', 'svg'] },
-        { name: 'sql', extensions: ['sql'] },
+        // TODO: Install missing packages: @codemirror/lang-yaml, @codemirror/lang-toml, @codemirror/lang-xml, @codemirror/lang-sql
+        // { name: 'yaml', extensions: ['yaml', 'yml'] },
+        // { name: 'toml', extensions: ['toml'] },
+        // { name: 'xml', extensions: ['xml', 'svg'] },
+        // { name: 'sql', extensions: ['sql'] },
       ];
 
     for (const def of languageDefinitions) {
@@ -164,25 +165,26 @@ class LanguageRegistry {
           support = css();
           break;
 
-        case 'yaml':
-          const { yaml } = await import('@codemirror/lang-yaml');
-          support = yaml();
-          break;
+        // TODO: Uncomment when packages are installed
+        // case 'yaml':
+        //   const { yaml } = await import('@codemirror/lang-yaml');
+        //   support = yaml();
+        //   break;
 
-        case 'toml':
-          const { toml } = await import('@codemirror/lang-toml');
-          support = toml();
-          break;
+        // case 'toml':
+        //   const { toml } = await import('@codemirror/lang-toml');
+        //   support = toml();
+        //   break;
 
-        case 'xml':
-          const { xml } = await import('@codemirror/lang-xml');
-          support = xml();
-          break;
+        // case 'xml':
+        //   const { xml } = await import('@codemirror/lang-xml');
+        //   support = xml();
+        //   break;
 
-        case 'sql':
-          const { sql } = await import('@codemirror/lang-sql');
-          support = sql();
-          break;
+        // case 'sql':
+        //   const { sql } = await import('@codemirror/lang-sql');
+        //   support = sql();
+        //   break;
 
         default:
           return null;
@@ -383,7 +385,7 @@ export async function createEditor(
 ): Promise<EditorView> {
   const {
     theme,
-    keybindings,
+    keybindings: _keybindings, // TODO: Implement keybinding integration
     readOnly = false,
     onChange,
     onCursorMove,
@@ -527,7 +529,6 @@ export async function createDiffEditor(
     if (isScrolling) return;
     isScrolling = true;
 
-    const scrollInfo = source.scrollDOM.getBoundingClientRect();
     target.scrollDOM.scrollTop = source.scrollDOM.scrollTop;
 
     requestAnimationFrame(() => {
@@ -646,7 +647,7 @@ export function setupPluginHooks(view: EditorView): void {
 // STATE PERSISTENCE
 // ============================================================================
 
-interface EditorStateSnapshot {
+export interface EditorStateSnapshot {
   doc: string;
   selection: {
     anchor: number;
@@ -848,13 +849,14 @@ export function highlightTrailingWhitespace(): Extension {
  */
 export function readOnlyRanges(ranges: Array<{ from: number; to: number }>): Extension {
   return EditorState.changeFilter.of((transaction) => {
-    for (const change of transaction.changes) {
+    // Iterate through changes using iter()
+    transaction.changes.iterChanges((fromA, toA) => {
       for (const range of ranges) {
-        if (change.from < range.to && change.to > range.from) {
+        if (fromA < range.to && toA > range.from) {
           return false; // Reject change
         }
       }
-    }
+    });
     return true; // Allow change
   });
 }

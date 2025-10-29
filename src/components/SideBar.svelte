@@ -2,7 +2,7 @@
 
 <script lang="ts">
     import { pluginsStore, visiblePanels } from '$lib/stores/plugins';
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount } from 'svelte';
   
     export let visible = true;
   

@@ -2,11 +2,19 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { type } from '@tauri-apps/api/os';
 
 // ============================================================================
 // CORE PLUGIN TYPES
 // ============================================================================
+
+/**
+ * Plugin hook event data
+ */
+export interface PluginHookEvent {
+  hookName: string;
+  data: any;
+  timestamp: number;
+}
 
 /**
  * Main plugin interface that all plugins must implement
@@ -779,7 +787,7 @@ class UiAPIImpl implements UiAPI {
   }
 
   async withProgress<T>(
-    options: ProgressOptions,
+    _options: ProgressOptions,
     task: (progress: Progress) => Promise<T>
   ): Promise<T> {
     const progress: Progress = {
