@@ -1,677 +1,786 @@
-# 2. keybindings.ts - Complete Implementation
+# keybindings.ts Architecture
+
+> **Source File**: [`src/lib/stores/keybindings.ts`](../../../src/lib/stores/keybindings.ts)
+> **Status**: ✅ Implemented
+> **Module Type**: Svelte Store - Keybinding Management
+> **Lines of Code**: 654
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Type System](#type-system)
+- [Built-in Schemes](#built-in-schemes)
+- [Store API](#store-api)
+- [Helper Functions](#helper-functions)
+- [Context System](#context-system)
+- [Event Handling](#event-handling)
+- [Derived Stores](#derived-stores)
+- [Related Documentation](#related-documentation)
+
+---
+
+## Overview
+
+`keybindings.ts` provides comprehensive keyboard shortcut management for Skretchpad. It includes multiple built-in keybinding schemes (Default, Vim, Emacs), custom binding support, context-aware execution, and cross-platform key handling.
+
+### Key Features
+
+- **Multiple Schemes**: Default, Vim, and Emacs keybinding schemes
+- **Custom Bindings**: User-defined shortcuts that overlay scheme bindings
+- **Context Awareness**: Conditional keybindings based on editor state
+- **Cross-Platform**: Automatic Cmd/Ctrl mapping for macOS/Windows
+- **Global Handling**: Window-level keydown event interception
+- **Backend Integration**: Load custom schemes from disk
+- **Visual Formatting**: Platform-appropriate display (⌘ vs Ctrl)
+
+---
+
+## Type System
+
+### KeyModifier
 
 ```typescript
-// src/lib/stores/keybindings.ts
-
-import { writable, derived, get } from 'svelte/store';
-import { invoke } from '@tauri-apps/api/tauri';
-import { listen } from '@tauri-apps/api/event';
-
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
-
 export type KeyModifier = 'Ctrl' | 'Shift' | 'Alt' | 'Cmd' | 'Meta';
+```
 
+**Source**: Line 11
+
+Modifier keys for keyboard shortcuts.
+
+### Keybinding
+
+```typescript
 export interface Keybinding {
-  key: string;
-  modifiers: KeyModifier[];
-  command: string;
-  when?: string; // Context condition
-  args?: Record<string, any>;
+  key: string;              // Key pressed (e.g., 'o', 'F3', '`')
+  modifiers: KeyModifier[]; // Active modifiers
+  command: string;          // Command ID to execute
+  when?: string;            // Optional context condition
+  args?: Record<string, any>; // Optional command arguments
 }
+```
 
+**Source**: Lines 13-19
+
+Individual keybinding definition.
+
+**Example**:
+```typescript
+{
+  key: 's',
+  modifiers: ['Ctrl'],
+  command: 'file.save',
+  when: 'editorFocused' // Optional
+}
+```
+
+### Keybindings
+
+```typescript
 export type Keybindings = Record<string, Keybinding>;
+```
 
+**Source**: Line 21
+
+Map of keybinding ID (e.g., `"Ctrl+S"`) to Keybinding object.
+
+### KeybindingScheme
+
+```typescript
 export interface KeybindingScheme {
-  name: string;
-  description: string;
-  author: string;
-  bindings: Keybindings;
+  name: string;         // Display name
+  description: string;  // User-facing description
+  author: string;       // Creator/maintainer
+  bindings: Keybindings; // All bindings in this scheme
 }
+```
 
+**Source**: Lines 23-28
+
+Complete keybinding scheme (theme).
+
+### KeybindingState
+
+```typescript
 export interface KeybindingState {
-  current: Keybindings;
-  currentScheme: KeybindingScheme | null;
-  available: KeybindingScheme[];
-  customBindings: Keybindings;
+  current: Keybindings;              // Active bindings (scheme + custom)
+  currentScheme: KeybindingScheme | null; // Active scheme
+  available: KeybindingScheme[];     // All loaded schemes
+  customBindings: Keybindings;       // User-defined bindings
   loading: boolean;
   error: string | null;
 }
+```
 
+**Source**: Lines 30-37
+
+Store state structure.
+
+### KeyEvent
+
+```typescript
 export interface KeyEvent {
-  key: string;
-  code: string;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  altKey: boolean;
-  metaKey: boolean;
+  key: string;      // Key identifier (e.g., 'a', 'Enter', 'F1')
+  code: string;     // Physical key code (e.g., 'KeyA', 'Enter')
+  ctrlKey: boolean; // Ctrl pressed
+  shiftKey: boolean; // Shift pressed
+  altKey: boolean;  // Alt pressed
+  metaKey: boolean; // Meta/Cmd pressed
 }
+```
 
-// ============================================================================
-// DEFAULT KEYBINDING SCHEMES
-// ============================================================================
+**Source**: Lines 39-46
 
+Normalized keyboard event.
+
+---
+
+## Built-in Schemes
+
+### DEFAULT_SCHEME
+
+```typescript
 const DEFAULT_SCHEME: KeybindingScheme = {
   name: 'Default',
   description: 'Default keybindings for skretchpad',
   author: 'skretchpad',
   bindings: {
-    // File operations
-    'Ctrl+O': {
-      key: 'o',
-      modifiers: ['Ctrl'],
-      command: 'file.open',
-    },
-    'Ctrl+S': {
-      key: 's',
-      modifiers: ['Ctrl'],
-      command: 'file.save',
-    },
-    'Ctrl+Shift+S': {
-      key: 's',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'file.saveAs',
-    },
-    'Ctrl+W': {
-      key: 'w',
-      modifiers: ['Ctrl'],
-      command: 'file.close',
-    },
-    'Ctrl+N': {
-      key: 'n',
-      modifiers: ['Ctrl'],
-      command: 'file.new',
-    },
-
-    // Edit operations
-    'Ctrl+Z': {
-      key: 'z',
-      modifiers: ['Ctrl'],
-      command: 'edit.undo',
-    },
-    'Ctrl+Y': {
-      key: 'y',
-      modifiers: ['Ctrl'],
-      command: 'edit.redo',
-    },
-    'Ctrl+Shift+Z': {
-      key: 'z',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'edit.redo',
-    },
-    'Ctrl+C': {
-      key: 'c',
-      modifiers: ['Ctrl'],
-      command: 'edit.copy',
-    },
-    'Ctrl+X': {
-      key: 'x',
-      modifiers: ['Ctrl'],
-      command: 'edit.cut',
-    },
-    'Ctrl+V': {
-      key: 'v',
-      modifiers: ['Ctrl'],
-      command: 'edit.paste',
-    },
-    'Ctrl+A': {
-      key: 'a',
-      modifiers: ['Ctrl'],
-      command: 'edit.selectAll',
-    },
-    'Ctrl+/': {
-      key: '/',
-      modifiers: ['Ctrl'],
-      command: 'edit.toggleComment',
-    },
-    'Ctrl+D': {
-      key: 'd',
-      modifiers: ['Ctrl'],
-      command: 'edit.duplicateLine',
-    },
-    'Ctrl+Shift+K': {
-      key: 'k',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'edit.deleteLine',
-    },
-
-    // Search operations
-    'Ctrl+F': {
-      key: 'f',
-      modifiers: ['Ctrl'],
-      command: 'search.find',
-    },
-    'Ctrl+H': {
-      key: 'h',
-      modifiers: ['Ctrl'],
-      command: 'search.replace',
-    },
-    'F3': {
-      key: 'F3',
-      modifiers: [],
-      command: 'search.findNext',
-    },
-    'Shift+F3': {
-      key: 'F3',
-      modifiers: ['Shift'],
-      command: 'search.findPrevious',
-    },
-
-    // View operations
-    'Ctrl+Shift+H': {
-      key: 'h',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'view.toggleChrome',
-    },
-    'Ctrl+P': {
-      key: 'p',
-      modifiers: ['Ctrl'],
-      command: 'view.togglePin',
-    },
-    'Ctrl+,': {
-      key: ',',
-      modifiers: ['Ctrl'],
-      command: 'view.openSettings',
-    },
-    'Ctrl+Shift+P': {
-      key: 'p',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'view.commandPalette',
-    },
-
-    // Navigation
-    'Ctrl+G': {
-      key: 'g',
-      modifiers: ['Ctrl'],
-      command: 'navigation.gotoLine',
-    },
-    'Ctrl+Tab': {
-      key: 'Tab',
-      modifiers: ['Ctrl'],
-      command: 'navigation.nextTab',
-    },
-    'Ctrl+Shift+Tab': {
-      key: 'Tab',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'navigation.previousTab',
-    },
-
-    // Formatting
-    'Shift+Alt+F': {
-      key: 'f',
-      modifiers: ['Shift', 'Alt'],
-      command: 'format.document',
-    },
-
-    // Git commands
-    'Ctrl+Shift+G': {
-      key: 'g',
-      modifiers: ['Ctrl', 'Shift'],
-      command: 'git.status',
-    },
-    'Ctrl+K': {
-      key: 'k',
-      modifiers: ['Ctrl'],
-      command: 'git.commit',
-      when: 'gitAvailable',
-    },
-
-    // Terminal
-    'Ctrl+`': {
-      key: '`',
-      modifiers: ['Ctrl'],
-      command: 'terminal.toggle',
-    },
-  },
+    // 30+ keybindings
+  }
 };
+```
 
+**Source**: Lines 52-224
+
+**Binding Categories**:
+
+#### File Operations
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Ctrl+O` | `file.open` | Open file |
+| `Ctrl+S` | `file.save` | Save file |
+| `Ctrl+Shift+S` | `file.saveAs` | Save as |
+| `Ctrl+W` | `file.close` | Close file |
+| `Ctrl+N` | `file.new` | New file |
+
+**Source**: Lines 57-83
+
+#### Edit Operations
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Ctrl+Z` | `edit.undo` | Undo |
+| `Ctrl+Y`, `Ctrl+Shift+Z` | `edit.redo` | Redo |
+| `Ctrl+C` | `edit.copy` | Copy |
+| `Ctrl+X` | `edit.cut` | Cut |
+| `Ctrl+V` | `edit.paste` | Paste |
+| `Ctrl+A` | `edit.selectAll` | Select all |
+| `Ctrl+/` | `edit.toggleComment` | Toggle comment |
+| `Ctrl+D` | `edit.duplicateLine` | Duplicate line |
+| `Ctrl+Shift+K` | `edit.deleteLine` | Delete line |
+
+**Source**: Lines 85-135
+
+#### Search Operations
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Ctrl+F` | `search.find` | Find |
+| `Ctrl+H` | `search.replace` | Replace |
+| `F3` | `search.findNext` | Find next |
+| `Shift+F3` | `search.findPrevious` | Find previous |
+
+**Source**: Lines 137-157
+
+#### View Operations
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Ctrl+Shift+H` | `view.toggleChrome` | Toggle title bar |
+| `Ctrl+P` | `view.togglePin` | Toggle window pin |
+| `Ctrl+,` | `view.openSettings` | Open settings |
+| `Ctrl+Shift+P` | `view.commandPalette` | Command palette |
+
+**Source**: Lines 159-179
+
+#### Navigation
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Ctrl+G` | `navigation.gotoLine` | Go to line |
+| `Ctrl+Tab` | `navigation.nextTab` | Next tab |
+| `Ctrl+Shift+Tab` | `navigation.previousTab` | Previous tab |
+
+**Source**: Lines 181-196
+
+#### Formatting
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Shift+Alt+F` | `format.document` | Format document |
+
+**Source**: Lines 198-203
+
+#### Git Commands
+| Keybinding | Command | Context | Description |
+|------------|---------|---------|-------------|
+| `Ctrl+Shift+G` | `git.status` | - | Git status |
+| `Ctrl+K` | `git.commit` | `gitAvailable` | Commit |
+
+**Source**: Lines 205-216
+
+#### Terminal
+| Keybinding | Command | Description |
+|------------|---------|-------------|
+| `Ctrl+\`` | `terminal.toggle` | Toggle terminal |
+
+**Source**: Lines 218-223
+
+### VIM_SCHEME
+
+```typescript
 const VIM_SCHEME: KeybindingScheme = {
   name: 'Vim',
   description: 'Vim-style keybindings',
   author: 'skretchpad',
   bindings: {
-    // Normal mode navigation
-    'h': {
-      key: 'h',
-      modifiers: [],
-      command: 'vim.moveLeft',
-      when: 'vim.normalMode',
-    },
-    'j': {
-      key: 'j',
-      modifiers: [],
-      command: 'vim.moveDown',
-      when: 'vim.normalMode',
-    },
-    'k': {
-      key: 'k',
-      modifiers: [],
-      command: 'vim.moveUp',
-      when: 'vim.normalMode',
-    },
-    'l': {
-      key: 'l',
-      modifiers: [],
-      command: 'vim.moveRight',
-      when: 'vim.normalMode',
-    },
-    'i': {
-      key: 'i',
-      modifiers: [],
-      command: 'vim.insertMode',
-      when: 'vim.normalMode',
-    },
-    'a': {
-      key: 'a',
-      modifiers: [],
-      command: 'vim.appendMode',
-      when: 'vim.normalMode',
-    },
-    'Escape': {
-      key: 'Escape',
-      modifiers: [],
-      command: 'vim.normalMode',
-      when: 'vim.insertMode',
-    },
-    // ... more vim bindings would go here
-  },
+    // Vim modal bindings
+  }
 };
+```
 
+**Source**: Lines 226-276
+
+**Key Bindings**:
+- `h`, `j`, `k`, `l` - Movement (when `vim.normalMode`)
+- `i` - Insert mode (when `vim.normalMode`)
+- `a` - Append mode (when `vim.normalMode`)
+- `Escape` - Normal mode (when `vim.insertMode`)
+
+### EMACS_SCHEME
+
+```typescript
 const EMACS_SCHEME: KeybindingScheme = {
   name: 'Emacs',
   description: 'Emacs-style keybindings',
   author: 'skretchpad',
   bindings: {
-    'Ctrl+F': {
-      key: 'f',
-      modifiers: ['Ctrl'],
-      command: 'emacs.moveForward',
-    },
-    'Ctrl+B': {
-      key: 'b',
-      modifiers: ['Ctrl'],
-      command: 'emacs.moveBackward',
-    },
-    'Ctrl+N': {
-      key: 'n',
-      modifiers: ['Ctrl'],
-      command: 'emacs.moveDown',
-    },
-    'Ctrl+P': {
-      key: 'p',
-      modifiers: ['Ctrl'],
-      command: 'emacs.moveUp',
-    },
-    'Ctrl+A': {
-      key: 'a',
-      modifiers: ['Ctrl'],
-      command: 'emacs.moveLineStart',
-    },
-    'Ctrl+E': {
-      key: 'e',
-      modifiers: ['Ctrl'],
-      command: 'emacs.moveLineEnd',
-    },
-    // ... more emacs bindings would go here
-  },
+    // Emacs control-key bindings
+  }
 };
+```
 
-// ============================================================================
-// KEYBINDING STORE
-// ============================================================================
+**Source**: Lines 278-315
 
-function createKeybindingStore() {
-  const { subscribe, set, update } = writable<KeybindingState>({
-    current: DEFAULT_SCHEME.bindings,
-    currentScheme: DEFAULT_SCHEME,
-    available: [DEFAULT_SCHEME, VIM_SCHEME, EMACS_SCHEME],
-    customBindings: {},
-    loading: false,
-    error: null,
-  });
+**Key Bindings**:
+- `Ctrl+F` - Move forward
+- `Ctrl+B` - Move backward
+- `Ctrl+N` - Move down
+- `Ctrl+P` - Move up
+- `Ctrl+A` - Move to line start
+- `Ctrl+E` - Move to line end
 
-  return {
-    subscribe,
+---
 
-    /
-     * Set keybinding scheme
-     */
-    setScheme: (scheme: KeybindingScheme) => {
-      update((state) => ({
-        ...state,
-        current: { ...scheme.bindings, ...state.customBindings },
-        currentScheme: scheme,
-      }));
-    },
+## Store API
 
-    /
-     * Load scheme by name
-     */
-    loadScheme: async (schemeName: string) => {
-      const state = get({ subscribe });
-      const scheme = state.available.find((s) => s.name === schemeName);
+### Initialization
 
-      if (scheme) {
-        keybindingStore.setScheme(scheme);
-      } else {
-        // Try loading from backend
-        try {
-          const loadedScheme = await invoke<KeybindingScheme>('load_keybinding_scheme', {
-            schemeName,
-          });
+```typescript
+const { subscribe, update } = writable<KeybindingState>({
+  current: DEFAULT_SCHEME.bindings,
+  currentScheme: DEFAULT_SCHEME,
+  available: [DEFAULT_SCHEME, VIM_SCHEME, EMACS_SCHEME],
+  customBindings: {},
+  loading: false,
+  error: null,
+});
+```
 
-          update((s) => ({
-            ...s,
-            available: [...s.available, loadedScheme],
-            current: { ...loadedScheme.bindings, ...s.customBindings },
-            currentScheme: loadedScheme,
-          }));
-        } catch (error) {
-          console.error('Failed to load keybinding scheme:', error);
-          throw error;
-        }
-      }
-    },
+**Source**: Lines 322-329
 
-    /
-     * Add custom keybinding
-     */
-    addCustomBinding: (id: string, binding: Keybinding) => {
-      update((state) => {
-        const customBindings = { ...state.customBindings, [id]: binding };
-        return {
-          ...state,
-          customBindings,
-          current: { ...state.current, [id]: binding },
-        };
-      });
-    },
+Store initializes with Default scheme active.
 
-    /
-     * Remove custom keybinding
-     */
-    removeCustomBinding: (id: string) => {
-      update((state) => {
-        const customBindings = { ...state.customBindings };
-        delete customBindings[id];
+### Methods
 
-        const current = { ...state.current };
-        delete current[id];
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `setScheme(scheme)` | `(scheme: KeybindingScheme) => void` | Switch to specified scheme |
+| `loadScheme(name)` | `(name: string) => Promise<void>` | Load scheme by name (local or backend) |
+| `addCustomBinding(id, binding)` | `(id: string, binding: Keybinding) => void` | Add user-defined binding |
+| `removeCustomBinding(id)` | `(id: string) => void` | Remove custom binding |
+| `resetToDefault()` | `() => void` | Reset to DEFAULT_SCHEME |
+| `clearCustomBindings()` | `() => void` | Remove all custom bindings |
+| `getCommand(event)` | `(event: KeyEvent) => string \| null` | Get command for key event |
+| `execute(event)` | `(event: KeyEvent) => Promise<boolean>` | Execute command for key event |
 
-        return {
-          ...state,
-          customBindings,
-          current,
-        };
-      });
-    },
+### setScheme
 
-    /
-     * Reset to default scheme
-     */
-    resetToDefault: () => {
-      update((state) => ({
-        ...state,
-        current: { ...DEFAULT_SCHEME.bindings, ...state.customBindings },
-        currentScheme: DEFAULT_SCHEME,
-      }));
-    },
+```typescript
+setScheme: (scheme: KeybindingScheme) => void
+```
 
-    /**
-     * Clear all custom bindings
-     */
-    clearCustomBindings: () => {
-      update((state) => ({
-        ...state,
-        customBindings: {},
-        current: state.currentScheme
-          ? state.currentScheme.bindings
-          : DEFAULT_SCHEME.bindings,
-      }));
-    },
+**Source**: Lines 337-346
 
-    /**
-     * Get command for key event
-     */
-    getCommand: (event: KeyEvent): string | null => {
-      const state = get({ subscribe });
-      const id = keybindingToString(eventToKeybinding(event));
+Switches to the specified keybinding scheme. Custom bindings are preserved and overlaid on top of the scheme.
 
-      const binding = state.current[id];
-      if (!binding) return null;
+**Example**:
+```typescript
+keybindingStore.setScheme(VIM_SCHEME);
+```
 
-      // Check context condition if specified
-      if (binding.when && !evaluateContext(binding.when)) {
-        return null;
-      }
+### loadScheme
 
-      return binding.command;
-    },
+```typescript
+loadScheme: async (schemeName: string) => Promise<void>
+```
 
-    /
-     * Execute keybinding
-     */
-    execute: async (event: KeyEvent): Promise<boolean> => {
-      const command = keybindingStore.getCommand(event);
-      if (!command) return false;
+**Source**: Lines 348-375
 
-      try {
-        await invoke('execute_command', { command });
-        return true;
-      } catch (error) {
-        console.error('Failed to execute command:', error);
-        return false;
-      }
-    },
-  };
+Loads a keybinding scheme by name. Checks local schemes first, then attempts to load from backend.
+
+**Process**:
+1. Search `available` array for scheme with matching name
+2. If found locally, call `setScheme()`
+3. If not found, invoke `load_keybinding_scheme` backend command
+4. Add loaded scheme to `available` array
+5. Apply scheme
+
+**Example**:
+```typescript
+await keybindingStore.loadScheme('Emacs');
+await keybindingStore.loadScheme('custom-scheme'); // From backend
+```
+
+### addCustomBinding
+
+```typescript
+addCustomBinding: (id: string, binding: Keybinding) => void
+```
+
+**Source**: Lines 377-389
+
+Adds a user-defined keybinding that overlays the current scheme.
+
+**Example**:
+```typescript
+keybindingStore.addCustomBinding('Ctrl+Shift+D', {
+  key: 'd',
+  modifiers: ['Ctrl', 'Shift'],
+  command: 'editor.duplicateDown'
+});
+```
+
+### removeCustomBinding
+
+```typescript
+removeCustomBinding: (id: string) => void
+```
+
+**Source**: Lines 391-407
+
+Removes a custom binding by ID.
+
+**Example**:
+```typescript
+keybindingStore.removeCustomBinding('Ctrl+Shift+D');
+```
+
+### resetToDefault
+
+```typescript
+resetToDefault: () => void
+```
+
+**Source**: Lines 410-419
+
+Resets current scheme to `DEFAULT_SCHEME` while preserving custom bindings.
+
+### clearCustomBindings
+
+```typescript
+clearCustomBindings: () => void
+```
+
+**Source**: Lines 421-432
+
+Removes all custom bindings and returns to pure scheme bindings.
+
+### getCommand
+
+```typescript
+getCommand: (event: KeyEvent) => string | null
+```
+
+**Source**: Lines 434-450
+
+Looks up the command associated with a key event.
+
+**Process**:
+1. Convert KeyEvent to Keybinding using `eventToKeybinding()`
+2. Convert Keybinding to string ID using `keybindingToString()`
+3. Lookup binding in `state.current`
+4. Check `when` context condition if specified
+5. Return command ID or `null`
+
+### execute
+
+```typescript
+execute: async (event: KeyEvent) => Promise<boolean>
+```
+
+**Source**: Lines 452-466
+
+Executes the command associated with a key event.
+
+**Returns**: `true` if command was executed, `false` if no binding found
+
+**Example**:
+```typescript
+const handled = await keybindingStore.execute({
+  key: 's',
+  code: 'KeyS',
+  ctrlKey: true,
+  shiftKey: false,
+  altKey: false,
+  metaKey: false
+});
+// Returns true and executes 'file.save' command
+```
+
+---
+
+## Helper Functions
+
+### eventToKeybinding
+
+```typescript
+function eventToKeybinding(event: KeyEvent): Keybinding
+```
+
+**Source**: Lines 476-494
+
+Converts a KeyEvent to a Keybinding object. Handles platform-specific modifier mapping (Ctrl vs Cmd on macOS).
+
+**Platform Handling**:
+- macOS: `metaKey` → `Cmd`
+- Windows/Linux: `ctrlKey` → `Ctrl`
+
+### keybindingToString
+
+```typescript
+function keybindingToString(binding: Keybinding): string
+```
+
+**Source**: Lines 499-518
+
+Converts a Keybinding to a string ID for lookup.
+
+**Example**:
+```typescript
+keybindingToString({
+  key: 's',
+  modifiers: ['Ctrl', 'Shift'],
+  command: 'file.saveAs'
+})
+// Returns: "Ctrl+Shift+s"
+```
+
+### parseKeybinding
+
+```typescript
+export function parseKeybinding(str: string): Keybinding
+```
+
+**Source**: Lines 520-533
+
+Parses a keybinding string into a Keybinding object.
+
+**Example**:
+```typescript
+parseKeybinding('Ctrl+Shift+S')
+// Returns: { key: 'S', modifiers: ['Ctrl', 'Shift'], command: '' }
+```
+
+### isMac
+
+```typescript
+function isMac(): boolean
+```
+
+**Source**: Lines 535-540
+
+Detects if running on macOS using platform detection.
+
+### formatKeybinding
+
+```typescript
+export function formatKeybinding(binding: Keybinding): string
+```
+
+**Source**: Lines 559-588
+
+Formats a keybinding for display with platform-appropriate symbols.
+
+**Platform-Specific Formatting**:
+
+| Modifier | macOS | Windows/Linux |
+|----------|-------|---------------|
+| Ctrl/Cmd | `⌘` | `Ctrl` |
+| Shift | `⇧` | `Shift` |
+| Alt | `⌥` | `Alt` |
+
+**Example**:
+```typescript
+formatKeybinding({ key: 's', modifiers: ['Ctrl'], command: 'file.save' })
+// macOS: "⌘S"
+// Windows: "Ctrl+S"
+```
+
+---
+
+## Context System
+
+### evaluateContext
+
+```typescript
+function evaluateContext(condition: string): boolean
+```
+
+**Source**: Lines 542-557
+
+Evaluates a context condition string.
+
+**Built-in Contexts**:
+- `vim.normalMode` - Vim normal mode active
+- `vim.insertMode` - Vim insert mode active
+- `gitAvailable` - Git integration available
+
+**Implementation Note**: Current implementation is simplified. Production version would integrate with actual editor state tracking.
+
+**Example**:
+```typescript
+{
+  key: 'k',
+  modifiers: ['Ctrl'],
+  command: 'git.commit',
+  when: 'gitAvailable' // Only active if git is available
 }
+```
 
-export const keybindingStore = createKeybindingStore();
+---
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
+## Event Handling
 
-/
- * Convert keyboard event to keybinding
- */
-function eventToKeybinding(event: KeyEvent): Keybinding {
-  const modifiers: KeyModifier[] = [];
+### Global Keydown Handler
 
-  if (event.ctrlKey || event.metaKey) {
-    modifiers.push(isMac() ? 'Cmd' : 'Ctrl');
-  }
-  if (event.shiftKey) {
-    modifiers.push('Shift');
-  }
-  if (event.altKey) {
-    modifiers.push('Alt');
+```typescript
+window.addEventListener('keydown', async (event) => {
+  // Skip input fields
+  if (event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement) {
+    return;
   }
 
-  return {
-    key: event.key,
-    modifiers,
-    command: '',
-  };
-}
+  const keyEvent: KeyEvent = { /* convert event */ };
+  const handled = await keybindingStore.execute(keyEvent);
 
-/
- * Convert keybinding to string ID
- */
-function keybindingToString(binding: Keybinding): string {
-  const parts: string[] = [];
-
-  if (binding.modifiers.includes('Ctrl') || binding.modifiers.includes('Cmd')) {
-    parts.push('Ctrl');
+  if (handled) {
+    event.preventDefault();
+    event.stopPropagation();
   }
-  if (binding.modifiers.includes('Shift')) {
-    parts.push('Shift');
-  }
-  if (binding.modifiers.includes('Alt')) {
-    parts.push('Alt');
-  }
+});
+```
 
-  parts.push(binding.key);
+**Source**: Lines 622-650
 
-  return parts.join('+');
-}
+**Process**:
+1. Ignore events from input/textarea elements
+2. Convert browser KeyboardEvent to KeyEvent
+3. Execute keybinding via store
+4. If command executed, prevent default browser behavior
 
-/
- * Parse keybinding string
- */
-export function parseKeybinding(str: string): Keybinding {
-  const parts = str.split('+');
-  const key = parts[parts.length - 1];
-  const modifiers = parts.slice(0, -1) as KeyModifier[];
+### Backend Event Listener
 
-  return {
-    key,
-    modifiers,
-    command: '',
-  };
-}
+```typescript
+listen<KeybindingScheme>('keybindings:changed', (event) => {
+  keybindingStore.setScheme(event.payload);
+});
+```
 
-/
- * Check if running on macOS
- */
-function isMac(): boolean {
-  return typeof window !== 'undefined' && /Mac/.test(window.navigator.platform);
-}
+**Source**: Lines 650-655
 
-/
- * Evaluate context condition
- */
-function evaluateContext(condition: string): boolean {
-  // This is a simplified implementation
-  // In production, this would be more robust with proper context tracking
+Listens for keybinding scheme changes from backend and applies them automatically.
 
-  const contexts = {
-    'vim.normalMode': false,
-    'vim.insertMode': false,
-    gitAvailable: true,
-    // Add more contexts as needed
-  };
+---
 
-  return contexts[condition] ?? true;
-}
+## Derived Stores
 
-/
- * Format keybinding for display
- */
-export function formatKeybinding(binding: Keybinding): string {
-  const parts: string[] = [];
+### currentSchemeName
 
-  const isMacOS = isMac();
-
-  for (const mod of binding.modifiers) {
-    if (mod === 'Ctrl' || mod === 'Cmd') {
-      parts.push(isMacOS ? '⌘' : 'Ctrl');
-    } else if (mod === 'Shift') {
-      parts.push(isMacOS ? '⇧' : 'Shift');
-    } else if (mod === 'Alt') {
-      parts.push(isMacOS ? '⌥' : 'Alt');
-    }
-  }
-
-  // Format key
-  const key = binding.key;
-  if (key === ' ') {
-    parts.push('Space');
-  } else if (key.length === 1) {
-    parts.push(key.toUpperCase());
-  } else {
-    parts.push(key);
-  }
-
-  return parts.join(isMacOS ? '' : '+');
-}
-
-// ============================================================================
-// DERIVED STORES
-// ============================================================================
-
-/
- * Current scheme name
- */
+```typescript
 export const currentSchemeName = derived(
   keybindingStore,
   ($kb) => $kb.currentScheme?.name || 'Custom'
 );
+```
 
-/
- * Has custom bindings
- */
+**Source**: Lines 594-600
+
+Returns current scheme name or `"Custom"` if no scheme active.
+
+### hasCustomBindings
+
+```typescript
 export const hasCustomBindings = derived(
   keybindingStore,
   ($kb) => Object.keys($kb.customBindings).length > 0
 );
+```
 
-/
- * All keybindings as array
- */
+**Source**: Lines 602-608
+
+Returns `true` if user has defined any custom bindings.
+
+### keybindingArray
+
+```typescript
 export const keybindingArray = derived(keybindingStore, ($kb) =>
   Object.entries($kb.current).map(([id, binding]) => ({
     id,
     ...binding,
   }))
 );
+```
 
-// ============================================================================
-// EVENT LISTENERS
-// ============================================================================
+**Source**: Lines 610-618
 
-// Global keyboard event handler
-if (typeof window !== 'undefined') {
-  window.addEventListener('keydown', async (event) => {
-    // Don't handle events from input fields
-    if (
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement
-    ) {
-      return;
-    }
+Converts keybindings Record to array for iteration.
 
-    const keyEvent: KeyEvent = {
-      key: event.key,
-      code: event.code,
-      ctrlKey: event.ctrlKey,
-      shiftKey: event.shiftKey,
-      altKey: event.altKey,
-      metaKey: event.metaKey,
-    };
+**Usage**:
+```typescript
+{#each $keybindingArray as binding}
+  <div class="keybinding">
+    <span>{formatKeybinding(binding)}</span>
+    <span>{binding.command}</span>
+  </div>
+{/each}
+```
 
-    const handled = await keybindingStore.execute(keyEvent);
+---
 
-    if (handled) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  });
+## Usage Examples
 
-  // Listen for keybinding changes from backend
-  listen<KeybindingScheme>('keybindings:changed', (event) => {
-    keybindingStore.setScheme(event.payload);
-  }).catch(console.error);
+### Switch Keybinding Scheme
+
+```typescript
+import { keybindingStore } from '$lib/stores/keybindings';
+
+// Switch to Vim mode
+keybindingStore.setScheme(VIM_SCHEME);
+
+// Load from backend
+await keybindingStore.loadScheme('custom-ide-scheme');
+```
+
+### Add Custom Keybinding
+
+```typescript
+keybindingStore.addCustomBinding('Ctrl+Shift+D', {
+  key: 'd',
+  modifiers: ['Ctrl', 'Shift'],
+  command: 'editor.duplicateDown'
+});
+```
+
+### Display Keybindings in UI
+
+```typescript
+import { keybindingArray, formatKeybinding } from '$lib/stores/keybindings';
+
+{#each $keybindingArray as binding}
+  <div class="keybinding-row">
+    <kbd>{formatKeybinding(binding)}</kbd>
+    <span>{binding.command}</span>
+  </div>
+{/each}
+```
+
+### Manual Command Execution
+
+```typescript
+// Simulate Ctrl+S press
+const result = await keybindingStore.execute({
+  key: 's',
+  code: 'KeyS',
+  ctrlKey: true,
+  shiftKey: false,
+  altKey: false,
+  metaKey: false
+});
+
+if (result) {
+  console.log('File saved via keybinding');
 }
 ```
 
 ---
 
-## Integration Dependencies Recap
+## Related Documentation
 
-### Files Created
+### Components Using This Store
 
-```text
-✅ src/lib/stores/theme.ts (600 lines)
-   └─> Complete theme management system
-   └─> Default themes included
-   └─> CSS variable application
-   └─> Backend integration
+- **[App.svelte](./0_App.svelte.md)** - Root component, initializes keybindings
+- **[Editor.svelte](./2_Editor.svelte.md)** - Editor receives keyboard events
+- **Settings Component** (planned) - Keybinding customization UI
 
-✅ src/lib/stores/keybindings.ts (550 lines)
-   └─> Complete keybinding management
-   └─> Multiple schemes (Default, Vim, Emacs)
-   └─> Custom binding support
-   └─> Context-aware execution
+### Backend Commands
+
+- **`load_keybinding_scheme(schemeName)`** - Load scheme from disk
+- **`save_keybinding_scheme(scheme)`** - Save custom scheme
+- **`execute_command(command)`** - Execute command by ID
+
+### Related Frontend Files
+
+- **[editor.ts](./12_editor.ts.md)** - Editor store that receives keybinding commands
+- **[plugins.ts](./13_plugins.ts.md)** - Plugins can register custom commands
+
+### Project Documentation
+
+- **[STATUS.md](../../STATUS.md)** - Development progress
+- **[Technical Details](../3_technical-details.md)** - Keybinding system architecture
+
+---
+
+## Implementation Notes
+
+### Custom vs Scheme Bindings
+
+Custom bindings are merged with scheme bindings using spread operator:
+
+```typescript
+current: { ...scheme.bindings, ...state.customBindings }
 ```
+
+This means custom bindings always override scheme bindings with the same ID.
+
+### Platform Detection
+
+Platform detection uses `navigator.platform` which is deprecated but still widely supported. Future versions should use `navigator.userAgentData.platform` (when available).
+
+### Context Evaluation
+
+The current context system is simplified. Production implementation should:
+- Track editor mode state (normal, insert, visual)
+- Track git availability dynamically
+- Support complex conditions (e.g., `gitAvailable && editorFocused`)
+- Provide context registration API for plugins
+
+### Performance Considerations
+
+- Keybinding lookup is O(1) using Record
+- Event handler runs on every keydown (unavoidable)
+- Context evaluation should be optimized for frequently-checked contexts
+- Consider caching formatted keybindings for display
+
+---
+
+**Documentation Version**: 2.0.0
+**Module Version**: 0.1.0
+**Accuracy**: Verified against source code 2025-10-28

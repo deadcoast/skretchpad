@@ -1,32 +1,45 @@
-# 1. editor.ts - Editor State Management
+# editor.ts Architecture
+
+> **Source File**: [`src/lib/stores/editor.ts`](../../../src/lib/stores/editor.ts)
+> **Status**: ✅ Implemented
+> **Module Type**: Svelte Store - Editor State Management
+> **Lines of Code**: 737
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Type Definitions](#type-definitions)
+- [Store API](#store-api)
+- [Tab Management](#tab-management)
+- [File Operations](#file-operations)
+- [Derived Stores](#derived-stores)
+- [Event Listeners](#event-listeners)
+- [Related Documentation](#related-documentation)
+
+---
+
+## Overview
+
+`editor.ts` provides comprehensive state management for the editor system using Svelte stores. It implements a **tab-based file management system** with auto-save, dirty state tracking, and editor state persistence.
+
+### Key Features
+
+- **Multi-tab support**: Open multiple files simultaneously
+- **Auto-save**: Debounced auto-save (1s delay)
+- **State persistence**: Saves/restores cursor position and scroll state
+- **Dirty tracking**: Tracks unsaved changes per file
+- **File events**: Emits events for plugin integration
+- **Recent actions**: Tracks file operations for undo/redo
+
+---
+
+## Type Definitions
+
+### OpenFile
 
 ```typescript
-// src/lib/stores/editor.ts
-
-import { writable, derived, get } from 'svelte/store';
-import type { EditorView } from '@codemirror/view';
-import { invoke } from '@tauri-apps/api/tauri';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import {
-  createEditor,
-  setLanguage,
-  detectLanguage,
-  updateTheme,
-  destroyEditor,
-  getEditorContent,
-  setEditorContent,
-  getCursorPosition,
-  saveEditorState,
-  restoreEditorState,
-  type EditorStateSnapshot,
-} from './editor-loader';
-import { themeStore } from './theme';
-import { debounce } from '../utils/debounce';
-
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
-
 export interface OpenFile {
   path: string;
   name: string;
@@ -36,13 +49,29 @@ export interface OpenFile {
   snapshot?: EditorStateSnapshot;
   lastSaved?: number;
 }
+```
 
+**Source**: Lines 27-35
+
+Represents an open file with all metadata.
+
+### Tab
+
+```typescript
 export interface Tab {
   id: string;
   file: OpenFile;
   active: boolean;
 }
+```
 
+**Source**: Lines 37-41
+
+Represents a tab containing an open file.
+
+### EditorState
+
+```typescript
 export interface EditorState {
   tabs: Tab[];
   activeTabId: string | null;
@@ -54,688 +83,417 @@ export interface EditorState {
   isLoading: boolean;
   error: string | null;
 }
+```
 
+**Source**: Lines 43-53
+
+Main store state structure.
+
+### EditorAction
+
+```typescript
 export interface EditorAction {
   type: 'open' | 'save' | 'close' | 'create' | 'rename';
   file: string;
   timestamp: number;
 }
+```
 
-// ============================================================================
-// EDITOR STORE
-// ============================================================================
-
-function createEditorStore() {
-  const { subscribe, set, update } = writable<EditorState>({
-    tabs: [],
-    activeTabId: null,
-    editorView: null,
-    cursorPosition: { line: 1, column: 1 },
-    selection: '',
-    canUndo: false,
-    canRedo: false,
-    isLoading: false,
-    error: null,
-  });
-
-  // Recent actions for undo/redo
-  const recentActions: EditorAction[] = [];
-
-  // Debounced save function
-  const debouncedSave = debounce(async (path: string, content: string) => {
-    try {
-      await invoke('save_file', { path, content });
-      
-      // Mark file as not dirty
-      update((state) => ({
-        ...state,
-        tabs: state.tabs.map((tab) =>
-          tab.file.path === path
-            ? { ...tab, file: { ...tab.file, isDirty: false, lastSaved: Date.now() } }
-            : tab
-        ),
-      }));
-
-      // Emit save event for plugins
-      await invoke('emit_editor_event', {
-        event: 'file:save',
-        data: { path },
-      });
-    } catch (error) {
-      console.error('Failed to save file:', error);
-      update((state) => ({
-        ...state,
-        error: `Failed to save file: ${error}`,
-      }));
-    }
-  }, 1000);
-
-  return {
-    subscribe,
-
-    /
-     * Initialize editor with container element
-     */
-    async initialize(container: HTMLElement): Promise<void> {
-      const state = get({ subscribe });
-
-      if (state.editorView) {
-        console.warn('Editor already initialized');
-        return;
-      }
-
-      try {
-        const theme = get(themeStore).current;
-
-        const view = await createEditor(container, {
-          theme: theme || undefined,
-          onChange: (viewUpdate) => {
-            const content = getEditorContent(viewUpdate.view);
-            const state = get({ subscribe });
-            
-            if (state.activeTabId) {
-              // Mark file as dirty
-              update((s) => ({
-                ...s,
-                tabs: s.tabs.map((tab) =>
-                  tab.id === s.activeTabId
-                    ? { ...tab, file: { ...tab.file, content, isDirty: true } }
-                    : tab
-                ),
-              }));
-
-              // Auto-save
-              const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
-              if (activeTab) {
-                debouncedSave(activeTab.file.path, content);
-              }
-            }
-          },
-          onCursorMove: (viewUpdate) => {
-            const position = getCursorPosition(viewUpdate.view);
-            update((state) => ({
-              ...state,
-              cursorPosition: position,
-            }));
-          },
-          onSelection: (viewUpdate) => {
-            const selection = viewUpdate.state.selection.main;
-            const text = viewUpdate.state.doc.sliceString(selection.from, selection.to);
-            update((state) => ({
-              ...state,
-              selection: text,
-            }));
-          },
-        });
-
-        update((state) => ({
-          ...state,
-          editorView: view,
-        }));
-
-        // Subscribe to theme changes
-        themeStore.subscribe(($theme) => {
-          if ($theme.current && view) {
-            updateTheme(view, $theme.current);
-          }
-        });
-      } catch (error) {
-        console.error('Failed to initialize editor:', error);
-        update((state) => ({
-          ...state,
-          error: `Failed to initialize editor: ${error}`,
-        }));
-      }
-    },
-
-    /
-     * Open a file in a new tab
-     */
-    async openFile(path: string): Promise<void> {
-      update((state) => ({ ...state, isLoading: true, error: null }));
-
-      try {
-        // Check if file is already open
-        const state = get({ subscribe });
-        const existingTab = state.tabs.find((tab) => tab.file.path === path);
-
-        if (existingTab) {
-          // Switch to existing tab
-          await editorStore.switchTab(existingTab.id);
-          update((s) => ({ ...s, isLoading: false }));
-          return;
-        }
-
-        // Read file content
-        const content = await invoke<string>('read_file', { path });
-
-        // Get file name
-        const name = path.split('/').pop() || 'Untitled';
-
-        // Detect language
-        const language = detectLanguage(name);
-
-        // Create new file object
-        const file: OpenFile = {
-          path,
-          name,
-          content,
-          language: language || undefined,
-          isDirty: false,
-          lastSaved: Date.now(),
-        };
-
-        // Create new tab
-        const tab: Tab = {
-          id: `tab-${Date.now()}-${Math.random()}`,
-          file,
-          active: true,
-        };
-
-        update((state) => {
-          // Save current editor state
-          const currentTab = state.tabs.find((t) => t.id === state.activeTabId);
-          if (currentTab && state.editorView) {
-            currentTab.file.snapshot = saveEditorState(state.editorView);
-          }
-
-          return {
-            ...state,
-            tabs: [
-              ...state.tabs.map((t) => ({ ...t, active: false })),
-              tab,
-            ],
-            activeTabId: tab.id,
-            isLoading: false,
-          };
-        });
-
-        // Update editor content
-        await editorStore.updateEditorContent(content, language || null);
-
-        // Record action
-        recentActions.push({
-          type: 'open',
-          file: path,
-          timestamp: Date.now(),
-        });
-
-        // Emit event for plugins
-        await invoke('emit_editor_event', {
-          event: 'file:open',
-          data: { path, name },
-        });
-      } catch (error) {
-        console.error('Failed to open file:', error);
-        update((state) => ({
-          ...state,
-          isLoading: false,
-          error: `Failed to open file: ${error}`,
-        }));
-      }
-    },
-
-    /
-     * Create a new untitled file
-     */
-    async createFile(): Promise<void> {
-      const file: OpenFile = {
-        path: '',
-        name: 'Untitled',
-        content: '',
-        isDirty: true,
-      };
-
-      const tab: Tab = {
-        id: `tab-${Date.now()}-${Math.random()}`,
-        file,
-        active: true,
-      };
-
-      update((state) => ({
-        ...state,
-        tabs: [
-          ...state.tabs.map((t) => ({ ...t, active: false })),
-          tab,
-        ],
-        activeTabId: tab.id,
-      }));
-
-      await editorStore.updateEditorContent('', null);
-
-      recentActions.push({
-        type: 'create',
-        file: 'Untitled',
-        timestamp: Date.now(),
-      });
-    },
-
-    /
-     * Save the active file
-     */
-    async saveFile(): Promise<void> {
-      const state = get({ subscribe });
-
-      if (!state.activeTabId) {
-        return;
-      }
-
-      const activeTab = state.tabs.find((tab) => tab.id === state.activeTabId);
-
-      if (!activeTab) {
-        return;
-      }
-
-      // If file has no path, prompt for save location
-      if (!activeTab.file.path) {
-        await editorStore.saveFileAs();
-        return;
-      }
-
-      try {
-        const content = state.editorView
-          ? getEditorContent(state.editorView)
-          : activeTab.file.content;
-
-        await invoke('save_file', {
-          path: activeTab.file.path,
-          content,
-        });
-
-        update((s) => ({
-          ...s,
-          tabs: s.tabs.map((tab) =>
-            tab.id === s.activeTabId
-              ? {
-                  ...tab,
-                  file: {
-                    ...tab.file,
-                    content,
-                    isDirty: false,
-                    lastSaved: Date.now(),
-                  },
-                }
-              : tab
-          ),
-        }));
-
-        recentActions.push({
-          type: 'save',
-          file: activeTab.file.path,
-          timestamp: Date.now(),
-        });
-
-        // Emit event for plugins
-        await invoke('emit_editor_event', {
-          event: 'file:save',
-          data: { path: activeTab.file.path },
-        });
-      } catch (error) {
-        console.error('Failed to save file:', error);
-        update((s) => ({
-          ...s,
-          error: `Failed to save file: ${error}`,
-        }));
-      }
-    },
-
-    /
-     * Save file with new path (Save As)
-     */
-    async saveFileAs(): Promise<void> {
-      try {
-        const path = await invoke<string>('show_save_dialog');
-
-        if (!path) {
-          return;
-        }
-
-        const state = get({ subscribe });
-
-        if (!state.activeTabId || !state.editorView) {
-          return;
-        }
-
-        const content = getEditorContent(state.editorView);
-        const name = path.split('/').pop() || 'Untitled';
-
-        await invoke('save_file', { path, content });
-
-        update((s) => ({
-          ...s,
-          tabs: s.tabs.map((tab) =>
-            tab.id === s.activeTabId
-              ? {
-                  ...tab,
-                  file: {
-                    ...tab.file,
-                    path,
-                    name,
-                    content,
-                    isDirty: false,
-                    lastSaved: Date.now(),
-                  },
-                }
-              : tab
-          ),
-        }));
-
-        recentActions.push({
-          type: 'save',
-          file: path,
-          timestamp: Date.now(),
-        });
-      } catch (error) {
-        console.error('Failed to save file:', error);
-        update((s) => ({
-          ...s,
-          error: `Failed to save file: ${error}`,
-        }));
-      }
-    },
-
-    /
-     * Close a tab
-     */
-    async closeTab(tabId: string): Promise<void> {
-      const state = get({ subscribe });
-      const tab = state.tabs.find((t) => t.id === tabId);
-
-      if (!tab) {
-        return;
-      }
-
-      // Check if file is dirty
-      if (tab.file.isDirty) {
-        const shouldSave = await invoke<boolean>('show_confirm_dialog', {
-          title: 'Unsaved Changes',
-          message: `Do you want to save changes to ${tab.file.name}?`,
-        });
-
-        if (shouldSave) {
-          // Switch to tab and save
-          await editorStore.switchTab(tabId);
-          await editorStore.saveFile();
-        }
-      }
-
-      update((s) => {
-        const newTabs = s.tabs.filter((t) => t.id !== tabId);
-        
-        // If closing active tab, activate another tab
-        let newActiveTabId = s.activeTabId;
-        if (s.activeTabId === tabId) {
-          newActiveTabId = newTabs.length > 0 ? newTabs[newTabs.length - 1].id : null;
-        }
-
-        return {
-          ...s,
-          tabs: newTabs,
-          activeTabId: newActiveTabId,
-        };
-      });
-
-      // If there's a new active tab, load its content
-      const newState = get({ subscribe });
-      if (newState.activeTabId) {
-        const newActiveTab = newState.tabs.find((t) => t.id === newState.activeTabId);
-        if (newActiveTab) {
-          await editorStore.updateEditorContent(
-            newActiveTab.file.content,
-            newActiveTab.file.language || null
-          );
-
-          // Restore editor state if available
-          if (newActiveTab.file.snapshot && newState.editorView) {
-            restoreEditorState(newState.editorView, newActiveTab.file.snapshot);
-          }
-        }
-      }
-
-      recentActions.push({
-        type: 'close',
-        file: tab.file.path,
-        timestamp: Date.now(),
-      });
-
-      // Emit event for plugins
-      await invoke('emit_editor_event', {
-        event: 'file:close',
-        data: { path: tab.file.path },
-      });
-    },
-
-    /
-     * Switch to a different tab
-     */
-    async switchTab(tabId: string): Promise<void> {
-      const state = get({ subscribe });
-
-      // Save current tab state
-      const currentTab = state.tabs.find((t) => t.id === state.activeTabId);
-      if (currentTab && state.editorView) {
-        currentTab.file.snapshot = saveEditorState(state.editorView);
-      }
-
-      update((s) => ({
-        ...s,
-        tabs: s.tabs.map((tab) => ({
-          ...tab,
-          active: tab.id === tabId,
-        })),
-        activeTabId: tabId,
-      }));
-
-      // Load new tab content
-      const newTab = state.tabs.find((t) => t.id === tabId);
-      if (newTab) {
-        await editorStore.updateEditorContent(
-          newTab.file.content,
-          newTab.file.language || null
-        );
-
-        // Restore editor state if available
-        if (newTab.file.snapshot && state.editorView) {
-          restoreEditorState(state.editorView, newTab.file.snapshot);
-        }
-      }
-    },
-
-    /
-     * Update editor content and language
-     */
-    async updateEditorContent(content: string, language: string | null): Promise<void> {
-      const state = get({ subscribe });
-
-      if (!state.editorView) {
-        return;
-      }
-
-      setEditorContent(state.editorView, content);
-
-      if (language) {
-        await setLanguage(state.editorView, language);
-      }
-    },
-
-    /
-     * Get active file
-     */
-    getActiveFile(): OpenFile | null {
-      const state = get({ subscribe });
-      const activeTab = state.tabs.find((tab) => tab.id === state.activeTabId);
-      return activeTab?.file || null;
-    },
-
-    /
-     * Close all tabs
-     */
-    async closeAll(): Promise<void> {
-      const state = get({ subscribe });
-      
-      for (const tab of state.tabs) {
-        await editorStore.closeTab(tab.id);
-      }
-    },
-
-    /
-     * Save all files
-     */
-    async saveAll(): Promise<void> {
-      const state = get({ subscribe });
-      
-      for (const tab of state.tabs) {
-        if (tab.file.isDirty && tab.file.path) {
-          await editorStore.switchTab(tab.id);
-          await editorStore.saveFile();
-        }
-      }
-    },
-
-    /
-     * Reload file from disk
-     */
-    async reloadFile(path: string): Promise<void> {
-      try {
-        const content = await invoke<string>('read_file', { path });
-
-        update((state) => ({
-          ...state,
-          tabs: state.tabs.map((tab) =>
-            tab.file.path === path
-              ? {
-                  ...tab,
-                  file: {
-                    ...tab.file,
-                    content,
-                    isDirty: false,
-                    lastSaved: Date.now(),
-                  },
-                }
-              : tab
-          ),
-        }));
-
-        // If this is the active file, update editor
-        const state = get({ subscribe });
-        const activeTab = state.tabs.find((t) => t.id === state.activeTabId);
-        if (activeTab && activeTab.file.path === path) {
-          await editorStore.updateEditorContent(content, activeTab.file.language || null);
-        }
-      } catch (error) {
-        console.error('Failed to reload file:', error);
-        update((state) => ({
-          ...state,
-          error: `Failed to reload file: ${error}`,
-        }));
-      }
-    },
-
-    /
-     * Get recent actions
-     */
-    getRecentActions(): EditorAction[] {
-      return [...recentActions];
-    },
-
-    /
-     * Clear error
-     */
-    clearError(): void {
-      update((state) => ({
-        ...state,
-        error: null,
-      }));
-    },
-
-    /
-     * Cleanup editor
-     */
-    cleanup(): void {
-      const state = get({ subscribe });
-
-      if (state.editorView) {
-        destroyEditor(state.editorView);
-      }
-
-      set({
-        tabs: [],
-        activeTabId: null,
-        editorView: null,
-        cursorPosition: { line: 1, column: 1 },
-        selection: '',
-        canUndo: false,
-        canRedo: false,
-        isLoading: false,
-        error: null,
-      });
-    },
-  };
-}
-
-export const editorStore = createEditorStore();
-
-// ============================================================================
-// DERIVED STORES
-// ============================================================================
-
-/
- * Active file
- */
+**Source**: Lines 55-59
+
+Tracks recent file operations.
+
+---
+
+## Store API
+
+### Core Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `initialize(container)` | `(container: HTMLElement) => Promise<void>` | Initializes CodeMirror editor |
+| `openFile(path)` | `(path: string) => Promise<void>` | Opens file in new tab |
+| `createFile()` | `() => Promise<void>` | Creates new untitled file |
+| `saveFile()` | `() => Promise<void>` | Saves active file |
+| `saveFileAs()` | `() => Promise<void>` | Save with new path |
+| `closeTab(tabId)` | `(tabId: string) => Promise<void>` | Closes specific tab |
+| `switchTab(tabId)` | `(tabId: string) => Promise<void>` | Switches to different tab |
+
+### Bulk Operations
+
+| Method | Description | Source |
+|--------|-------------|--------|
+| `saveAll()` | Saves all dirty files | Lines 581-590 |
+| `closeAll()` | Closes all tabs | Lines 570-576 |
+| `reloadFile(path)` | Reloads file from disk | Lines 595-629 |
+
+### Utility Methods
+
+| Method | Description | Source |
+|--------|-------------|--------|
+| `getActiveFile()` | Returns active file or null | Lines 561-565 |
+| `getRecentActions()` | Returns action history | Lines 634-636 |
+| `clearError()` | Clears error state | Lines 641-646 |
+| `cleanup()` | Destroys editor and resets state | Lines 651-670 |
+| `updateEditorContent(content, language)` | Updates editor with new content | Lines 544-556 |
+
+---
+
+## Tab Management
+
+### Opening Files
+
+```typescript
+await editorStore.openFile('/path/to/file.rs');
+```
+
+**Flow**:
+1. Check if file already open → switch to existing tab
+2. Read file content via `invoke('read_file')`
+3. Detect language from file extension
+4. Create `OpenFile` and `Tab` objects
+5. Save current tab's editor state
+6. Add new tab and mark as active
+7. Update editor content
+8. Emit `file:open` event for plugins
+
+**Source**: Lines 191-273
+
+### Switching Tabs
+
+```typescript
+await editorStore.switchTab('tab-123');
+```
+
+**Flow**:
+1. Save current tab's editor state (cursor, scroll)
+2. Update active tab in store
+3. Load new tab's content into editor
+4. Restore previous editor state if available
+
+**Source**: Lines 508-539
+
+### Closing Tabs
+
+```typescript
+await editorStore.closeTab('tab-123');
+```
+
+**Flow**:
+1. Check if file is dirty
+2. Prompt user to save if needed
+3. Remove tab from array
+4. Activate next tab if closing active tab
+5. Load activated tab's content
+6. Emit `file:close` event
+
+**Source**: Lines 437-503
+
+---
+
+## File Operations
+
+### Auto-Save System
+
+```typescript
+const debouncedSave = debounce(async (path: string, content: string) => {
+  await invoke('save_file', { path, content });
+  // Mark file as clean
+  // Emit save event
+}, 1000);
+```
+
+**Source**: Lines 82-108
+
+- **Debounce**: 1 second delay
+- **Trigger**: Content change in editor
+- **Behavior**: Automatically saves without user interaction
+
+### Manual Save
+
+```typescript
+await editorStore.saveFile();
+```
+
+**Flow**:
+1. Get active tab
+2. If no path, prompt for save location
+3. Get content from editor view
+4. Call `invoke('save_file')`
+5. Mark file as clean
+6. Record save action
+7. Emit `file:save` event
+
+**Source**: Lines 313-377
+
+### Save As
+
+```typescript
+await editorStore.saveFileAs();
+```
+
+**Flow**:
+1. Show save dialog via `invoke('show_save_dialog')`
+2. Save file to new path
+3. Update tab with new path and name
+4. Detect language for new extension
+5. Mark as clean
+
+**Source**: Lines 382-432
+
+---
+
+## Derived Stores
+
+### activeFile
+
+```typescript
 export const activeFile = derived(editorStore, ($editor) => {
   const activeTab = $editor.tabs.find((tab) => tab.id === $editor.activeTabId);
   return activeTab?.file || null;
 });
+```
 
-/
- * Has unsaved changes
- */
+**Source**: Lines 682-685
+
+Returns the currently active file or `null`.
+
+### hasUnsavedChanges
+
+```typescript
 export const hasUnsavedChanges = derived(editorStore, ($editor) =>
   $editor.tabs.some((tab) => tab.file.isDirty)
 );
+```
 
-/
- * Open file count
- */
+**Source**: Lines 690-692
+
+Returns `true` if any tab has unsaved changes.
+
+### openFileCount
+
+```typescript
 export const openFileCount = derived(
   editorStore,
   ($editor) => $editor.tabs.length
 );
+```
 
-/
- * Active tab
- */
+**Source**: Lines 697-700
+
+Returns the number of open tabs.
+
+### activeTab
+
+```typescript
 export const activeTab = derived(editorStore, ($editor) =>
   $editor.tabs.find((tab) => tab.id === $editor.activeTabId)
 );
+```
 
-// ============================================================================
-// EVENT LISTENERS
-// ============================================================================
+**Source**: Lines 705-707
 
-// Listen for file changes from backend
-if (typeof window !== 'undefined') {
-  listen<{ path: string }>('file:changed', async (event) => {
-    const { path } = event.payload;
-    await editorStore.reloadFile(path);
-  }).catch(console.error);
+Returns the active `Tab` object or `undefined`.
 
-  listen<{ path: string }>('file:deleted', async (event) => {
-    const { path } = event.payload;
-    const state = get(editorStore);
-    const tab = state.tabs.find((t) => t.file.path === path);
-    if (tab) {
-      await editorStore.closeTab(tab.id);
-    }
-  }).catch(console.error);
+---
 
-  // Handle before unload
-  window.addEventListener('beforeunload', (e) => {
-    const state = get(editorStore);
-    if (state.tabs.some((tab) => tab.file.isDirty)) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
+## Event Listeners
+
+### Backend File Events
+
+```typescript
+// Reload file when changed externally
+listen<{ path: string }>('file:changed', async (event) => {
+  await editorStore.reloadFile(event.payload.path);
+});
+
+// Close tab when file deleted
+listen<{ path: string }>('file:deleted', async (event) => {
+  const tab = state.tabs.find((t) => t.file.path === event.payload.path);
+  if (tab) await editorStore.closeTab(tab.id);
+});
+```
+
+**Source**: Lines 714-727
+
+### Browser Events
+
+```typescript
+// Prevent closing with unsaved changes
+window.addEventListener('beforeunload', (e) => {
+  const state = get(editorStore);
+  if (state.tabs.some((tab) => tab.file.isDirty)) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+```
+
+**Source**: Lines 730-736
+
+Prevents accidental data loss by prompting when closing browser with unsaved changes.
+
+---
+
+## Editor Initialization
+
+### Setup Flow
+
+```typescript
+await editorStore.initialize(containerElement);
+```
+
+**Process**:
+1. Check if already initialized
+2. Get current theme from `themeStore`
+3. Create CodeMirror editor with:
+   - `onChange`: Marks file dirty, triggers auto-save
+   - `onCursorMove`: Updates cursor position in store
+   - `onSelection`: Updates selection text in store
+4. Store editor view in state
+5. Subscribe to theme changes
+
+**Source**: Lines 116-186
+
+### Editor Callbacks
+
+| Callback | Trigger | Action |
+|----------|---------|--------|
+| `onChange` | Content modified | Mark dirty, auto-save, update content in tab |
+| `onCursorMove` | Cursor position changes | Update `cursorPosition` in store |
+| `onSelection` | Text selected | Update `selection` in store |
+
+---
+
+## State Persistence
+
+### Saving State
+
+```typescript
+// Before switching tabs
+if (currentTab && state.editorView) {
+  currentTab.file.snapshot = saveEditorState(state.editorView);
 }
 ```
+
+**What's saved**:
+- Cursor position
+- Scroll position
+- Selection ranges
+
+**Source**: Lines 233-236, 512-515
+
+### Restoring State
+
+```typescript
+// After switching tabs
+if (newTab.file.snapshot && state.editorView) {
+  restoreEditorState(state.editorView, newTab.file.snapshot);
+}
+```
+
+**Source**: Lines 485-488, 534-537
+
+---
+
+## Usage Examples
+
+### Opening and Editing Files
+
+```typescript
+import { editorStore, activeFile } from '$lib/stores/editor';
+
+// Initialize editor
+await editorStore.initialize(containerElement);
+
+// Open file
+await editorStore.openFile('/path/to/file.ts');
+
+// Get active file (reactive)
+$: currentFile = $activeFile;
+
+// Save file
+await editorStore.saveFile();
+```
+
+### Tab Management
+
+```typescript
+import { editorStore, openFileCount, hasUnsavedChanges } from '$lib/stores/editor';
+
+// Create new file
+await editorStore.createFile();
+
+// Switch tabs
+await editorStore.switchTab(tabId);
+
+// Close tab
+await editorStore.closeTab(tabId);
+
+// Check for unsaved changes
+if ($hasUnsavedChanges) {
+  await editorStore.saveAll();
+}
+```
+
+---
+
+## Related Documentation
+
+### Dependencies
+
+- **[editor-loader.ts](./5_editor-loader.ts.md)** - CodeMirror setup functions
+- **[theme.ts](./6_theme.ts.md)** - Theme store
+- **[debounce.ts](./14_debounce.ts.md)** - Debounce utility for auto-save
+
+### Components Using This Store
+
+- **[Editor.svelte](./2_Editor.svelte.md)** - Main editor component
+- **[StatusBar.svelte](./StatusBar.svelte.md)** - Displays cursor position, selection
+
+### Backend Commands
+
+- **`read_file`** - Read file content
+- **`save_file`** - Write file content
+- **`show_save_dialog`** - File save dialog
+- **`show_confirm_dialog`** - Confirmation dialog
+- **`emit_editor_event`** - Emit events for plugins
+
+### Project Documentation
+
+- **[STATUS.md](../../STATUS.md)** - Development progress
+- **[Technical Details](../3_technical-details.md)** - Implementation patterns
+
+---
+
+## Implementation Notes
+
+### Tab ID Generation
+
+```typescript
+const tab: Tab = {
+  id: `tab-${Date.now()}-${Math.random()}`,
+  // ...
+};
+```
+
+Uses timestamp + random number for unique IDs. Not cryptographically secure but sufficient for tab identification.
+
+### Auto-Save Behavior
+
+- **Debounce**: 1000ms (1 second)
+- **Trigger**: Every content change
+- **Condition**: Only if file has a path (not untitled)
+- **Result**: File saved silently in background
+
+### Memory Considerations
+
+- Editor state snapshots stored per tab
+- Recent actions array grows unbounded (potential memory leak)
+- Consider implementing action history limit
+
+---
+
+**Documentation Version**: 2.0.0
+**Module Version**: 0.1.0
+**Accuracy**: Verified against source code 2025-10-28
