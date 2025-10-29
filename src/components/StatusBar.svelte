@@ -3,7 +3,6 @@
 <script lang="ts">
   import { pluginsStore, sortedStatusBarItems } from '$lib/stores/plugins';
   import { editorStore, activeFile } from '$lib/stores/editor';
-  import { formatShortcut, isMac } from '$lib/utils/ui';
 
   // Local component state
   let showPluginMenu = false;
@@ -19,6 +18,12 @@
 
   function togglePluginMenu() {
     showPluginMenu = !showPluginMenu;
+  }
+
+  function handlePluginMenuKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      showPluginMenu = false;
+    }
   }
 
   function handleStatusBarItemClick(item: any) {
@@ -104,7 +109,14 @@
 </div>
 
 {#if showPluginMenu}
-  <div class="plugin-menu" on:click={() => (showPluginMenu = false)}>
+  <div
+    class="plugin-menu"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Plugin menu"
+    on:click={() => (showPluginMenu = false)}
+    on:keydown={handlePluginMenuKeydown}
+  >
     <div class="plugin-menu__content" on:click|stopPropagation>
       <h3 class="plugin-menu__title">Plugins</h3>
       

@@ -6,10 +6,18 @@
   import { themeStore } from './lib/stores/theme';
   import { pluginsStore } from './lib/stores/plugins';
   import { keybindingStore } from './lib/stores/keybindings';
+  import { activeFile } from './lib/stores/editor';
 
   let chromeVisible = true;
   let alwaysOnTop = false;
-  let currentFile = '';
+
+  // Reactive current file from editor store (used for window title updates)
+  $: currentFile = $activeFile?.path || '';
+
+  // Update window title when file changes
+  $: if (typeof document !== 'undefined') {
+    document.title = currentFile ? `${currentFile.split('/').pop()} - Skretchpad` : 'Skretchpad';
+  }
 
   onMount(async () => {
     try {
@@ -26,6 +34,11 @@
     if ($themeStore.current) {
       // Theme is already applied in store initialization
       console.log('Theme loaded:', $themeStore.current.metadata.name);
+    }
+
+    // Initialize keybinding store (ensure default scheme is loaded)
+    if ($keybindingStore.currentScheme) {
+      console.log('Keybindings loaded:', $keybindingStore.currentScheme.name);
     }
 
     // Initialize plugin system (discover and load plugins)

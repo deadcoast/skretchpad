@@ -1,16 +1,24 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [svelte()],
-  
+
+  // Path aliases
+  resolve: {
+    alias: {
+      '$lib': resolve('./src/lib'),
+    },
+  },
+
   // Vite options tailored for Tauri
   clearScreen: false,
   
   server: {
     port: 5173,
-    strictPort: true,
+    strictPort: false,
     // Tauri expects a fixed port, fail if occupied
     watch: {
       ignored: ['**/src-tauri/**'],

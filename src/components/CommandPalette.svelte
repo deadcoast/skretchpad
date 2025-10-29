@@ -85,10 +85,13 @@
   {#if visible}
     <div
       class="command-palette-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
       on:click={handleBackdropClick}
       on:keydown={handleKeyDown}
     >
-      <div class="command-palette" on:click|stopPropagation>
+      <div class="command-palette" role="dialog" on:click|stopPropagation>
         <input
           bind:this={inputElement}
           bind:value={searchQuery}

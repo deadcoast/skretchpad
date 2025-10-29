@@ -31,10 +31,32 @@ export function createMinimalCodeMirror(container: HTMLElement) {
   });
 }
 
+// Language map for supported languages
+const languageMap = {
+  python: () => python(),
+  rust: () => rust(),
+  markdown: () => markdown(),
+};
+
 // Dynamic language loading
 export async function setLanguage(view: EditorView, lang: string) {
-  const langModule = await import(`@codemirror/lang-${lang}`);
+  let languageSupport;
+
+  if (languageMap[lang as keyof typeof languageMap]) {
+    // Use pre-imported language
+    languageSupport = languageMap[lang as keyof typeof languageMap]();
+  } else {
+    // Fallback to dynamic import for other languages
+    try {
+      const langModule = await import(`@codemirror/lang-${lang}`);
+      languageSupport = langModule[lang]();
+    } catch (error) {
+      console.warn(`Failed to load language ${lang}:`, error);
+      return;
+    }
+  }
+
   view.dispatch({
-    effects: languageCompartment.reconfigure(langModule[lang]()),
+    effects: languageCompartment.reconfigure(languageSupport),
   });
 }
