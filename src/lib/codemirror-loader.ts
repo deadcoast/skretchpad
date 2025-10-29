@@ -1,6 +1,9 @@
 // src/lib/codemirror-loader.ts
 import { EditorView, basicSetup } from 'codemirror';
 import { EditorState, Compartment } from '@codemirror/state';
+import { python } from '@codemirror/lang-python';
+import { rust } from '@codemirror/lang-rust';
+import { markdown } from '@codemirror/lang-markdown';
 
 // Lazy-load language support
 const languageCompartment = new Compartment();

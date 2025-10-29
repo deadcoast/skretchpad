@@ -2,18 +2,24 @@
 
 <!-- src/components/Editor.svelte -->
 <script lang="ts">
-    import { onMount, onDestroy } from 'svelte';
+    import { python } from '@codemirror/lang-python';
+    import { rust } from '@codemirror/lang-rust';
+    import { markdown } from '@codemirror/lang-markdown';
+    import { javascript } from '@codemirror/lang-javascript';
+    import { json } from '@codemirror/lang-json';
+    import { onMount, onDestroy, tick } from 'svelte';
     import { invoke } from '@tauri-apps/api/core';
     import { listen, type UnlistenFn } from '@tauri-apps/api/event';
     import { EditorView } from 'codemirror';
     import type { ViewUpdate } from '@codemirror/view';
     import { debounce } from '../lib/utils/debounce';
     import { createEditor, destroyEditor, setLanguage, updateTheme } from '../lib/editor-loader';
-    import { editorStore } from '../lib/stores/editor';
+    import { editorStore, type EditorState } from '../lib/stores/editor';
     import { themeStore, type Theme } from '../lib/stores/theme';
-    import { pluginsStore } from '../lib/stores/plugins';
+    import { uiStore } from '../lib/stores/ui';
+    import { pluginStore } from '../lib/stores/plugins';
     import { keybindingStore } from '../lib/stores/keybindings';
-    type PluginHookPayload = Record<string, unknown>;
+    import type { PluginHookEvent } from '../lib/plugin-api';
 
     // Props
     export let initialPath: string | null = null;
@@ -24,38 +30,31 @@
     let editorView: EditorView | null = null;
     let currentFilePath: string | null = null;
     let currentLanguage: string | null = null;
-    let lastKnownModified: number | null = null;
-    let lastDiffSnapshot: { original: string; modified: string } | null = null;
     let isDirty: boolean = false;
     let isLoading: boolean = false;
     let error: string | null = null;
-
-    const getErrorMessage = (err: unknown): string =>
-      err instanceof Error ? err.message : String(err);
     
     // Event unsubscribers
     let unsubscribers: UnlistenFn[] = [];
     let storeUnsubscribers: (() => void)[] = [];
   
     // Editor state
-    type EditorMetrics = {
-      cursorPosition: { line: number; column: number };
-      selection: string;
-      selectionLength: number;
-      lineCount: number;
-      encoding: string;
-      eolType: 'LF' | 'CRLF' | 'CR';
-    };
-
-    let editorMetrics: EditorMetrics = {
+    let editorState: EditorState = {
       cursorPosition: { line: 1, column: 1 },
-      selection: '',
       selectionLength: 0,
       lineCount: 1,
       encoding: 'utf-8',
       eolType: 'LF',
     };
 
+    const languageMap = {
+    'python': python(),
+    'rust': rust(),
+    'markdown': markdown(),
+    'javascript': javascript(),
+    'json': json(),
+  };
+  
     // ============================================================================
     // LIFECYCLE: INITIALIZATION
     // ============================================================================
@@ -71,7 +70,7 @@
         }
       } catch (err) {
         console.error('Failed to initialize editor:', err);
-        error = `Initialization failed: ${getErrorMessage(err)}`;
+        error = `Initialization failed: ${err.message}`;
       }
     });
   
@@ -89,7 +88,7 @@
       }
   
       // Get current theme
-      const theme: Theme | undefined = $themeStore.current ?? undefined;
+      const theme = $themeStore.current;
       const keybindings = $keybindingStore.current;
   
       // Create editor instance
@@ -157,6 +156,12 @@
       });
       storeUnsubscribers.push(themeUnsub);
   
+      // UI store subscription (chrome visibility, etc.)
+      const uiUnsub = uiStore.subscribe((state) => {
+        // React to UI state changes if needed
+      });
+      storeUnsubscribers.push(uiUnsub);
+  
       // Keybinding store subscription
       const keybindingUnsub = keybindingStore.subscribe(async (state) => {
         if (editorView && state.current) {
@@ -187,15 +192,6 @@
   
         // Read file from disk
         const content = await invoke<string>('read_file', { path: filePath });
-        let metadata: { modified: number } | null = null;
-
-        try {
-          metadata = await invoke<{ modified: number }>('get_file_metadata', {
-            path: filePath,
-          });
-        } catch (metaError) {
-          console.warn('Failed to read file metadata:', metaError);
-        }
         
         // Detect language from file extension
         const language = await detectLanguage(filePath);
@@ -220,14 +216,13 @@
   
         // Update state
         currentFilePath = filePath;
-        lastKnownModified = metadata?.modified ?? Date.now();
         isDirty = false;
         
         // Update editor state
         updateEditorState();
   
         // Update store
-        await editorStore.openFile(filePath, content);
+        editorStore.openFile(filePath, content);
   
         // Execute plugin hook: on_file_open
         await executePluginHook('on_file_open', { 
@@ -239,20 +234,15 @@
         console.log(`Opened file: ${filePath}`);
       } catch (err) {
         console.error('Failed to open file:', err);
-        error = `Failed to open file: ${getErrorMessage(err)}`;
+        error = `Failed to open file: ${err.message}`;
       } finally {
         isLoading = false;
       }
     }
   
     async function saveCurrentFile() {
-      if (!editorView) {
-        console.warn('No editor instance available to save');
-        return;
-      }
-
-      if (!currentFilePath) {
-        await saveFileAs();
+      if (!currentFilePath || !editorView) {
+        console.warn('No file to save');
         return;
       }
   
@@ -276,7 +266,6 @@
   
         // Update state
         isDirty = false;
-        lastKnownModified = Date.now();
         editorStore.markClean();
   
         // Execute plugin hook: on_file_save
@@ -288,62 +277,39 @@
         console.log(`Saved file: ${currentFilePath}`);
       } catch (err) {
         console.error('Failed to save file:', err);
-        error = `Failed to save file: ${getErrorMessage(err)}`;
+        error = `Failed to save file: ${err.message}`;
       } finally {
         isLoading = false;
       }
     }
   
-    async function saveFileAs(newPath?: string) {
-      if (!editorView) {
-        console.warn('No editor instance available to save');
-        return;
-      }
-  
-      const targetPath =
-        newPath ??
-        (await invoke<string>('show_save_dialog'));
-  
-      if (!targetPath) {
-        return;
-      }
+    async function saveFileAs(newPath: string) {
+      if (!editorView) return;
   
       const content = editorView.state.doc.toString();
   
       try {
-        await executePluginHook('before_file_save', {
-          path: targetPath,
-          content,
-        });
-  
         await invoke('write_file', { 
-          path: targetPath,
+          path: newPath,
           content,
         });
   
-        currentFilePath = targetPath;
+        currentFilePath = newPath;
         isDirty = false;
-        lastKnownModified = Date.now();
         
         // Re-detect language for new extension
-        const language = await detectLanguage(targetPath);
+        const language = await detectLanguage(newPath);
         if (language && language !== currentLanguage) {
           await setLanguage(editorView, language);
           currentLanguage = language;
         }
   
-        await editorStore.openFile(targetPath, content);
-        editorStore.markClean();
+        editorStore.openFile(newPath, content);
         
-        await executePluginHook('on_file_save', {
-          path: targetPath,
-          content,
-        });
-        
-        console.log(`Saved file as: ${targetPath}`);
+        console.log(`Saved file as: ${newPath}`);
       } catch (err) {
         console.error('Failed to save file:', err);
-        error = `Failed to save file: ${getErrorMessage(err)}`;
+        error = `Failed to save file: ${err.message}`;
       }
     }
   
@@ -368,10 +334,9 @@
   
       currentFilePath = null;
       currentLanguage = null;
-      lastKnownModified = null;
       isDirty = false;
   
-      await editorStore.closeFile();
+      editorStore.closeFile();
     }
   
     async function reloadCurrentFile() {
@@ -384,29 +349,17 @@
     }
   
     async function checkForExternalChanges() {
-      if (!currentFilePath) return;
+      if (!currentFilePath || !editorView) return;
   
       try {
+        // Get file metadata
         const metadata = await invoke<{ modified: number }>('get_file_metadata', {
           path: currentFilePath,
         });
   
-        if (typeof metadata?.modified !== 'number') {
-          return;
-        }
-  
-        if (lastKnownModified === null) {
-          lastKnownModified = metadata.modified;
-          return;
-        }
-  
-        if (metadata.modified > lastKnownModified) {
-          const shouldReload = await confirmReload();
-          if (shouldReload) {
-            await reloadCurrentFile();
-          }
-          lastKnownModified = metadata.modified;
-        }
+        // Compare with last known modification time
+        // (This would require storing modification time in state)
+        // If changed externally, prompt to reload
       } catch (err) {
         console.error('Failed to check for external changes:', err);
       }
@@ -506,23 +459,19 @@
       const selection = state.selection.main;
       const lineInfo = state.doc.lineAt(selection.head);
   
-      const selectedText = state.doc.sliceString(selection.from, selection.to);
-      const eolType = detectEOL(state.doc.toString());
-
-      editorMetrics = {
+      editorState = {
         cursorPosition: {
           line: lineInfo.number,
           column: selection.head - lineInfo.from + 1,
         },
-        selection: selectedText,
         selectionLength: selection.to - selection.from,
         lineCount: state.doc.lines,
-        encoding: 'utf-8', // Placeholder until encoding detection added
-        eolType,
+        encoding: 'utf-8', // This would come from file metadata
+        eolType: detectEOL(state.doc.toString()),
       };
   
       // Update store
-      editorStore.updateState(editorMetrics);
+      editorStore.updateState(editorState);
     }
   
     function detectEOL(content: string): 'LF' | 'CRLF' | 'CR' {
@@ -535,18 +484,18 @@
     // PLUGIN HOOKS
     // ============================================================================
   
-    async function executePluginHook(hookName: string, data: PluginHookPayload) {
-      const plugins = pluginsStore.getActivePlugins();
-
-      for (const plugin of plugins) {
+    async function executePluginHook(hookName: string, data: PluginHookEvent) {
+      const plugins = $pluginStore.active;
+  
+      for (const pluginId of plugins) {
         try {
           await invoke('plugin_execute_hook', {
-            pluginId: plugin.id,
+            pluginId,
             hookName,
             data,
           });
         } catch (err) {
-          console.error(`Plugin ${plugin.id} hook ${hookName} failed:`, err);
+          console.error(`Plugin ${pluginId} hook ${hookName} failed:`, err);
         }
       }
     }
@@ -563,19 +512,12 @@
         const originalContent = await invoke<string>('get_original_content', {
           path: currentFilePath,
         });
-        const currentContent = editorView.state.doc.toString();
   
-        lastDiffSnapshot = {
-          original: originalContent,
-          modified: currentContent,
-        };
+        const currentContent = editorView.state.doc.toString();
   
         // Show diff view (this would involve creating a diff editor)
         // Implementation depends on diff viewer component
-        console.log('Toggling diff view...', {
-          originalLength: originalContent.length,
-          modifiedLength: currentContent.length,
-        });
+        console.log('Toggling diff view...');
       } catch (err) {
         console.error('Failed to show diff:', err);
       }
@@ -610,19 +552,19 @@
       console.log('Opening search panel...');
     }
   
-    function findNext(_query: string) {
+    function findNext(query: string) {
       // Search implementation
     }
- 
-    function findPrevious(_query: string) {
+  
+    function findPrevious(query: string) {
       // Search implementation
     }
- 
-    function replaceNext(_query: string, _replacement: string) {
+  
+    function replaceNext(query: string, replacement: string) {
       // Replace implementation
     }
- 
-    function replaceAll(_query: string, _replacement: string) {
+  
+    function replaceAll(query: string, replacement: string) {
       // Replace all implementation
     }
   
@@ -725,23 +667,6 @@
     // EXPOSED FUNCTIONS (for parent components)
     // ============================================================================
   
-    export const editorCommands = {
-      toggleDiffView,
-      openSearchPanel,
-      findNext,
-      findPrevious,
-      replaceNext,
-      replaceAll,
-      undo,
-      redo,
-      formatDocument,
-      toggleComment,
-      duplicateLine,
-      deleteLine,
-      moveLinesUp,
-      moveLinesDown,
-    };
-
     export function getEditorView(): EditorView | null {
       return editorView;
     }
@@ -781,10 +706,6 @@
         },
       });
       editorView.dispatch(transaction);
-    }
-
-    export function getLastDiffSnapshot() {
-      return lastDiffSnapshot;
     }
   </script>
   

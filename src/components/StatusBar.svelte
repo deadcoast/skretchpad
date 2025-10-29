@@ -2,10 +2,8 @@
 
 <script lang="ts">
   import { pluginsStore, sortedStatusBarItems } from '$lib/stores/plugins';
-  import type { PluginStatus, PluginStatusBarItem } from '$lib/stores/plugins';
   import { editorStore, activeFile } from '$lib/stores/editor';
-
-  type StatusBarItem = PluginStatusBarItem & { onClick?: () => void };
+  import { formatShortcut, isMac } from '$lib/utils/ui';
 
   // Local component state
   let showPluginMenu = false;
@@ -17,18 +15,13 @@
   $: fileInfo = $activeFile;
 
   // Get plugin status bar items
-  $: pluginItems = $sortedStatusBarItems as StatusBarItem[];
-  $: pluginList = Array.from($pluginsStore.plugins.values()) as PluginStatus[];
+  $: pluginItems = $sortedStatusBarItems;
 
   function togglePluginMenu() {
     showPluginMenu = !showPluginMenu;
   }
 
-  function closePluginMenu() {
-    showPluginMenu = false;
-  }
-
-  function handleStatusBarItemClick(item: StatusBarItem) {
+  function handleStatusBarItemClick(item: any) {
     if (item.onClick) {
       item.onClick();
     }
@@ -111,17 +104,12 @@
 </div>
 
 {#if showPluginMenu}
-  <button
-    class="plugin-menu"
-    type="button"
-    aria-label="Close plugin menu"
-    on:click|self={closePluginMenu}
-  >
-    <section class="plugin-menu__content" role="dialog" aria-modal="true" aria-label="Plugin overview">
+  <div class="plugin-menu" on:click={() => (showPluginMenu = false)}>
+    <div class="plugin-menu__content" on:click|stopPropagation>
       <h3 class="plugin-menu__title">Plugins</h3>
       
       <div class="plugin-list">
-        {#each pluginList as plugin (plugin.id)}
+        {#each Array.from($pluginsStore.plugins.values()) as plugin (plugin.id)}
           <div class="plugin-item" class:plugin-item--active={plugin.state === 'active'}>
             <div class="plugin-item__header">
               <span class="plugin-item__name">{plugin.name}</span>
@@ -164,8 +152,8 @@
           </div>
         {/each}
       </div>
-    </section>
-  </button>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -232,9 +220,6 @@
     align-items: flex-end;
     justify-content: flex-end;
     z-index: 1000;
-    border: none;
-    padding: 0;
-    cursor: default;
   }
 
   .plugin-menu__content {

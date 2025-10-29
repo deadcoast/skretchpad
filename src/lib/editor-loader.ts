@@ -1,8 +1,7 @@
 // src/lib/editor-loader.ts
 
 import { EditorView, ViewUpdate, keymap, highlightActiveLine, drawSelection } from '@codemirror/view';
-import { EditorState, Compartment } from '@codemirror/state';
-import type { Extension } from '@codemirror/state';
+import { EditorState, Compartment, Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { 
   indentOnInput, 
@@ -125,53 +124,65 @@ class LanguageRegistry {
       let support: LanguageSupport;
 
       switch (languageName) {
-        case 'javascript': {
+        case 'javascript':
           const { javascript } = await import('@codemirror/lang-javascript');
           support = javascript({ jsx: true });
           break;
-        }
 
-        case 'typescript': {
+        case 'typescript':
           const { javascript: ts } = await import('@codemirror/lang-javascript');
           support = ts({ typescript: true, jsx: true });
           break;
-        }
 
-        case 'python': {
+        case 'python':
           const { python } = await import('@codemirror/lang-python');
           support = python();
           break;
-        }
 
-        case 'rust': {
+        case 'rust':
           const { rust } = await import('@codemirror/lang-rust');
           support = rust();
           break;
-        }
 
-        case 'json': {
+        case 'json':
           const { json } = await import('@codemirror/lang-json');
           support = json();
           break;
-        }
 
-        case 'markdown': {
+        case 'markdown':
           const { markdown } = await import('@codemirror/lang-markdown');
           support = markdown();
           break;
-        }
 
-        case 'html': {
+        case 'html':
           const { html } = await import('@codemirror/lang-html');
           support = html();
           break;
-        }
 
-        case 'css': {
+        case 'css':
           const { css } = await import('@codemirror/lang-css');
           support = css();
           break;
-        }
+
+        case 'yaml':
+          const { yaml } = await import('@codemirror/lang-yaml');
+          support = yaml();
+          break;
+
+        case 'toml':
+          const { toml } = await import('@codemirror/lang-toml');
+          support = toml();
+          break;
+
+        case 'xml':
+          const { xml } = await import('@codemirror/lang-xml');
+          support = xml();
+          break;
+
+        case 'sql':
+          const { sql } = await import('@codemirror/lang-sql');
+          support = sql();
+          break;
 
         default:
           return null;
@@ -286,20 +297,15 @@ function createThemeExtension(theme?: Theme): Extension {
 // PLUGIN HOOKS SYSTEM
 // ============================================================================
 
-type PluginHookPayload = Record<string, unknown>;
-
 interface PluginHook {
   name: string;
-  handler: (view: EditorView, data: PluginHookPayload) => void;
+  handler: (view: EditorView, data: any) => void;
 }
 
 class PluginHooksManager {
   private hooks: Map<string, PluginHook[]> = new Map();
 
-  register(
-    hookName: string,
-    handler: (view: EditorView, data: PluginHookPayload) => void
-  ): () => void {
+  register(hookName: string, handler: (view: EditorView, data: any) => void): () => void {
     if (!this.hooks.has(hookName)) {
       this.hooks.set(hookName, []);
     }
@@ -323,7 +329,7 @@ class PluginHooksManager {
     };
   }
 
-  trigger(hookName: string, view: EditorView, data: PluginHookPayload): void {
+  trigger(hookName: string, view: EditorView, data: any): void {
     const hooks = this.hooks.get(hookName);
     if (!hooks) return;
 
@@ -452,10 +458,6 @@ export async function createEditor(
     parent,
   });
 
-  if (keybindings) {
-    registerKeybindings(view, keybindings);
-  }
-
   return view;
 }
 
@@ -525,6 +527,7 @@ export async function createDiffEditor(
     if (isScrolling) return;
     isScrolling = true;
 
+    const scrollInfo = source.scrollDOM.getBoundingClientRect();
     target.scrollDOM.scrollTop = source.scrollDOM.scrollTop;
 
     requestAnimationFrame(() => {
@@ -624,7 +627,7 @@ export function setReadOnly(view: EditorView, readOnly: boolean): void {
 
 export function registerPluginHook(
   hookName: string,
-  handler: (view: EditorView, data: PluginHookPayload) => void
+  handler: (view: EditorView, data: any) => void
 ): () => void {
   return pluginHooksManager.register(hookName, handler);
 }
@@ -643,7 +646,7 @@ export function setupPluginHooks(view: EditorView): void {
 // STATE PERSISTENCE
 // ============================================================================
 
-export interface EditorStateSnapshot {
+interface EditorStateSnapshot {
   doc: string;
   selection: {
     anchor: number;
@@ -780,7 +783,7 @@ export function destroyEditor(view: EditorView): void {
 // CUSTOM EXTENSIONS
 // ============================================================================
 
-/**
+/
  * Extension to show line length indicator
  */
 export function lineLengthIndicator(maxLength: number = 80): Extension {
@@ -809,7 +812,7 @@ export function lineLengthIndicator(maxLength: number = 80): Extension {
   });
 }
 
-/**
+/
  * Extension to highlight trailing whitespace
  */
 export function highlightTrailingWhitespace(): Extension {
@@ -840,23 +843,19 @@ export function highlightTrailingWhitespace(): Extension {
   });
 }
 
-/**
+/
  * Extension for read-only regions
  */
 export function readOnlyRanges(ranges: Array<{ from: number; to: number }>): Extension {
   return EditorState.changeFilter.of((transaction) => {
-    let allowed = true;
-
-    transaction.changes.iterChanges((fromA, toA) => {
+    for (const change of transaction.changes) {
       for (const range of ranges) {
-        if (fromA < range.to && toA > range.from) {
-          allowed = false;
-          return;
+        if (change.from < range.to && change.to > range.from) {
+          return false; // Reject change
         }
       }
-    });
-
-    return allowed;
+    }
+    return true; // Allow change
   });
 }
 

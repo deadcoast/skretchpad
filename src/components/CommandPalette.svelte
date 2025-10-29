@@ -1,8 +1,7 @@
 <!-- src/lib/components/CommandPalette.svelte -->
 
 <script lang="ts">
-    import { commandsByCategory } from '$lib/stores/plugins';
-    import type { PluginCommand } from '$lib/stores/plugins';
+    import { pluginsStore, commandsByCategory } from '$lib/stores/plugins';
     import { formatShortcut } from '$lib/utils/ui';
     import { createEventDispatcher } from 'svelte';
   
@@ -13,10 +12,6 @@
     let searchQuery = '';
     let selectedIndex = 0;
     let inputElement: HTMLInputElement;
-    type PaletteCommand = PluginCommand & { category: string };
-    let allCommands: PaletteCommand[] = [];
-    let filteredCommands: PaletteCommand[] = [];
-    let groupedCommands = new Map<string, PaletteCommand[]>();
   
     // Get all commands
     $: allCommands = Array.from($commandsByCategory.entries()).flatMap(
@@ -36,12 +31,12 @@
   
     // Group filtered commands by category
     $: groupedCommands = filteredCommands.reduce((acc, cmd) => {
-      if (!acc.has(cmd.category)) {
-        acc.set(cmd.category, []);
+      if (!acc[cmd.category]) {
+        acc[cmd.category] = [];
       }
-      acc.get(cmd.category)!.push(cmd);
+      acc[cmd.category].push(cmd);
       return acc;
-    }, new Map<string, PaletteCommand[]>());
+    }, {} as Record<string, any[]>);
   
     $: if (visible && inputElement) {
       inputElement.focus();
@@ -85,16 +80,13 @@
     }
   </script>
   
-  <svelte:window on:keydown={handleKeyDown} />
   {#if visible}
-    <button
+    <div
       class="command-palette-backdrop"
-      type="button"
-      aria-label="Close command palette"
-      on:click|self={handleBackdropClick}
+      on:click={handleBackdropClick}
       on:keydown={handleKeyDown}
     >
-      <div class="command-palette">
+      <div class="command-palette" on:click|stopPropagation>
         <input
           bind:this={inputElement}
           bind:value={searchQuery}
@@ -107,11 +99,11 @@
           {#if filteredCommands.length === 0}
             <div class="command-palette__empty">No commands found</div>
           {:else}
-            {#each Array.from(groupedCommands.entries()) as [category, commands] (category)}
+            {#each Object.entries(groupedCommands) as [category, commands] (category)}
               <div class="command-category">
                 <div class="command-category__title">{category}</div>
   
-                {#each commands as command (command.id)}
+                {#each commands as command, index (command.id)}
                   {@const globalIndex = filteredCommands.indexOf(command)}
                   <button
                     class="command-item"
@@ -141,7 +133,7 @@
           <span class="command-palette__hint">esc close</span>
         </div>
       </div>
-    </button>
+    </div>
   {/if}
   
   <style>
@@ -155,10 +147,6 @@
       justify-content: center;
       padding-top: 20vh;
       z-index: 10000;
-      border: none;
-      margin: 0;
-      padding: 0;
-      cursor: default;
     }
   
     .command-palette {

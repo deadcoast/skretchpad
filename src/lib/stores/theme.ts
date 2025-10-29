@@ -338,7 +338,7 @@ const LIQUID_GLASS_LIGHT: Theme = {
 // ============================================================================
 
 function createThemeStore() {
-  const { subscribe, update } = writable<ThemeState>({
+  const { subscribe, set, update } = writable<ThemeState>({
     current: LIQUID_GLASS_DARK, // Default theme
     available: [LIQUID_GLASS_DARK, LIQUID_GLASS_LIGHT],
     loading: false,

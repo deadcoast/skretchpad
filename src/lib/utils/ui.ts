@@ -621,7 +621,7 @@ export async function withTimeout<T>(
   timeoutMs: number,
   timeoutError?: Error
 ): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let timeoutId: ReturnType<typeof setTimeout>;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(
@@ -633,8 +633,6 @@ export async function withTimeout<T>(
   try {
     return await Promise.race([promise, timeoutPromise]);
   } finally {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
-    }
+    clearTimeout(timeoutId);
   }
 }

@@ -15,7 +15,7 @@ export interface Keybinding {
   modifiers: KeyModifier[];
   command: string;
   when?: string; // Context condition
-  args?: Record<string, unknown>;
+  args?: Record<string, any>;
 }
 
 export type Keybindings = Record<string, Keybinding>;
@@ -319,7 +319,7 @@ const EMACS_SCHEME: KeybindingScheme = {
 // ============================================================================
 
 function createKeybindingStore() {
-  const { subscribe, update } = writable<KeybindingState>({
+  const { subscribe, set, update } = writable<KeybindingState>({
     current: DEFAULT_SCHEME.bindings,
     currentScheme: DEFAULT_SCHEME,
     available: [DEFAULT_SCHEME, VIM_SCHEME, EMACS_SCHEME],
@@ -543,7 +543,7 @@ function evaluateContext(condition: string): boolean {
   // This is a simplified implementation
   // In production, this would be more robust with proper context tracking
 
-  const contexts: Record<string, boolean> = {
+  const contexts = {
     'vim.normalMode': false,
     'vim.insertMode': false,
     gitAvailable: true,

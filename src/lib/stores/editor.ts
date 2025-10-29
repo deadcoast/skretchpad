@@ -1,9 +1,9 @@
 // src/lib/stores/editor.ts
 
 import { writable, derived, get } from 'svelte/store';
-import type { EditorView, ViewUpdate } from '@codemirror/view';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import type { EditorView } from '@codemirror/view';
+import { invoke } from '@tauri-apps/api/tauri';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import {
   createEditor,
   setLanguage,
@@ -16,7 +16,7 @@ import {
   saveEditorState,
   restoreEditorState,
   type EditorStateSnapshot,
-} from '../editor-loader';
+} from './editor-loader';
 import { themeStore } from './theme';
 import { debounce } from '../utils/debounce';
 
@@ -46,10 +46,6 @@ export interface EditorState {
   editorView: EditorView | null;
   cursorPosition: { line: number; column: number };
   selection: string;
-  selectionLength: number;
-  lineCount: number;
-  encoding: string;
-  eolType: 'LF' | 'CRLF' | 'CR';
   canUndo: boolean;
   canRedo: boolean;
   isLoading: boolean;
@@ -73,10 +69,6 @@ function createEditorStore() {
     editorView: null,
     cursorPosition: { line: 1, column: 1 },
     selection: '',
-    selectionLength: 0,
-    lineCount: 1,
-    encoding: 'utf-8',
-    eolType: 'LF',
     canUndo: false,
     canRedo: false,
     isLoading: false,
@@ -118,10 +110,6 @@ function createEditorStore() {
   return {
     subscribe,
 
-    setView(view: EditorView | null): void {
-      update((state) => ({ ...state, editorView: view }));
-    },
-
     /**
      * Initialize editor with container element
      */
@@ -138,7 +126,7 @@ function createEditorStore() {
 
         const view = await createEditor(container, {
           theme: theme || undefined,
-          onChange: (viewUpdate: ViewUpdate) => {
+          onChange: (viewUpdate) => {
             const content = getEditorContent(viewUpdate.view);
             const state = get({ subscribe });
             
@@ -160,14 +148,14 @@ function createEditorStore() {
               }
             }
           },
-          onCursorMove: (viewUpdate: ViewUpdate) => {
+          onCursorMove: (viewUpdate) => {
             const position = getCursorPosition(viewUpdate.view);
             update((state) => ({
               ...state,
               cursorPosition: position,
             }));
           },
-          onSelection: (viewUpdate: ViewUpdate) => {
+          onSelection: (viewUpdate) => {
             const selection = viewUpdate.state.selection.main;
             const text = viewUpdate.state.doc.sliceString(selection.from, selection.to);
             update((state) => ({
@@ -200,7 +188,7 @@ function createEditorStore() {
     /**
      * Open a file in a new tab
      */
-    async openFile(path: string, providedContent?: string): Promise<void> {
+    async openFile(path: string): Promise<void> {
       update((state) => ({ ...state, isLoading: true, error: null }));
 
       try {
@@ -216,8 +204,7 @@ function createEditorStore() {
         }
 
         // Read file content
-        const content =
-          providedContent ?? (await invoke<string>('read_file', { path }));
+        const content = await invoke<string>('read_file', { path });
 
         // Get file name
         const name = path.split('/').pop() || 'Untitled';
@@ -674,80 +661,11 @@ function createEditorStore() {
         editorView: null,
         cursorPosition: { line: 1, column: 1 },
         selection: '',
-        selectionLength: 0,
-        lineCount: 1,
-        encoding: 'utf-8',
-        eolType: 'LF',
         canUndo: false,
         canRedo: false,
         isLoading: false,
         error: null,
       });
-    },
-
-    markDirty(): void {
-      update((state) => {
-        if (!state.activeTabId) {
-          return state;
-        }
-
-        return {
-          ...state,
-          tabs: state.tabs.map((tab) =>
-            tab.id === state.activeTabId
-              ? {
-                  ...tab,
-                  file: {
-                    ...tab.file,
-                    isDirty: true,
-                  },
-                }
-              : tab
-          ),
-        };
-      });
-    },
-
-    markClean(): void {
-      update((state) => {
-        if (!state.activeTabId) {
-          return state;
-        }
-
-        return {
-          ...state,
-          tabs: state.tabs.map((tab) =>
-            tab.id === state.activeTabId
-              ? {
-                  ...tab,
-                  file: {
-                    ...tab.file,
-                    isDirty: false,
-                    lastSaved: Date.now(),
-                  },
-                }
-              : tab
-          ),
-        };
-      });
-    },
-
-    updateState(partial: {
-      cursorPosition: { line: number; column: number };
-      selection: string;
-      selectionLength: number;
-      lineCount: number;
-      encoding: string;
-      eolType: 'LF' | 'CRLF' | 'CR';
-    }): void {
-      update((state) => ({ ...state, ...partial }));
-    },
-
-    async closeFile(): Promise<void> {
-      const state = get({ subscribe });
-      if (state.activeTabId) {
-        await editorStore.closeTab(state.activeTabId);
-      }
     },
   };
 }

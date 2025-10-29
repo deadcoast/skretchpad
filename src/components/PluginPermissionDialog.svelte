@@ -1,43 +1,23 @@
 <!-- src/components/PluginPermissionDialog.svelte -->
 <script lang="ts">
-    interface NetworkPermission {
-      DomainAllowlist?: string[];
-    }
-    
-    interface PluginManifest {
-      name: string;
-      version: string;
-      permissions: {
-        filesystem: string;
-        network: 'None' | NetworkPermission;
-        commands: {
-          allowlist: string[];
-        };
-      };
-    }
+    import { invoke } from '@tauri-apps/api/core';
     
     export let plugin: PluginManifest;
     export let onApprove: () => void;
     export let onDeny: () => void;
     
-    const riskLevels: Record<'filesystem' | 'network' | 'commands' | 'ui', 'critical' | 'high' | 'low'> = {
+    const riskLevels = {
       filesystem: 'high',
       network: 'critical',
       commands: 'critical',
       ui: 'low',
     };
     
-    function getRiskColor(capability: keyof typeof riskLevels) {
+    function getRiskColor(capability: string) {
       const level = riskLevels[capability];
       return level === 'critical' ? 'text-red-500' : 
              level === 'high' ? 'text-orange-500' : 
              'text-yellow-500';
-    }
-    
-    function hasNetworkPermission(
-      permission: PluginManifest['permissions']['network']
-    ): permission is NetworkPermission {
-      return permission !== 'None';
     }
   </script>
   
@@ -55,7 +35,7 @@
         </div>
       {/if}
       
-      {#if hasNetworkPermission(plugin.permissions.network)}
+      {#if plugin.permissions.network !== 'None'}
         <div class="permission-item">
           <span class={getRiskColor('network')}>🔴</span>
           <span>Network Access</span>
