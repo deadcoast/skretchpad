@@ -1,7 +1,7 @@
 // src/lib/stores/plugins.ts
 
 import { writable, derived, get } from 'svelte/store';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 // ============================================================================
@@ -19,7 +19,7 @@ export interface PluginMetadata {
 
 export interface PluginCapabilities {
   filesystem: string;
-  network: any;
+  network: Record<string, unknown>;
   commands: {
     allowlist: string[];
     require_confirmation: boolean;
@@ -32,7 +32,7 @@ export interface PluginCapabilities {
   };
 }
 
-export type PluginState =
+export type PluginLifecycleState =
   | 'loaded'
   | 'activating'
   | 'active'
@@ -43,7 +43,7 @@ export interface PluginStatus {
   id: string;
   name: string;
   version: string;
-  state: PluginState;
+  state: PluginLifecycleState;
   capabilities: PluginCapabilities;
   error?: string;
 }
@@ -73,7 +73,7 @@ export interface PluginStatusBarItem {
   color?: string;
 }
 
-export interface PluginState {
+export interface PluginsStoreState {
   plugins: Map<string, PluginStatus>;
   commands: Map<string, PluginCommand>;
   panels: Map<string, PluginPanel>;
@@ -87,7 +87,7 @@ export interface PluginState {
 // ============================================================================
 
 function createPluginsStore() {
-  const { subscribe, set, update } = writable<PluginState>({
+  const { subscribe, set, update } = writable<PluginsStoreState>({
     plugins: new Map(),
     commands: new Map(),
     panels: new Map(),
@@ -528,7 +528,7 @@ export const commandsByCategory = derived(pluginsStore, ($plugins) => {
  * Visible panels
  */
 export const visiblePanels = derived(pluginsStore, ($plugins) =>
-  Array.from($plugins.panels.values()).filter((p) => p.visible)
+  Array.from($plugins.panels.values()).filter((panel): panel is PluginPanel => panel.visible)
 );
 
 /**

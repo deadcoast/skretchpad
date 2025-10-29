@@ -2,12 +2,14 @@
 
 <script lang="ts">
     import { pluginsStore, visiblePanels } from '$lib/stores/plugins';
-    import { onMount, onDestroy } from 'svelte';
+    import type { PluginPanel } from '$lib/stores/plugins';
+    import { onMount } from 'svelte';
   
     export let visible = true;
   
     // Get visible plugin panels
-    $: pluginPanels = $visiblePanels.filter(panel => panel.position === 'sidebar');
+    let pluginPanels: PluginPanel[] = [];
+    $: pluginPanels = $visiblePanels.filter((panel): panel is PluginPanel => panel.position === 'sidebar');
   
     // Active panel
     let activePanel: string | null = null;

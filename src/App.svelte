@@ -6,8 +6,6 @@
   
   let chromeVisible = true;
   let alwaysOnTop = false;
-  let currentFile = '';
-  
   onMount(() => {
     // Apply default glass theme
     applyGlassTheme();
@@ -45,7 +43,7 @@
     <Editor />
   </div>
   
-  <StatusBar {currentFile} />
+  <StatusBar />
 </div>
 
 <style>

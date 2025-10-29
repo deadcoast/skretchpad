@@ -2,7 +2,6 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { type } from '@tauri-apps/api/os';
 
 // ============================================================================
 // CORE PLUGIN TYPES
@@ -49,8 +48,8 @@ export interface PluginContext {
   network?: NetworkAPI;
 
   /** Event system */
-  on(event: string, handler: (data: any) => void): UnlistenFn;
-  emit(event: string, data: any): Promise<void>;
+  on(event: string, handler: (data: unknown) => void): UnlistenFn;
+  emit(event: string, data: unknown): Promise<void>;
 }
 
 /**
@@ -83,12 +82,12 @@ export interface WorkspaceAPI {
   /**
    * Get workspace configuration
    */
-  getConfiguration<T = any>(section?: string): Promise<T>;
+  getConfiguration<T = unknown>(section?: string): Promise<T>;
 
   /**
    * Update workspace configuration
    */
-  updateConfiguration(section: string, value: any): Promise<void>;
+  updateConfiguration(section: string, value: unknown): Promise<void>;
 
   /**
    * Get all files in workspace
@@ -316,12 +315,12 @@ export interface CommandsAPI {
   /**
    * Register a command
    */
-  register(id: string, handler: (...args: any[]) => Promise<void>): UnlistenFn;
+  register(id: string, handler: (...args: unknown[]) => Promise<void>): UnlistenFn;
 
   /**
    * Execute a command
    */
-  execute(id: string, ...args: any[]): Promise<void>;
+  execute(id: string, ...args: unknown[]): Promise<void>;
 
   /**
    * Execute shell command
@@ -512,7 +511,7 @@ class PluginContextImpl implements PluginContext {
   editor: EditorAPI;
   network?: NetworkAPI;
 
-  private eventListeners: Map<string, Set<(data: any) => void>> = new Map();
+  private eventListeners: Map<string, Set<(data: unknown) => void>> = new Map();
   private unlisteners: UnlistenFn[] = [];
 
   constructor(pluginId: string, metadata: PluginMetadata) {
@@ -535,7 +534,7 @@ class PluginContextImpl implements PluginContext {
     return true;
   }
 
-  on(event: string, handler: (data: any) => void): UnlistenFn {
+  on(event: string, handler: (data: unknown) => void): UnlistenFn {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
@@ -543,19 +542,28 @@ class PluginContextImpl implements PluginContext {
     this.eventListeners.get(event)!.add(handler);
 
     // Set up backend listener
-    const unlisten = listen(`plugin:${this.plugin.id}:${event}`, (e) => {
+    let backendUnlisten: UnlistenFn | null = null;
+    listen<unknown>(`plugin:${this.plugin.id}:${event}`, (e) => {
       handler(e.payload);
-    });
-
-    this.unlisteners.push(unlisten as any);
+    })
+      .then((unlisten) => {
+        backendUnlisten = unlisten;
+        this.unlisteners.push(unlisten);
+      })
+      .catch((error) => {
+        console.error(`Failed to register plugin listener for ${event}:`, error);
+      });
 
     // Return cleanup function
     return () => {
       this.eventListeners.get(event)?.delete(handler);
+      if (backendUnlisten) {
+        backendUnlisten();
+      }
     };
   }
 
-  async emit(event: string, data: any): Promise<void> {
+  async emit(event: string, data: unknown): Promise<void> {
     await invoke('plugin_emit_event', {
       params: {
         plugin_id: this.plugin.id,
@@ -590,14 +598,14 @@ class WorkspaceAPIImpl implements WorkspaceAPI {
     return this.getPath() || '';
   }
 
-  async getConfiguration<T = any>(section?: string): Promise<T> {
+  async getConfiguration<T = unknown>(section?: string): Promise<T> {
     return await invoke('workspace_get_configuration', {
       plugin_id: this.pluginId,
       section,
     });
   }
 
-  async updateConfiguration(section: string, value: any): Promise<void> {
+  async updateConfiguration(section: string, value: unknown): Promise<void> {
     await invoke('workspace_update_configuration', {
       plugin_id: this.pluginId,
       section,
@@ -662,12 +670,23 @@ class FilesystemAPIImpl implements FilesystemAPI {
     // Set up file watcher
     invoke<string>('plugin_watch_path', {
       params: { plugin_id: this.pluginId, path },
-    }).then(async (id) => {
-      watchId = id;
-      unlisten = await listen(`plugin:${this.pluginId}:file_change`, (event: any) => {
-        handler(event.payload);
+    })
+      .then(async (id) => {
+        watchId = id;
+        try {
+          unlisten = await listen<FileEvent>(
+            `plugin:${this.pluginId}:file_change`,
+            (event) => {
+              handler(event.payload);
+            }
+          );
+        } catch (error) {
+          console.error('Failed to attach file watcher listener:', error);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to watch path:', error);
       });
-    });
 
     return {
       dispose: () => {
@@ -779,7 +798,7 @@ class UiAPIImpl implements UiAPI {
   }
 
   async withProgress<T>(
-    options: ProgressOptions,
+    _options: ProgressOptions,
     task: (progress: Progress) => Promise<T>
   ): Promise<T> {
     const progress: Progress = {
@@ -908,11 +927,11 @@ class PanelImpl implements Panel {
 // ============================================================================
 
 class CommandsAPIImpl implements CommandsAPI {
-  private registeredCommands: Map<string, (...args: any[]) => Promise<void>> = new Map();
+  private registeredCommands: Map<string, (...args: unknown[]) => Promise<void>> = new Map();
 
   constructor(private pluginId: string) {}
 
-  register(id: string, handler: (...args: any[]) => Promise<void>): UnlistenFn {
+  register(id: string, handler: (...args: unknown[]) => Promise<void>): UnlistenFn {
     this.registeredCommands.set(id, handler);
 
     // Register with backend
@@ -924,21 +943,28 @@ class CommandsAPIImpl implements CommandsAPI {
     }).catch(console.error);
 
     // Listen for command invocations
-    const unlisten = listen(`plugin:${this.pluginId}:command:${id}`, async (event: any) => {
+    let backendUnlisten: UnlistenFn | null = null;
+    listen<{ args?: unknown[] }>(`plugin:${this.pluginId}:command:${id}`, async (event) => {
       try {
-        await handler(...(event.payload.args || []));
+        await handler(...(event.payload.args ?? []));
       } catch (error) {
         console.error(`Command ${id} failed:`, error);
       }
-    });
+    })
+      .then((unlisten) => {
+        backendUnlisten = unlisten;
+      })
+      .catch((error) => {
+        console.error(`Failed to listen for command ${id}:`, error);
+      });
 
     return () => {
       this.registeredCommands.delete(id);
-      unlisten.then((fn) => fn());
+      backendUnlisten?.();
     };
   }
 
-  async execute(id: string, ...args: any[]): Promise<void> {
+  async execute(id: string, ...args: unknown[]): Promise<void> {
     // Check if command is registered locally
     const handler = this.registeredCommands.get(id);
     if (handler) {
