@@ -40,3 +40,6 @@ src-tauri/Cargo.lock
 # Temporary files
 *.tmp
 *.temp
+
+# Setup script logs
+.setup/

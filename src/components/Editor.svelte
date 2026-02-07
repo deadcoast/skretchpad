@@ -5,6 +5,7 @@
     import { onMount, onDestroy } from 'svelte';
     import { invoke } from '@tauri-apps/api/core';
     import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+    import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
     import { EditorView } from '@codemirror/view';
     import type { ViewUpdate } from '@codemirror/view';
     import {
@@ -535,6 +536,42 @@
       }
       return true;
     }
+
+    async function handleOpenFileDialog() {
+      try {
+        const selected = await showOpenDialog({
+          title: 'Open File',
+          multiple: false,
+          filters: [{ name: 'All Files', extensions: ['*'] }],
+        });
+        if (selected) {
+          // selected is a string path when multiple is false
+          await openFile(selected as string);
+        }
+      } catch (err) {
+        console.error('Failed to open file dialog:', err);
+        error = `Failed to open file: ${err instanceof Error ? err.message : String(err)}`;
+      }
+    }
+
+    async function handleNewFile() {
+      // Clear editor for a new untitled file
+      if (editorView) {
+        if (isDirty && currentFilePath) {
+          const shouldSave = await confirmSave();
+          if (shouldSave) {
+            await saveCurrentFile();
+          }
+        }
+        const transaction = editorView.state.update({
+          changes: { from: 0, to: editorView.state.doc.length, insert: '' },
+        });
+        editorView.dispatch(transaction);
+      }
+      currentFilePath = null;
+      currentLanguage = null;
+      isDirty = false;
+    }
   
     // ============================================================================
     // SEARCH & REPLACE
@@ -779,10 +816,10 @@
           <h2>No file open</h2>
           <p>Open a file to start editing</p>
           <div class="empty-state-actions">
-            <button on:click={() => invoke('show_open_dialog')}>
+            <button on:click={handleOpenFileDialog}>
               Open File
             </button>
-            <button on:click={() => invoke('create_new_file')}>
+            <button on:click={handleNewFile}>
               New File
             </button>
           </div>

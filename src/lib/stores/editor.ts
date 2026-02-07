@@ -4,6 +4,7 @@ import { writable, derived, get } from 'svelte/store';
 import type { EditorView, ViewUpdate } from '@codemirror/view';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { save as showSaveDialog, ask as showConfirmDialog } from '@tauri-apps/plugin-dialog';
 import {
   createEditor,
   setLanguage,
@@ -381,7 +382,10 @@ function createEditorStore() {
      */
     async saveFileAs(): Promise<void> {
       try {
-        const path = await invoke<string>('show_save_dialog');
+        const path = await showSaveDialog({
+          title: 'Save File As',
+          filters: [{ name: 'All Files', extensions: ['*'] }],
+        });
 
         if (!path) {
           return;
@@ -444,10 +448,10 @@ function createEditorStore() {
 
       // Check if file is dirty
       if (tab.file.isDirty) {
-        const shouldSave = await invoke<boolean>('show_confirm_dialog', {
-          title: 'Unsaved Changes',
-          message: `Do you want to save changes to ${tab.file.name}?`,
-        });
+        const shouldSave = await showConfirmDialog(
+          `Do you want to save changes to ${tab.file.name}?`,
+          { title: 'Unsaved Changes', kind: 'warning' }
+        );
 
         if (shouldSave) {
           // Switch to tab and save

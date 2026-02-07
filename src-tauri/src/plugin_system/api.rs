@@ -82,6 +82,35 @@ impl AuditLogger {
 }
 
 // ============================================================================
+// FILE WATCHER REGISTRY
+// ============================================================================
+
+/// Registry for active file watchers, keyed by watch_id
+pub struct FileWatcherRegistry {
+    watchers: tokio::sync::Mutex<HashMap<String, notify::RecommendedWatcher>>,
+}
+
+impl FileWatcherRegistry {
+    pub fn new() -> Self {
+        Self {
+            watchers: tokio::sync::Mutex::new(HashMap::new()),
+        }
+    }
+
+    pub async fn register(&self, id: String, watcher: notify::RecommendedWatcher) {
+        self.watchers.lock().await.insert(id, watcher);
+    }
+
+    pub async fn unregister(&self, id: &str) -> bool {
+        self.watchers.lock().await.remove(id).is_some()
+    }
+
+    pub async fn count(&self) -> usize {
+        self.watchers.lock().await.len()
+    }
+}
+
+// ============================================================================
 // ERROR TYPES
 // ============================================================================
 

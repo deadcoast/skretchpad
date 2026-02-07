@@ -19,7 +19,7 @@ use plugin_system::{
     sandbox::SandboxRegistry,
 };
 use std::sync::Arc;
-use tauri::{Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::RwLock;
 
 // ============================================================================
@@ -111,11 +111,80 @@ async fn get_all_plugin_statuses(
 }
 
 // ============================================================================
+// NATIVE FILE OPERATIONS
+// ============================================================================
+
+#[tauri::command]
+async fn read_file(path: String) -> Result<String, String> {
+    tokio::fs::read_to_string(&path)
+        .await
+        .map_err(|e| format!("Failed to read '{}': {}", path, e))
+}
+
+#[tauri::command]
+async fn write_file(path: String, content: String) -> Result<(), String> {
+    // Ensure parent directory exists
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        tokio::fs::create_dir_all(parent)
+            .await
+            .map_err(|e| format!("Failed to create directory: {}", e))?;
+    }
+    tokio::fs::write(&path, &content)
+        .await
+        .map_err(|e| format!("Failed to write '{}': {}", path, e))
+}
+
+#[tauri::command]
+async fn save_file(path: String, content: String) -> Result<(), String> {
+    write_file(path, content).await
+}
+
+#[tauri::command]
+async fn emit_editor_event(
+    event: String,
+    data: serde_json::Value,
+    app: AppHandle,
+) -> Result<(), String> {
+    app.emit(&event, data)
+        .map_err(|e| format!("Failed to emit event '{}': {}", event, e))
+}
+
+#[derive(serde::Serialize)]
+struct FileMetadata {
+    modified: u64,
+    size: u64,
+    is_file: bool,
+    is_dir: bool,
+}
+
+#[tauri::command]
+async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
+    let metadata = tokio::fs::metadata(&path)
+        .await
+        .map_err(|e| format!("Failed to get metadata for '{}': {}", path, e))?;
+
+    let modified = metadata
+        .modified()
+        .map_err(|e| format!("Failed to get modification time: {}", e))?
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+
+    Ok(FileMetadata {
+        modified,
+        size: metadata.len(),
+        is_file: metadata.is_file(),
+        is_dir: metadata.is_dir(),
+    })
+}
+
+// ============================================================================
 // MAIN FUNCTION
 // ============================================================================
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Get app data directory
             let app_dir = app
@@ -173,6 +242,12 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            // Native file operations
+            read_file,
+            write_file,
+            save_file,
+            get_file_metadata,
+            emit_editor_event,
             // Plugin management
             discover_plugins,
             load_plugin,

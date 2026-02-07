@@ -148,18 +148,18 @@ skretchpad/
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
+| Shortcut     | Action          |
+|--------------|-----------------|
 | Ctrl+Shift+P | Command Palette |
-| Ctrl+Z | Undo |
-| Ctrl+Shift+Z | Redo |
-| Ctrl+/ | Toggle Comment |
-| Ctrl+Shift+D | Duplicate Line |
-| Ctrl+Shift+K | Delete Line |
-| Alt+Up | Move Lines Up |
-| Alt+Down | Move Lines Down |
-| Ctrl+F | Find |
-| Ctrl+S | Save |
+| Ctrl+Z       | Undo            |
+| Ctrl+Shift+Z | Redo            |
+| Ctrl+/       | Toggle Comment  |
+| Ctrl+Shift+D | Duplicate Line  |
+| Ctrl+Shift+K | Delete Line     |
+| Alt+Up       | Move Lines Up   |
+| Alt+Down     | Move Lines Down |
+| Ctrl+F       | Find            |
+| Ctrl+S       | Save            |
 
 ## Plugin System
 

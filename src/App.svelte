@@ -9,7 +9,8 @@
   import { themeStore } from './lib/stores/theme';
   import { pluginsStore } from './lib/stores/plugins';
   import { keybindingStore } from './lib/stores/keybindings';
-  import { activeFile } from './lib/stores/editor';
+  import { editorStore, activeFile } from './lib/stores/editor';
+  import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
   let chromeVisible = true;
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
@@ -62,7 +63,11 @@
       { id: 'editor.moveLinesDown', label: 'Move Lines Down', keybinding: 'Alt+Down', category: 'Editor' },
       { id: 'editor.find', label: 'Find', keybinding: 'Ctrl+F', category: 'Editor' },
       { id: 'editor.formatDocument', label: 'Format Document', keybinding: 'Ctrl+Shift+F', category: 'Editor' },
+      { id: 'file.open', label: 'Open File', keybinding: 'Ctrl+O', category: 'File' },
+      { id: 'file.new', label: 'New File', keybinding: 'Ctrl+N', category: 'File' },
       { id: 'file.save', label: 'Save File', keybinding: 'Ctrl+S', category: 'File' },
+      { id: 'file.saveAs', label: 'Save As...', keybinding: 'Ctrl+Shift+S', category: 'File' },
+      { id: 'file.close', label: 'Close File', keybinding: 'Ctrl+W', category: 'File' },
       { id: 'view.commandPalette', label: 'Command Palette', keybinding: 'Ctrl+Shift+P', category: 'View' },
       { id: 'view.toggleChrome', label: 'Toggle Title Bar', category: 'View' },
       { id: 'view.toggleAlwaysOnTop', label: 'Toggle Always on Top', category: 'View' },
@@ -87,7 +92,18 @@
       case 'editor.moveLinesDown': commands?.moveLinesDown(); break;
       case 'editor.find': commands?.openSearchReplace(); break;
       case 'editor.formatDocument': commands?.formatDocument(); break;
+      case 'file.open': handleOpenFile(); break;
+      case 'file.new': editorStore.createFile(); break;
       case 'file.save': editorRef?.save(); break;
+      case 'file.saveAs': editorStore.saveFileAs(); break;
+      case 'file.close': {
+        const state = editorStore.getActiveFile();
+        if (state) {
+          // Close via editor component
+          editorRef?.close();
+        }
+        break;
+      }
       case 'view.commandPalette': commandPaletteVisible = true; break;
       case 'view.toggleChrome': toggleChrome(); break;
       case 'view.toggleAlwaysOnTop': toggleAlwaysOnTop(); break;
@@ -96,11 +112,54 @@
     }
   }
 
-  // Global keyboard shortcut for command palette
+  async function handleOpenFile() {
+    try {
+      const selected = await showOpenDialog({
+        title: 'Open File',
+        multiple: false,
+        filters: [{ name: 'All Files', extensions: ['*'] }],
+      });
+      if (selected) {
+        await editorStore.openFile(selected as string);
+      }
+    } catch (err) {
+      console.error('Failed to open file:', err);
+    }
+  }
+
+  // Global keyboard shortcuts
   function handleKeydown(e: KeyboardEvent) {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
+    const mod = e.ctrlKey || e.metaKey;
+
+    if (mod && e.shiftKey && e.key === 'P') {
       e.preventDefault();
       commandPaletteVisible = !commandPaletteVisible;
+      return;
+    }
+    if (mod && e.key === 'o') {
+      e.preventDefault();
+      handleOpenFile();
+      return;
+    }
+    if (mod && e.key === 'n') {
+      e.preventDefault();
+      editorStore.createFile();
+      return;
+    }
+    if (mod && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      editorStore.saveFileAs();
+      return;
+    }
+    if (mod && e.key === 's') {
+      e.preventDefault();
+      editorRef?.save();
+      return;
+    }
+    if (mod && e.key === 'w') {
+      e.preventDefault();
+      editorRef?.close();
+      return;
     }
   }
 

@@ -8,7 +8,9 @@
       "Bash(npm install:*)",
       "Bash(npx svelte-check:*)",
       "Bash(npm run build:*)",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File setup.ps1:*)",
+      "Bash(npx vite build)"
     ],
     "deny": [],
     "ask": []
