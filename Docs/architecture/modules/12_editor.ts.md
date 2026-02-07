@@ -109,33 +109,33 @@ Tracks recent file operations.
 
 ### Core Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
+| Method                  | Signature                                   | Description                   |
+|-------------------------|---------------------------------------------|-------------------------------|
 | `initialize(container)` | `(container: HTMLElement) => Promise<void>` | Initializes CodeMirror editor |
-| `openFile(path)` | `(path: string) => Promise<void>` | Opens file in new tab |
-| `createFile()` | `() => Promise<void>` | Creates new untitled file |
-| `saveFile()` | `() => Promise<void>` | Saves active file |
-| `saveFileAs()` | `() => Promise<void>` | Save with new path |
-| `closeTab(tabId)` | `(tabId: string) => Promise<void>` | Closes specific tab |
-| `switchTab(tabId)` | `(tabId: string) => Promise<void>` | Switches to different tab |
+| `openFile(path)`        | `(path: string) => Promise<void>`           | Opens file in new tab         |
+| `createFile()`          | `() => Promise<void>`                       | Creates new untitled file     |
+| `saveFile()`            | `() => Promise<void>`                       | Saves active file             |
+| `saveFileAs()`          | `() => Promise<void>`                       | Save with new path            |
+| `closeTab(tabId)`       | `(tabId: string) => Promise<void>`          | Closes specific tab           |
+| `switchTab(tabId)`      | `(tabId: string) => Promise<void>`          | Switches to different tab     |
 
 ### Bulk Operations
 
-| Method | Description | Source |
-|--------|-------------|--------|
-| `saveAll()` | Saves all dirty files | Lines 581-590 |
-| `closeAll()` | Closes all tabs | Lines 570-576 |
+| Method             | Description            | Source        |
+|--------------------|------------------------|---------------|
+| `saveAll()`        | Saves all dirty files  | Lines 581-590 |
+| `closeAll()`       | Closes all tabs        | Lines 570-576 |
 | `reloadFile(path)` | Reloads file from disk | Lines 595-629 |
 
 ### Utility Methods
 
-| Method | Description | Source |
-|--------|-------------|--------|
-| `getActiveFile()` | Returns active file or null | Lines 561-565 |
-| `getRecentActions()` | Returns action history | Lines 634-636 |
-| `clearError()` | Clears error state | Lines 641-646 |
-| `cleanup()` | Destroys editor and resets state | Lines 651-670 |
-| `updateEditorContent(content, language)` | Updates editor with new content | Lines 544-556 |
+| Method                                   | Description                      | Source        |
+|------------------------------------------|----------------------------------|---------------|
+| `getActiveFile()`                        | Returns active file or null      | Lines 561-565 |
+| `getRecentActions()`                     | Returns action history           | Lines 634-636 |
+| `clearError()`                           | Clears error state               | Lines 641-646 |
+| `cleanup()`                              | Destroys editor and resets state | Lines 651-670 |
+| `updateEditorContent(content, language)` | Updates editor with new content  | Lines 544-556 |
 
 ---
 
@@ -357,11 +357,11 @@ await editorStore.initialize(containerElement);
 
 ### Editor Callbacks
 
-| Callback | Trigger | Action |
-|----------|---------|--------|
-| `onChange` | Content modified | Mark dirty, auto-save, update content in tab |
-| `onCursorMove` | Cursor position changes | Update `cursorPosition` in store |
-| `onSelection` | Text selected | Update `selection` in store |
+| Callback       | Trigger                 | Action                                       |
+|----------------|-------------------------|----------------------------------------------|
+| `onChange`     | Content modified        | Mark dirty, auto-save, update content in tab |
+| `onCursorMove` | Cursor position changes | Update `cursorPosition` in store             |
+| `onSelection`  | Text selected           | Update `selection` in store                  |
 
 ---
 

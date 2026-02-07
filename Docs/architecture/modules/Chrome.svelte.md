@@ -57,11 +57,11 @@
 
 ### Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `alwaysOnTop` | `boolean` | No | `false` | Indicates if window is pinned (always-on-top) |
-| `onToggleChrome` | `() => void` | Yes | - | Callback to toggle chrome visibility |
-| `onTogglePin` | `() => void` | Yes | - | Callback to toggle always-on-top state |
+| Prop             | Type         | Required | Default | Description                                   |
+|------------------|--------------|----------|---------|-----------------------------------------------|
+| `alwaysOnTop`    | `boolean`    | No       | `false` | Indicates if window is pinned (always-on-top) |
+| `onToggleChrome` | `() => void` | Yes      | -       | Callback to toggle chrome visibility          |
+| `onTogglePin`    | `() => void` | Yes      | -       | Callback to toggle always-on-top state        |
 
 ### Events
 
@@ -83,9 +83,9 @@ export interface ChromeProps {
 
 ### Parent Component
 
-| Component | Relationship | Data Flow |
-|-----------|--------------|-----------|
-| **[App.svelte](0_App.svelte.md)** | Parent | Passes props and event handlers |
+| Component                         | Relationship | Data Flow                       |
+|-----------------------------------|--------------|---------------------------------|
+| **[App.svelte](0_App.svelte.md)** | Parent       | Passes props and event handlers |
 
 ### External Dependencies
 
@@ -172,13 +172,13 @@ graph LR
 
 ### Button Layout
 
-| Section | Buttons | Purpose | Status |
-|---------|---------|---------|--------|
-| **Window Controls** | Minimize (−) | Minimize window | 📋 Needs Tauri integration |
-| | Maximize (□) | Maximize/restore window | 📋 Needs Tauri integration |
-| | Close (×) | Close application | 📋 Needs Tauri integration |
-| **Chrome Actions** | Pin (📌) | Toggle always-on-top | ✅ Callback implemented |
-| | Hide (👁) | Toggle chrome visibility | ✅ Implemented |
+| Section             | Buttons      | Purpose                  | Status                      |
+|---------------------|--------------|--------------------------|-----------------------------|
+| **Window Controls** | Minimize (−) | Minimize window          | [ ] Needs Tauri integration |
+|                     | Maximize (□) | Maximize/restore window  | [ ] Needs Tauri integration |
+|                     | Close (×)    | Close application        | [ ] Needs Tauri integration |
+| **Chrome Actions**  | Pin (^)      | Toggle always-on-top     | [x] Callback implemented    |
+|                     | Hide (👁)     | Toggle chrome visibility | [x] Implemented             |
 
 ---
 
@@ -200,11 +200,11 @@ graph LR
 
 #### Window Control Buttons (macOS Style)
 
-| Button | Color | Symbol | Shortcut |
-|--------|-------|--------|----------|
-| Minimize | `#ffbd2e` (Yellow) | − | - |
-| Maximize | `#27ca3f` (Green) | □ | - |
-| Close | `#ff5f56` (Red) | × | - |
+| Button   | Color              | Symbol | Shortcut |
+|----------|--------------------|--------|----------|
+| Minimize | `#ffbd2e` (Yellow) | −      | -        |
+| Maximize | `#27ca3f` (Green)  | □      | -        |
+| Close    | `#ff5f56` (Red)    | ×      | -        |
 
 ```css
 .control-button {

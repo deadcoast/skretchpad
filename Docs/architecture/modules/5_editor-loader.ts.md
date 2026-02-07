@@ -132,20 +132,20 @@ class LanguageRegistry {
 
 ### Supported Languages
 
-| Language | Extensions | Package |
-|----------|------------|---------|
+| Language   | Extensions        | Package                       |
+|------------|-------------------|-------------------------------|
 | JavaScript | js, jsx, mjs, cjs | `@codemirror/lang-javascript` |
 | TypeScript | ts, tsx, mts, cts | `@codemirror/lang-javascript` |
-| Python | py, pyw, pyi | `@codemirror/lang-python` |
-| Rust | rs | `@codemirror/lang-rust` |
-| JSON | json, jsonc | `@codemirror/lang-json` |
-| Markdown | md, markdown | `@codemirror/lang-markdown` |
-| HTML | html, htm | `@codemirror/lang-html` |
-| CSS | css | `@codemirror/lang-css` |
-| YAML | yaml, yml | `@codemirror/lang-yaml` |
-| TOML | toml | `@codemirror/lang-toml` |
-| XML | xml, svg | `@codemirror/lang-xml` |
-| SQL | sql | `@codemirror/lang-sql` |
+| Python     | py, pyw, pyi      | `@codemirror/lang-python`     |
+| Rust       | rs                | `@codemirror/lang-rust`       |
+| JSON       | json, jsonc       | `@codemirror/lang-json`       |
+| Markdown   | md, markdown      | `@codemirror/lang-markdown`   |
+| HTML       | html, htm         | `@codemirror/lang-html`       |
+| CSS        | css               | `@codemirror/lang-css`        |
+| YAML       | yaml, yml         | `@codemirror/lang-yaml`       |
+| TOML       | toml              | `@codemirror/lang-toml`       |
+| XML        | xml, svg          | `@codemirror/lang-xml`        |
+| SQL        | sql               | `@codemirror/lang-sql`        |
 
 **Source**: Lines 79-91
 
@@ -249,11 +249,11 @@ class PluginHooksManager {
 
 ### Available Hooks
 
-| Hook Name | Triggered When | Data Payload |
-|-----------|----------------|--------------|
-| `content_change` | Document changes | `{ changes, newDoc }` |
-| `selection_change` | Selection changes | `{ selection }` |
-| `focus_change` | Focus changes | `{ focused }` |
+| Hook Name          | Triggered When    | Data Payload          |
+|--------------------|-------------------|-----------------------|
+| `content_change`   | Document changes  | `{ changes, newDoc }` |
+| `selection_change` | Selection changes | `{ selection }`       |
+| `focus_change`     | Focus changes     | `{ focused }`         |
 
 **Source**: Lines 346-365
 
@@ -475,24 +475,24 @@ if (saved) {
 
 ### Content Operations
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| `getEditorContent` | `(view) => string` | Get full document content |
-| `setEditorContent` | `(view, content: string) => void` | Replace all content |
-| `insertText` | `(view, text: string) => void` | Insert at cursor |
-| `replaceSelection` | `(view, text: string) => void` | Replace selected text |
-| `getSelection` | `(view) => string` | Get selected text |
+| Function           | Signature                         | Description               |
+|--------------------|-----------------------------------|---------------------------|
+| `getEditorContent` | `(view) => string`                | Get full document content |
+| `setEditorContent` | `(view, content: string) => void` | Replace all content       |
+| `insertText`       | `(view, text: string) => void`    | Insert at cursor          |
+| `replaceSelection` | `(view, text: string) => void`    | Replace selected text     |
+| `getSelection`     | `(view) => string`                | Get selected text         |
 
 **Source**: Lines 697-751
 
 ### Navigation
 
-| Function | Signature | Description |
-|----------|-----------|-------------|
+| Function            | Signature                    | Description         |
+|---------------------|------------------------------|---------------------|
 | `getCursorPosition` | `(view) => { line, column }` | Get cursor position |
-| `gotoLine` | `(view, lineNumber) => void` | Jump to line |
-| `focus` | `(view) => void` | Focus editor |
-| `blur` | `(view) => void` | Blur editor |
+| `gotoLine`          | `(view, lineNumber) => void` | Jump to line        |
+| `focus`             | `(view) => void`             | Focus editor        |
+| `blur`              | `(view) => void`             | Blur editor         |
 
 **Source**: Lines 711-768
 

@@ -179,11 +179,11 @@ Main store state structure using Maps for efficient lookup.
 
 ### Initialization
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `initialize()` | `() => Promise<void>` | Initialize plugin system (discover, load statuses, setup events) |
-| `discover()` | `() => Promise<string[]>` | Discover available plugins |
-| `setupEventListeners()` | `() => Promise<void>` | Set up Tauri event listeners |
+| Method                  | Signature                 | Description                                                      |
+|-------------------------|---------------------------|------------------------------------------------------------------|
+| `initialize()`          | `() => Promise<void>`     | Initialize plugin system (discover, load statuses, setup events) |
+| `discover()`            | `() => Promise<string[]>` | Discover available plugins                                       |
+| `setupEventListeners()` | `() => Promise<void>`     | Set up Tauri event listeners                                     |
 
 #### initialize()
 
@@ -202,12 +202,12 @@ await pluginsStore.initialize();
 
 ### Lifecycle Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `load(pluginId)` | `(pluginId: string) => Promise<void>` | Load plugin manifest |
-| `activate(pluginId)` | `(pluginId: string) => Promise<void>` | Activate loaded plugin |
-| `deactivate(pluginId)` | `(pluginId: string) => Promise<void>` | Deactivate active plugin |
-| `reload(pluginId)` | `(pluginId: string) => Promise<void>` | Reload plugin (deactivate → load → activate) |
+| Method                 | Signature                             | Description                                  |
+|------------------------|---------------------------------------|----------------------------------------------|
+| `load(pluginId)`       | `(pluginId: string) => Promise<void>` | Load plugin manifest                         |
+| `activate(pluginId)`   | `(pluginId: string) => Promise<void>` | Activate loaded plugin                       |
+| `deactivate(pluginId)` | `(pluginId: string) => Promise<void>` | Deactivate active plugin                     |
+| `reload(pluginId)`     | `(pluginId: string) => Promise<void>` | Reload plugin (deactivate → load → activate) |
 
 #### load()
 
@@ -261,10 +261,10 @@ Full reload cycle: deactivate → load manifest → activate.
 
 ### Status Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
+| Method                    | Signature                             | Description                  |
+|---------------------------|---------------------------------------|------------------------------|
 | `refreshStatus(pluginId)` | `(pluginId: string) => Promise<void>` | Refresh single plugin status |
-| `refreshStatuses()` | `() => Promise<void>` | Refresh all plugin statuses |
+| `refreshStatuses()`       | `() => Promise<void>`                 | Refresh all plugin statuses  |
 
 **Source**: Lines 200-232
 
@@ -274,11 +274,11 @@ Full reload cycle: deactivate → load manifest → activate.
 
 ### Commands
 
-| Method | Description | Source |
-|--------|-------------|--------|
-| `registerCommand(command)` | Add command to command palette | Lines 237-242 |
-| `unregisterCommand(commandId)` | Remove command | Lines 247-252 |
-| `getCommands(pluginId?)` | Get all commands or filter by plugin | Lines 364-373 |
+| Method                         | Description                          | Source        |
+|--------------------------------|--------------------------------------|---------------|
+| `registerCommand(command)`     | Add command to command palette       | Lines 237-242 |
+| `unregisterCommand(commandId)` | Remove command                       | Lines 247-252 |
+| `getCommands(pluginId?)`       | Get all commands or filter by plugin | Lines 364-373 |
 
 **Usage**:
 
@@ -294,13 +294,13 @@ pluginsStore.registerCommand({
 
 ### Panels
 
-| Method | Description | Source |
-|--------|-------------|--------|
-| `registerPanel(panel)` | Add panel to UI | Lines 257-262 |
-| `unregisterPanel(panelId)` | Remove panel | Lines 267-272 |
-| `showPanel(panelId)` | Show hidden panel | Lines 277-286 |
-| `hidePanel(panelId)` | Hide visible panel | Lines 291-300 |
-| `getPanels(pluginId?)` | Get all panels or filter by plugin | Lines 378-387 |
+| Method                     | Description                        | Source        |
+|----------------------------|------------------------------------|---------------|
+| `registerPanel(panel)`     | Add panel to UI                    | Lines 257-262 |
+| `unregisterPanel(panelId)` | Remove panel                       | Lines 267-272 |
+| `showPanel(panelId)`       | Show hidden panel                  | Lines 277-286 |
+| `hidePanel(panelId)`       | Hide visible panel                 | Lines 291-300 |
+| `getPanels(pluginId?)`     | Get all panels or filter by plugin | Lines 378-387 |
 
 **Positions**:
 - `'sidebar'` - Left/right sidebar
@@ -309,12 +309,12 @@ pluginsStore.registerCommand({
 
 ### Status Bar Items
 
-| Method | Description | Source |
-|--------|-------------|--------|
-| `registerStatusBarItem(item)` | Add status bar item | Lines 305-310 |
-| `unregisterStatusBarItem(itemId)` | Remove status bar item | Lines 315-320 |
-| `updateStatusBarItem(itemId, updates)` | Update existing item | Lines 325-333 |
-| `getStatusBarItems(pluginId?)` | Get items sorted by priority | Lines 392-401 |
+| Method                                 | Description                  | Source        |
+|----------------------------------------|------------------------------|---------------|
+| `registerStatusBarItem(item)`          | Add status bar item          | Lines 305-310 |
+| `unregisterStatusBarItem(itemId)`      | Remove status bar item       | Lines 315-320 |
+| `updateStatusBarItem(itemId, updates)` | Update existing item         | Lines 325-333 |
+| `getStatusBarItems(pluginId?)`         | Get items sorted by priority | Lines 392-401 |
 
 **Priority System**:
 - Higher priority → further left in status bar
@@ -349,13 +349,13 @@ async setupEventListeners(): Promise<void>
 
 **Events**:
 
-| Event | Payload | Handler |
-|-------|---------|---------|
-| `plugin:status_bar:add` | `PluginStatusBarItem` | Register status bar item |
-| `plugin:status_bar:remove` | `{ plugin_id, id }` | Unregister status bar item |
-| `plugin:panel:show` | `PluginPanel` | Register and show panel |
-| `plugin:panel:hide` | `{ plugin_id, id }` | Hide panel |
-| `plugin:notification` | `{ plugin_id, title, message, level }` | Log notification |
+| Event                      | Payload                                | Handler                    |
+|----------------------------|----------------------------------------|----------------------------|
+| `plugin:status_bar:add`    | `PluginStatusBarItem`                  | Register status bar item   |
+| `plugin:status_bar:remove` | `{ plugin_id, id }`                    | Unregister status bar item |
+| `plugin:panel:show`        | `PluginPanel`                          | Register and show panel    |
+| `plugin:panel:hide`        | `{ plugin_id, id }`                    | Hide panel                 |
+| `plugin:notification`      | `{ plugin_id, title, message, level }` | Log notification           |
 
 **Source**: Lines 406-452
 

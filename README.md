@@ -208,7 +208,7 @@ Plugins are auto-discovered from the `plugins/` directory and first-party plugin
 - [Technical Details](docs/architecture/3_technical-details.md)
 - [Configuration](docs/architecture/4_configs.md)
 - [Status](docs/STATUS.md)
-- [Changelog](CHANGELOG.md)
+- [Changelog](docs/CHANGELOG.md)
 
 ## License
 

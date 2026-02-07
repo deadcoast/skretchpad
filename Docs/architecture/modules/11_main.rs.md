@@ -51,11 +51,11 @@ struct AppState {
 
 Application state is managed via `tauri::State`:
 
-| State | Type | Purpose |
-|-------|------|---------|
-| `plugin_manager` | `Arc<RwLock<PluginManager>>` | Plugin lifecycle management |
-| `sandbox_registry` | `Arc<SandboxRegistry>` | JavaScript sandbox registry |
-| `audit_logger` | `Arc<AuditLogger>` | Security audit logging |
+| State              | Type                         | Purpose                     |
+|--------------------|------------------------------|-----------------------------|
+| `plugin_manager`   | `Arc<RwLock<PluginManager>>` | Plugin lifecycle management |
+| `sandbox_registry` | `Arc<SandboxRegistry>`       | JavaScript sandbox registry |
+| `audit_logger`     | `Arc<AuditLogger>`           | Security audit logging      |
 
 **Initialization**: Lines 138-140
 
@@ -338,17 +338,17 @@ See [`capabilities.rs`](1.1_capabilities.rs.md) for trust level definitions.
 
 ### Command Categories
 
-| Category | Commands | Defined In |
-|----------|----------|------------|
-| **Plugin Management** | 7 | main.rs (this file) |
-| **Filesystem** | 4 | [`api.rs`](3_api.rs.md) |
-| **Network** | 1 | [`api.rs`](3_api.rs.md) |
-| **Command Execution** | 1 | [`api.rs`](3_api.rs.md) |
-| **UI Operations** | 5 | [`api.rs`](3_api.rs.md) |
-| **Editor Operations** | 3 | [`api.rs`](3_api.rs.md) |
-| **Event System** | 2 | [`api.rs`](3_api.rs.md) |
-| **Plugin Hooks** | 1 | [`api.rs`](3_api.rs.md) |
-| **Audit Logs** | 2 | [`api.rs`](3_api.rs.md) |
+| Category              | Commands | Defined In              |
+|-----------------------|----------|-------------------------|
+| **Plugin Management** | 7        | main.rs (this file)     |
+| **Filesystem**        | 4        | [`api.rs`](3_api.rs.md) |
+| **Network**           | 1        | [`api.rs`](3_api.rs.md) |
+| **Command Execution** | 1        | [`api.rs`](3_api.rs.md) |
+| **UI Operations**     | 5        | [`api.rs`](3_api.rs.md) |
+| **Editor Operations** | 3        | [`api.rs`](3_api.rs.md) |
+| **Event System**      | 2        | [`api.rs`](3_api.rs.md) |
+| **Plugin Hooks**      | 1        | [`api.rs`](3_api.rs.md) |
+| **Audit Logs**        | 2        | [`api.rs`](3_api.rs.md) |
 
 ---
 

@@ -156,79 +156,87 @@ const DEFAULT_SCHEME: KeybindingScheme = {
 **Binding Categories**:
 
 #### File Operations
-| Keybinding | Command | Description |
-|------------|---------|-------------|
-| `Ctrl+O` | `file.open` | Open file |
-| `Ctrl+S` | `file.save` | Save file |
-| `Ctrl+Shift+S` | `file.saveAs` | Save as |
-| `Ctrl+W` | `file.close` | Close file |
-| `Ctrl+N` | `file.new` | New file |
+
+| Keybinding     | Command       | Description |
+|----------------|---------------|-------------|
+| `Ctrl+O`       | `file.open`   | Open file   |
+| `Ctrl+S`       | `file.save`   | Save file   |
+| `Ctrl+Shift+S` | `file.saveAs` | Save as     |
+| `Ctrl+W`       | `file.close`  | Close file  |
+| `Ctrl+N`       | `file.new`    | New file    |
 
 **Source**: Lines 57-83
 
 #### Edit Operations
-| Keybinding | Command | Description |
-|------------|---------|-------------|
-| `Ctrl+Z` | `edit.undo` | Undo |
-| `Ctrl+Y`, `Ctrl+Shift+Z` | `edit.redo` | Redo |
-| `Ctrl+C` | `edit.copy` | Copy |
-| `Ctrl+X` | `edit.cut` | Cut |
-| `Ctrl+V` | `edit.paste` | Paste |
-| `Ctrl+A` | `edit.selectAll` | Select all |
-| `Ctrl+/` | `edit.toggleComment` | Toggle comment |
-| `Ctrl+D` | `edit.duplicateLine` | Duplicate line |
-| `Ctrl+Shift+K` | `edit.deleteLine` | Delete line |
+
+| Keybinding               | Command              | Description    |
+|--------------------------|----------------------|----------------|
+| `Ctrl+Z`                 | `edit.undo`          | Undo           |
+| `Ctrl+Y`, `Ctrl+Shift+Z` | `edit.redo`          | Redo           |
+| `Ctrl+C`                 | `edit.copy`          | Copy           |
+| `Ctrl+X`                 | `edit.cut`           | Cut            |
+| `Ctrl+V`                 | `edit.paste`         | Paste          |
+| `Ctrl+A`                 | `edit.selectAll`     | Select all     |
+| `Ctrl+/`                 | `edit.toggleComment` | Toggle comment |
+| `Ctrl+D`                 | `edit.duplicateLine` | Duplicate line |
+| `Ctrl+Shift+K`           | `edit.deleteLine`    | Delete line    |
 
 **Source**: Lines 85-135
 
 #### Search Operations
-| Keybinding | Command | Description |
-|------------|---------|-------------|
-| `Ctrl+F` | `search.find` | Find |
-| `Ctrl+H` | `search.replace` | Replace |
-| `F3` | `search.findNext` | Find next |
+
+| Keybinding | Command               | Description   |
+|------------|-----------------------|---------------|
+| `Ctrl+F`   | `search.find`         | Find          |
+| `Ctrl+H`   | `search.replace`      | Replace       |
+| `F3`       | `search.findNext`     | Find next     |
 | `Shift+F3` | `search.findPrevious` | Find previous |
 
 **Source**: Lines 137-157
 
 #### View Operations
-| Keybinding | Command | Description |
-|------------|---------|-------------|
-| `Ctrl+Shift+H` | `view.toggleChrome` | Toggle title bar |
-| `Ctrl+P` | `view.togglePin` | Toggle window pin |
-| `Ctrl+,` | `view.openSettings` | Open settings |
-| `Ctrl+Shift+P` | `view.commandPalette` | Command palette |
+
+| Keybinding     | Command               | Description       |
+|----------------|-----------------------|-------------------|
+| `Ctrl+Shift+H` | `view.toggleChrome`   | Toggle title bar  |
+| `Ctrl+P`       | `view.togglePin`      | Toggle window pin |
+| `Ctrl+,`       | `view.openSettings`   | Open settings     |
+| `Ctrl+Shift+P` | `view.commandPalette` | Command palette   |
 
 **Source**: Lines 159-179
 
 #### Navigation
-| Keybinding | Command | Description |
-|------------|---------|-------------|
-| `Ctrl+G` | `navigation.gotoLine` | Go to line |
-| `Ctrl+Tab` | `navigation.nextTab` | Next tab |
+
+| Keybinding       | Command                  | Description  |
+|------------------|--------------------------|--------------|
+| `Ctrl+G`         | `navigation.gotoLine`    | Go to line   |
+| `Ctrl+Tab`       | `navigation.nextTab`     | Next tab     |
 | `Ctrl+Shift+Tab` | `navigation.previousTab` | Previous tab |
 
 **Source**: Lines 181-196
 
 #### Formatting
-| Keybinding | Command | Description |
-|------------|---------|-------------|
+
+| Keybinding    | Command           | Description     |
+|---------------|-------------------|-----------------|
 | `Shift+Alt+F` | `format.document` | Format document |
 
 **Source**: Lines 198-203
 
 #### Git Commands
-| Keybinding | Command | Context | Description |
-|------------|---------|---------|-------------|
-| `Ctrl+Shift+G` | `git.status` | - | Git status |
-| `Ctrl+K` | `git.commit` | `gitAvailable` | Commit |
+
+| Keybinding     | Command      | Context        | Description |
+|----------------|--------------|----------------|-------------|
+| `Ctrl+Shift+G` | `git.status` | -              | Git status  |
+| `Ctrl+K`       | `git.commit` | `gitAvailable` | Commit      |
 
 **Source**: Lines 205-216
 
 #### Terminal
-| Keybinding | Command | Description |
-|------------|---------|-------------|
-| `Ctrl+\`` | `terminal.toggle` | Toggle terminal |
+
+| Keybinding | Command           | Description     |
+|------------|-------------------|-----------------|
+| `Ctrl+\``  | `terminal.toggle` | Toggle terminal |
 
 **Source**: Lines 218-223
 
@@ -299,16 +307,16 @@ Store initializes with Default scheme active.
 
 ### Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `setScheme(scheme)` | `(scheme: KeybindingScheme) => void` | Switch to specified scheme |
-| `loadScheme(name)` | `(name: string) => Promise<void>` | Load scheme by name (local or backend) |
-| `addCustomBinding(id, binding)` | `(id: string, binding: Keybinding) => void` | Add user-defined binding |
-| `removeCustomBinding(id)` | `(id: string) => void` | Remove custom binding |
-| `resetToDefault()` | `() => void` | Reset to DEFAULT_SCHEME |
-| `clearCustomBindings()` | `() => void` | Remove all custom bindings |
-| `getCommand(event)` | `(event: KeyEvent) => string \| null` | Get command for key event |
-| `execute(event)` | `(event: KeyEvent) => Promise<boolean>` | Execute command for key event |
+| Method                          | Signature                                   | Description                            |
+|---------------------------------|---------------------------------------------|----------------------------------------|
+| `setScheme(scheme)`             | `(scheme: KeybindingScheme) => void`        | Switch to specified scheme             |
+| `loadScheme(name)`              | `(name: string) => Promise<void>`           | Load scheme by name (local or backend) |
+| `addCustomBinding(id, binding)` | `(id: string, binding: Keybinding) => void` | Add user-defined binding               |
+| `removeCustomBinding(id)`       | `(id: string) => void`                      | Remove custom binding                  |
+| `resetToDefault()`              | `() => void`                                | Reset to DEFAULT_SCHEME                |
+| `clearCustomBindings()`         | `() => void`                                | Remove all custom bindings             |
+| `getCommand(event)`             | `(event: KeyEvent) => string \| null`       | Get command for key event              |
+| `execute(event)`                | `(event: KeyEvent) => Promise<boolean>`     | Execute command for key event          |
 
 ### setScheme
 
@@ -522,9 +530,9 @@ Formats a keybinding for display with platform-appropriate symbols.
 
 | Modifier | macOS | Windows/Linux |
 |----------|-------|---------------|
-| Ctrl/Cmd | `⌘` | `Ctrl` |
-| Shift | `⇧` | `Shift` |
-| Alt | `⌥` | `Alt` |
+| Ctrl/Cmd | `⌘`   | `Ctrl`        |
+| Shift    | `⇧`   | `Shift`       |
+| Alt      | `⌥`   | `Alt`         |
 
 **Example**:
 ```typescript

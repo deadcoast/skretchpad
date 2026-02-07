@@ -129,11 +129,11 @@ skretchpad/
 
 ## File Counts
 
-| Category | Files | Approx LOC |
-|----------|-------|------------|
-| Rust backend | 11 | ~4,500 |
-| TypeScript/Svelte frontend | 24 | ~10,000 |
-| Plugin manifests/code | 3 | ~200 |
-| Config files | 11 | ~350 |
-| Documentation | 20+ | -- |
-| **Total source** | **38** | **~15,050** |
+| Category                   | Files  | Approx LOC  |
+|----------------------------|--------|-------------|
+| Rust backend               | 11     | ~4,500      |
+| TypeScript/Svelte frontend | 24     | ~10,000     |
+| Plugin manifests/code      | 3      | ~200        |
+| Config files               | 11     | ~350        |
+| Documentation              | 20+    | --          |
+| **Total source**           | **38** | **~15,050** |

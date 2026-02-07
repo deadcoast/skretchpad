@@ -385,14 +385,14 @@ const debouncedInput = debounce(handleInput, 300);
 
 ### Choosing the Right Function
 
-| Use Case | Function | Reason |
-|----------|----------|--------|
-| Input handlers | `debounce` | Wait for user to stop typing |
-| Scroll handlers | `throttle` | Limit execution frequency |
-| API calls | `debounceAsync` | Handle promises correctly |
-| Button clicks | `debounceLeading` | Execute immediately, prevent spam |
-| Auto-save | `debounceWithMaxWait` | Guarantee periodic saves |
-| Cleanup needed | `debounceWithCancel` | Cancel on unmount |
+| Use Case        | Function              | Reason                            |
+|-----------------|-----------------------|-----------------------------------|
+| Input handlers  | `debounce`            | Wait for user to stop typing      |
+| Scroll handlers | `throttle`            | Limit execution frequency         |
+| API calls       | `debounceAsync`       | Handle promises correctly         |
+| Button clicks   | `debounceLeading`     | Execute immediately, prevent spam |
+| Auto-save       | `debounceWithMaxWait` | Guarantee periodic saves          |
+| Cleanup needed  | `debounceWithCancel`  | Cancel on unmount                 |
 
 ---
 

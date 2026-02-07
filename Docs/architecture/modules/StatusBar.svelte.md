@@ -60,19 +60,19 @@
 
 ### Svelte Store Imports
 
-| Store | Source | Type | Purpose |
-|-------|--------|------|---------|
-| `pluginsStore` | [`$lib/stores/plugins`](13_plugins.ts.md) | `PluginStore` | Plugin registry and state management |
-| `sortedStatusBarItems` | [`$lib/stores/plugins`](13_plugins.ts.md) | `Readable<StatusBarItem[]>` | Sorted plugin status bar items |
-| `editorStore` | [`$lib/stores/editor`](12_editor.ts.md) | `EditorStore` | Editor state (cursor, selection) |
-| `activeFile` | [`$lib/stores/editor`](12_editor.ts.md) | `Readable<FileInfo?>` | Active file metadata |
+| Store                  | Source                                    | Type                        | Purpose                              |
+|------------------------|-------------------------------------------|-----------------------------|--------------------------------------|
+| `pluginsStore`         | [`$lib/stores/plugins`](13_plugins.ts.md) | `PluginStore`               | Plugin registry and state management |
+| `sortedStatusBarItems` | [`$lib/stores/plugins`](13_plugins.ts.md) | `Readable<StatusBarItem[]>` | Sorted plugin status bar items       |
+| `editorStore`          | [`$lib/stores/editor`](12_editor.ts.md)   | `EditorStore`               | Editor state (cursor, selection)     |
+| `activeFile`           | [`$lib/stores/editor`](12_editor.ts.md)   | `Readable<FileInfo?>`       | Active file metadata                 |
 
 ### Utility Imports
 
-| Function | Source | Purpose |
-|----------|--------|---------|
+| Function         | Source                         | Purpose                               |
+|------------------|--------------------------------|---------------------------------------|
 | `formatShortcut` | [`$lib/utils/ui`](15_ui.ts.md) | Format keyboard shortcuts for display |
-| `isMac` | [`$lib/utils/ui`](15_ui.ts.md) | Detect macOS platform |
+| `isMac`          | [`$lib/utils/ui`](15_ui.ts.md) | Detect macOS platform                 |
 
 ---
 
@@ -80,9 +80,9 @@
 
 ### Parent Component
 
-| Component | Relationship | Data Flow |
-|-----------|--------------|-----------|
-| **[App.svelte](0_App.svelte.md)** | Parent | No props - uses stores for state |
+| Component                         | Relationship | Data Flow                        |
+|-----------------------------------|--------------|----------------------------------|
+| **[App.svelte](0_App.svelte.md)** | Parent       | No props - uses stores for state |
 
 ### Store Integration
 
@@ -192,10 +192,10 @@ graph LR
 
 ### Status Bar Sections
 
-| Section | Items | Alignment | Priority Filter |
-|---------|-------|-----------|-----------------|
-| **Left** | File info, Language, High-priority plugin items | Left | `priority >= 100` |
-| **Right** | Low-priority plugin items, Cursor, Selection, Plugin count | Right | `priority < 100` |
+| Section   | Items                                                      | Alignment | Priority Filter   |
+|-----------|------------------------------------------------------------|-----------|-------------------|
+| **Left**  | File info, Language, High-priority plugin items            | Left      | `priority >= 100` |
+| **Right** | Low-priority plugin items, Cursor, Selection, Plugin count | Right     | `priority < 100`  |
 
 ### Plugin Menu Structure
 
@@ -246,18 +246,18 @@ interface StatusBarItem {
 
 ### Priority-Based Positioning
 
-| Priority Range | Position | Use Case |
-|----------------|----------|----------|
-| `≥ 100` | Left side | File-related info, high importance |
-| `< 100` | Right side | Editor state, low importance |
+| Priority Range | Position   | Use Case                           |
+|----------------|------------|------------------------------------|
+| `≥ 100`        | Left side  | File-related info, high importance |
+| `< 100`        | Right side | Editor state, low importance       |
 
 ### Plugin Lifecycle States
 
-| State | Indicator Color | Available Actions |
-|-------|----------------|-------------------|
+| State    | Indicator Color   | Available Actions  |
+|----------|-------------------|--------------------|
 | `active` | Green (`#50fa7b`) | Deactivate, Reload |
-| `loaded` | Cyan (`#00d9ff`) | Activate, Reload |
-| `error` | Red (`#ff5555`) | Reload |
+| `loaded` | Cyan (`#00d9ff`)  | Activate, Reload   |
+| `error`  | Red (`#ff5555`)   | Reload             |
 
 ### Plugin Store Methods
 
@@ -274,16 +274,16 @@ pluginsStore.reload(pluginId: string)
 
 ### CSS Variables
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `--status-bar-height` | `24px` | Bar height |
-| `--status-bar-bg` | Theme-dependent | Background color |
-| `--status-bar-fg` | Theme-dependent | Text color |
-| `--window-border-color` | Theme-dependent | Top border |
-| `--button-hover` | Theme-dependent | Hover background |
-| `--color-warning` | `#f1fa8c` | Dirty indicator |
-| `--color-success` | `#50fa7b` | Active plugin indicator |
-| `--color-error` | `#ff5555` | Error indicator |
+| Variable                | Default         | Purpose                 |
+|-------------------------|-----------------|-------------------------|
+| `--status-bar-height`   | `24px`          | Bar height              |
+| `--status-bar-bg`       | Theme-dependent | Background color        |
+| `--status-bar-fg`       | Theme-dependent | Text color              |
+| `--window-border-color` | Theme-dependent | Top border              |
+| `--button-hover`        | Theme-dependent | Hover background        |
+| `--color-warning`       | `#f1fa8c`       | Dirty indicator         |
+| `--color-success`       | `#50fa7b`       | Active plugin indicator |
+| `--color-error`         | `#ff5555`       | Error indicator         |
 
 ### Responsive Item Styling
 

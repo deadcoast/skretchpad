@@ -43,10 +43,10 @@
 
 ### Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `initialPath` | `string \| null` | No | `null` | File to open on mount |
-| `readOnly` | `boolean` | No | `false` | Read-only mode |
+| Prop          | Type             | Required | Default | Description           |
+|---------------|------------------|----------|---------|-----------------------|
+| `initialPath` | `string \| null` | No       | `null`  | File to open on mount |
+| `readOnly`    | `boolean`        | No       | `false` | Read-only mode        |
 
 ### Exported Functions
 
@@ -68,25 +68,25 @@ export function setContent(content: string): void
 
 ### Svelte Stores
 
-| Store | Import | Purpose |
-|-------|--------|---------|
-| `editorStore` | `../lib/stores/editor` | Cursor, selection, dirty state |
-| `themeStore` | `../lib/stores/theme` | Theme management |
-| `uiStore` | `../lib/stores/ui` | UI visibility state |
-| `pluginStore` | `../lib/stores/plugins` | Active plugins |
-| `keybindingStore` | `../lib/stores/keybindings` | Keybinding schemes |
+| Store             | Import                      | Purpose                        |
+|-------------------|-----------------------------|--------------------------------|
+| `editorStore`     | `../lib/stores/editor`      | Cursor, selection, dirty state |
+| `themeStore`      | `../lib/stores/theme`       | Theme management               |
+| `uiStore`         | `../lib/stores/ui`          | UI visibility state            |
+| `pluginStore`     | `../lib/stores/plugins`     | Active plugins                 |
+| `keybindingStore` | `../lib/stores/keybindings` | Keybinding schemes             |
 
 **References**: See [`12_editor.ts.md`](12_editor.ts.md), [`6_theme.ts.md`](6_theme.ts.md), [`13_plugins.ts.md`](13_plugins.ts.md)
 
 ### Utilities
 
-| Function | Import | Purpose |
-|----------|--------|---------|
-| `createEditor` | `../lib/editor-loader` | Creates CodeMirror instance |
-| `destroyEditor` | `../lib/editor-loader` | Cleanup on unmount |
-| `setLanguage` | `../lib/editor-loader` | Sets syntax mode |
-| `updateTheme` | `../lib/editor-loader` | Applies theme |
-| `debounce` | `../lib/utils/debounce` | Debounces handlers |
+| Function        | Import                  | Purpose                     |
+|-----------------|-------------------------|-----------------------------|
+| `createEditor`  | `../lib/editor-loader`  | Creates CodeMirror instance |
+| `destroyEditor` | `../lib/editor-loader`  | Cleanup on unmount          |
+| `setLanguage`   | `../lib/editor-loader`  | Sets syntax mode            |
+| `updateTheme`   | `../lib/editor-loader`  | Applies theme               |
+| `debounce`      | `../lib/utils/debounce` | Debounces handlers          |
 
 **Reference**: [`5_editor-loader.ts.md`](5_editor-loader.ts.md), [`14_debounce.ts.md`](14_debounce.ts.md)
 
@@ -138,13 +138,13 @@ onMount(async () => {
 
 ### Event Listeners Setup
 
-| Event | Handler | Purpose |
-|-------|---------|---------|
-| `file:open` | `openFile(path)` | Opens file from external trigger |
-| `file:save` | `saveCurrentFile()` | Saves from external trigger |
-| `theme:changed` | `applyTheme(theme)` | Applies new theme |
-| `keybindings:changed` | `reloadKeybindings()` | Reloads keybindings |
-| `window:focus` | `checkForExternalChanges()` | Checks for file modifications |
+| Event                 | Handler                     | Purpose                          |
+|-----------------------|-----------------------------|----------------------------------|
+| `file:open`           | `openFile(path)`            | Opens file from external trigger |
+| `file:save`           | `saveCurrentFile()`         | Saves from external trigger      |
+| `theme:changed`       | `applyTheme(theme)`         | Applies new theme                |
+| `keybindings:changed` | `reloadKeybindings()`       | Reloads keybindings              |
+| `window:focus`        | `checkForExternalChanges()` | Checks for file modifications    |
 
 **Source**: Lines 114-144
 
@@ -214,12 +214,12 @@ async function saveCurrentFile()
 
 ### Other Operations
 
-| Function | Purpose | Source |
-|----------|---------|--------|
-| `saveFileAs(newPath)` | Save to new path, re-detect language | Lines 286-314 |
-| `closeCurrentFile()` | Prompt to save, clear editor | Lines 316-340 |
-| `reloadCurrentFile()` | Reload from disk with confirmation | Lines 342-349 |
-| `checkForExternalChanges()` | Check file metadata for changes | Lines 351-366 |
+| Function                    | Purpose                              | Source        |
+|-----------------------------|--------------------------------------|---------------|
+| `saveFileAs(newPath)`       | Save to new path, re-detect language | Lines 286-314 |
+| `closeCurrentFile()`        | Prompt to save, clear editor         | Lines 316-340 |
+| `reloadCurrentFile()`       | Reload from disk with confirmation   | Lines 342-349 |
+| `checkForExternalChanges()` | Check file metadata for changes      | Lines 351-366 |
 
 ---
 
@@ -237,14 +237,14 @@ Executes hooks for all active plugins via `plugin_execute_hook` Tauri command.
 
 ### Available Hooks
 
-| Hook Name | Trigger | Data Payload |
-|-----------|---------|--------------|
-| `before_file_open` | Before opening file | `{ path }` |
-| `on_file_open` | After opening file | `{ path, content, language }` |
-| `before_file_save` | Before saving file | `{ path, content }` |
-| `on_file_save` | After saving file | `{ path, content }` |
-| `on_content_change` | Content changed (debounced) | `{ path, changes }` |
-| `before_editor_destroy` | Before editor cleanup | `{ path }` |
+| Hook Name               | Trigger                     | Data Payload                  |
+|-------------------------|-----------------------------|-------------------------------|
+| `before_file_open`      | Before opening file         | `{ path }`                    |
+| `on_file_open`          | After opening file          | `{ path, content, language }` |
+| `before_file_save`      | Before saving file          | `{ path, content }`           |
+| `on_file_save`          | After saving file           | `{ path, content }`           |
+| `on_content_change`     | Content changed (debounced) | `{ path, changes }`           |
+| `before_editor_destroy` | Before editor cleanup       | `{ path }`                    |
 
 ---
 
@@ -256,18 +256,18 @@ async function detectLanguage(filePath: string): Promise<string | null>
 
 Maps file extensions to language identifiers:
 
-| Extension | Language | Mode |
-|-----------|----------|------|
-| `.py` | `python` | `python()` |
-| `.rs` | `rust` | `rust()` |
-| `.js`, `.jsx` | `javascript` | `javascript()` |
-| `.ts`, `.tsx` | `typescript` | *(planned)* |
-| `.md` | `markdown` | `markdown()` |
-| `.json` | `json` | `json()` |
-| `.yaml`, `.yml` | `yaml` | *(planned)* |
-| `.toml` | `toml` | *(planned)* |
-| `.html` | `html` | *(planned)* |
-| `.css` | `css` | *(planned)* |
+| Extension       | Language     | Mode           |
+|-----------------|--------------|----------------|
+| `.py`           | `python`     | `python()`     |
+| `.rs`           | `rust`       | `rust()`       |
+| `.js`, `.jsx`   | `javascript` | `javascript()` |
+| `.ts`, `.tsx`   | `typescript` | *(planned)*    |
+| `.md`           | `markdown`   | `markdown()`   |
+| `.json`         | `json`       | `json()`       |
+| `.yaml`, `.yml` | `yaml`       | *(planned)*    |
+| `.toml`         | `toml`       | *(planned)*    |
+| `.html`         | `html`       | *(planned)*    |
+| `.css`          | `css`        | *(planned)*    |
 
 **Source**: Lines 372-392
 

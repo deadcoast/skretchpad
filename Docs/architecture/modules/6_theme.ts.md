@@ -314,14 +314,14 @@ export interface ThemeState {
 
 ### Core Methods
 
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `setTheme(theme)` | `(theme: Theme) => void` | Sets current theme and applies to DOM |
-| `loadTheme(name)` | `(name: string) => Promise<Theme>` | Loads theme from backend by name |
-| `loadAvailableThemes()` | `() => Promise<void>` | Loads all themes from backend |
-| `switchTheme(name)` | `(name: string) => Promise<void>` | Switches to theme by name |
-| `generateTheme(color, name)` | `(color: string, name: string) => Promise<Theme>` | Generates theme from base color |
-| `resetToDefault()` | `() => void` | Resets to LIQUID_GLASS_DARK |
+| Method                       | Signature                                         | Description                           |
+|------------------------------|---------------------------------------------------|---------------------------------------|
+| `setTheme(theme)`            | `(theme: Theme) => void`                          | Sets current theme and applies to DOM |
+| `loadTheme(name)`            | `(name: string) => Promise<Theme>`                | Loads theme from backend by name      |
+| `loadAvailableThemes()`      | `() => Promise<void>`                             | Loads all themes from backend         |
+| `switchTheme(name)`          | `(name: string) => Promise<void>`                 | Switches to theme by name             |
+| `generateTheme(color, name)` | `(color: string, name: string) => Promise<Theme>` | Generates theme from base color       |
+| `resetToDefault()`           | `() => void`                                      | Resets to LIQUID_GLASS_DARK           |
 
 ### Usage Examples
 
@@ -393,61 +393,61 @@ function applyThemeToDocument(theme: Theme): void {
 
 ### Complete Variable List
 
-| Variable | Theme Path | Example Value |
-|----------|------------|---------------|
-| **Window** |||
-| `--window-bg` | `window.background.base` | `rgba(18, 18, 18, 0.85)` |
-| `--window-blur` | `window.background.blur` | `20px` |
-| `--window-border-radius` | `window.border.radius` | `12px` |
-| `--window-border-width` | `window.border.width` | `1px` |
-| `--window-border-color` | `window.border.color` | `rgba(255, 255, 255, 0.1)` |
-| `--window-shadow-color` | `window.shadow.color` | `rgba(0, 0, 0, 0.5)` |
-| `--window-shadow-blur` | `window.shadow.blur` | `40px` |
-| **Chrome** |||
-| `--chrome-bg` | `chrome.background` | `rgba(28, 28, 28, 0.95)` |
-| `--chrome-fg` | `chrome.foreground` | `rgba(228, 228, 228, 0.9)` |
-| `--chrome-height` | `chrome.height` | `32px` |
-| `--chrome-blur` | `chrome.blur` | `10px` |
-| **Editor** |||
-| `--editor-bg` | `editor.background` | `transparent` |
-| `--editor-fg` | `editor.foreground` | `#e4e4e4` |
-| `--cursor-color` | `editor.cursor.color` | `#00d9ff` |
-| `--cursor-width` | `editor.cursor.width` | `2px` |
-| `--selection-bg` | `editor.selection.background` | `rgba(0, 217, 255, 0.2)` |
-| `--line-active` | `editor.line.active` | `rgba(255, 255, 255, 0.05)` |
-| `--line-number` | `editor.line.number` | `rgba(228, 228, 228, 0.4)` |
-| `--line-number-active` | `editor.line.numberActive` | `#00d9ff` |
-| `--gutter-bg` | `editor.gutter.background` | `rgba(0, 0, 0, 0.2)` |
-| `--gutter-width` | `editor.gutter.width` | `50px` |
-| **Syntax** |||
-| `--syntax-comment` | `syntax.comment.color` | `#6a737d` |
-| `--syntax-keyword` | `syntax.keyword.color` | `#ff79c6` |
-| `--syntax-string` | `syntax.string.color` | `#50fa7b` |
-| `--syntax-number` | `syntax.number.color` | `#bd93f9` |
-| `--syntax-operator` | `syntax.operator.color` | `#ff79c6` |
-| `--syntax-function` | `syntax.function.color` | `#8be9fd` |
-| `--syntax-variable` | `syntax.variable.color` | `#f8f8f2` |
-| `--syntax-type` | `syntax.type.color` | `#8be9fd` |
-| `--syntax-constant` | `syntax.constant.color` | `#bd93f9` |
-| **UI** |||
-| `--status-bar-bg` | `ui.statusBar.background` | `rgba(28, 28, 28, 0.95)` |
-| `--status-bar-fg` | `ui.statusBar.foreground` | `rgba(228, 228, 228, 0.7)` |
-| `--status-bar-height` | `ui.statusBar.height` | `24px` |
-| `--button-bg` | `ui.button.background` | `rgba(255, 255, 255, 0.1)` |
-| `--button-hover` | `ui.button.hover` | `rgba(255, 255, 255, 0.15)` |
-| `--button-active` | `ui.button.active` | `rgba(0, 217, 255, 0.3)` |
-| `--input-bg` | `ui.input.background` | `rgba(0, 0, 0, 0.3)` |
-| `--input-border` | `ui.input.border` | `rgba(255, 255, 255, 0.2)` |
-| `--input-focus` | `ui.input.focus` | `rgba(0, 217, 255, 0.5)` |
-| `--color-info` | `ui.notification.info` | `#00d9ff` |
-| `--color-warning` | `ui.notification.warning` | `#f1fa8c` |
-| `--color-error` | `ui.notification.error` | `#ff5555` |
-| `--color-success` | `ui.notification.success` | `#50fa7b` |
-| **Transitions** |||
-| `--transition-chrome` | `transitions.chromeToggle` | `200ms` |
-| `--transition-theme` | `transitions.themeSwitch` | `300ms` |
-| `--transition-hover` | `transitions.hover` | `100ms` |
-| `--transition-easing` | `transitions.easing` | `cubic-bezier(0.4, 0.0, 0.2, 1)` |
+| Variable                 | Theme Path                    | Example Value                    |
+|--------------------------|-------------------------------|----------------------------------|
+| **Window**               |                               |                                  |
+| `--window-bg`            | `window.background.base`      | `rgba(18, 18, 18, 0.85)`         |
+| `--window-blur`          | `window.background.blur`      | `20px`                           |
+| `--window-border-radius` | `window.border.radius`        | `12px`                           |
+| `--window-border-width`  | `window.border.width`         | `1px`                            |
+| `--window-border-color`  | `window.border.color`         | `rgba(255, 255, 255, 0.1)`       |
+| `--window-shadow-color`  | `window.shadow.color`         | `rgba(0, 0, 0, 0.5)`             |
+| `--window-shadow-blur`   | `window.shadow.blur`          | `40px`                           |
+| **Chrome**               |                               |                                  |
+| `--chrome-bg`            | `chrome.background`           | `rgba(28, 28, 28, 0.95)`         |
+| `--chrome-fg`            | `chrome.foreground`           | `rgba(228, 228, 228, 0.9)`       |
+| `--chrome-height`        | `chrome.height`               | `32px`                           |
+| `--chrome-blur`          | `chrome.blur`                 | `10px`                           |
+| **Editor**               |                               |                                  |
+| `--editor-bg`            | `editor.background`           | `transparent`                    |
+| `--editor-fg`            | `editor.foreground`           | `#e4e4e4`                        |
+| `--cursor-color`         | `editor.cursor.color`         | `#00d9ff`                        |
+| `--cursor-width`         | `editor.cursor.width`         | `2px`                            |
+| `--selection-bg`         | `editor.selection.background` | `rgba(0, 217, 255, 0.2)`         |
+| `--line-active`          | `editor.line.active`          | `rgba(255, 255, 255, 0.05)`      |
+| `--line-number`          | `editor.line.number`          | `rgba(228, 228, 228, 0.4)`       |
+| `--line-number-active`   | `editor.line.numberActive`    | `#00d9ff`                        |
+| `--gutter-bg`            | `editor.gutter.background`    | `rgba(0, 0, 0, 0.2)`             |
+| `--gutter-width`         | `editor.gutter.width`         | `50px`                           |
+| **Syntax**               |                               |                                  |
+| `--syntax-comment`       | `syntax.comment.color`        | `#6a737d`                        |
+| `--syntax-keyword`       | `syntax.keyword.color`        | `#ff79c6`                        |
+| `--syntax-string`        | `syntax.string.color`         | `#50fa7b`                        |
+| `--syntax-number`        | `syntax.number.color`         | `#bd93f9`                        |
+| `--syntax-operator`      | `syntax.operator.color`       | `#ff79c6`                        |
+| `--syntax-function`      | `syntax.function.color`       | `#8be9fd`                        |
+| `--syntax-variable`      | `syntax.variable.color`       | `#f8f8f2`                        |
+| `--syntax-type`          | `syntax.type.color`           | `#8be9fd`                        |
+| `--syntax-constant`      | `syntax.constant.color`       | `#bd93f9`                        |
+| **UI**                   |                               |                                  |
+| `--status-bar-bg`        | `ui.statusBar.background`     | `rgba(28, 28, 28, 0.95)`         |
+| `--status-bar-fg`        | `ui.statusBar.foreground`     | `rgba(228, 228, 228, 0.7)`       |
+| `--status-bar-height`    | `ui.statusBar.height`         | `24px`                           |
+| `--button-bg`            | `ui.button.background`        | `rgba(255, 255, 255, 0.1)`       |
+| `--button-hover`         | `ui.button.hover`             | `rgba(255, 255, 255, 0.15)`      |
+| `--button-active`        | `ui.button.active`            | `rgba(0, 217, 255, 0.3)`         |
+| `--input-bg`             | `ui.input.background`         | `rgba(0, 0, 0, 0.3)`             |
+| `--input-border`         | `ui.input.border`             | `rgba(255, 255, 255, 0.2)`       |
+| `--input-focus`          | `ui.input.focus`              | `rgba(0, 217, 255, 0.5)`         |
+| `--color-info`           | `ui.notification.info`        | `#00d9ff`                        |
+| `--color-warning`        | `ui.notification.warning`     | `#f1fa8c`                        |
+| `--color-error`          | `ui.notification.error`       | `#ff5555`                        |
+| `--color-success`        | `ui.notification.success`     | `#50fa7b`                        |
+| **Transitions**          |                               |                                  |
+| `--transition-chrome`    | `transitions.chromeToggle`    | `200ms`                          |
+| `--transition-theme`     | `transitions.themeSwitch`     | `300ms`                          |
+| `--transition-hover`     | `transitions.hover`           | `100ms`                          |
+| `--transition-easing`    | `transitions.easing`          | `cubic-bezier(0.4, 0.0, 0.2, 1)` |
 
 **Usage in CSS**:
 

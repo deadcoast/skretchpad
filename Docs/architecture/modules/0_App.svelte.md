@@ -57,11 +57,11 @@
 
 ### Child Components
 
-| Component | Source | Purpose | Status |
-|-----------|--------|---------|--------|
-| **Chrome** | [`src/components/Chrome.svelte`](../../../src/components/Chrome.svelte) | Title bar with window controls | ✅ Implemented |
-| **Editor** | [`src/components/Editor.svelte`](../../../src/components/Editor.svelte) | CodeMirror 6 editor container | ✅ Implemented |
-| **StatusBar** | [`src/components/StatusBar.svelte`](../../../src/components/StatusBar.svelte) | Bottom status information bar | ✅ Implemented |
+| Component     | Source                                                                        | Purpose                        | Status          |
+|---------------|-------------------------------------------------------------------------------|--------------------------------|-----------------|
+| **Chrome**    | [`src/components/Chrome.svelte`](../../../src/components/Chrome.svelte)       | Title bar with window controls | [x] Implemented |
+| **Editor**    | [`src/components/Editor.svelte`](../../../src/components/Editor.svelte)       | CodeMirror 6 editor container  | [x] Implemented |
+| **StatusBar** | [`src/components/StatusBar.svelte`](../../../src/components/StatusBar.svelte) | Bottom status information bar  | [x] Implemented |
 
 ### External Dependencies
 
@@ -181,11 +181,11 @@ App.svelte
 
 ### Component State
 
-| Variable | Type | Initial Value | Purpose |
-|----------|------|---------------|---------|
-| `chromeVisible` | `boolean` | `true` | Controls visibility of title bar |
-| `alwaysOnTop` | `boolean` | `false` | Window pin state (always-on-top) |
-| `currentFile` | `string` | `''` | Currently open file path (unused) |
+| Variable        | Type      | Initial Value | Purpose                           |
+|-----------------|-----------|---------------|-----------------------------------|
+| `chromeVisible` | `boolean` | `true`        | Controls visibility of title bar  |
+| `alwaysOnTop`   | `boolean` | `false`       | Window pin state (always-on-top)  |
+| `currentFile`   | `string`  | `''`          | Currently open file path (unused) |
 
 ### State Flow
 
@@ -225,21 +225,21 @@ User Interaction
 
 #### Component Styling
 
-| Class | Properties | Purpose |
-|-------|------------|---------|
-| `.app` | `display: flex`, `flex-direction: column` | Vertical layout container |
-| `.glass-window` | `backdrop-filter: blur(...)`, `background: rgba(...)` | Liquid glass visual effect |
-| `.editor-container` | `flex: 1`, `min-height: 0` | Flexible editor area with scroll containment |
+| Class               | Properties                                            | Purpose                                      |
+|---------------------|-------------------------------------------------------|----------------------------------------------|
+| `.app`              | `display: flex`, `flex-direction: column`             | Vertical layout container                    |
+| `.glass-window`     | `backdrop-filter: blur(...)`, `background: rgba(...)` | Liquid glass visual effect                   |
+| `.editor-container` | `flex: 1`, `min-height: 0`                            | Flexible editor area with scroll containment |
 
 ### CSS Variables (Theme System)
 
-| Variable | Default Value | Purpose |
-|----------|---------------|---------|
-| `--window-bg` | `rgba(18, 18, 18, 0.85)` | Window background color with transparency |
-| `--window-blur` | `20px` | Backdrop blur strength for glass effect |
-| `--editor-bg` | `transparent` | Editor background (inherits window glass) |
-| `--editor-fg` | `#e4e4e4` | Editor foreground/text color |
-| `--cursor-color` | `#00d9ff` | Cursor accent color (cyan) |
+| Variable         | Default Value            | Purpose                                   |
+|------------------|--------------------------|-------------------------------------------|
+| `--window-bg`    | `rgba(18, 18, 18, 0.85)` | Window background color with transparency |
+| `--window-blur`  | `20px`                   | Backdrop blur strength for glass effect   |
+| `--editor-bg`    | `transparent`            | Editor background (inherits window glass) |
+| `--editor-fg`    | `#e4e4e4`                | Editor foreground/text color              |
+| `--cursor-color` | `#00d9ff`                | Cursor accent color (cyan)                |
 
 ### Theme Application
 
@@ -283,7 +283,7 @@ function applyGlassTheme() {
 
 - **[STATUS.md](../../STATUS.md)** - Module development progress tracker
 - **[TODO.md](../../TODO.md)** - Implementation tasks and issue resolution
-- **[Directory Tree](../../directory_tree.md)** - Complete project structure
+- **[Directory Tree](../0_directory-tree.md)** - Complete project structure
 
 ---
 
