@@ -205,11 +205,23 @@ fn main() {
             std::fs::create_dir_all(&plugins_dir)
                 .expect("Failed to create plugins directory");
 
+            // Determine workspace root (project root in dev, app data in release)
+            let workspace_root = if cfg!(debug_assertions) {
+                let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+                manifest_dir.parent().unwrap().to_path_buf()
+            } else {
+                app.path()
+                    .app_data_dir()
+                    .expect("Failed to get app data directory")
+            };
+
             // Initialize plugin system
             let sandbox_registry = Arc::new(SandboxRegistry::new());
             let plugin_manager = Arc::new(RwLock::new(PluginManager::new(
                 plugins_dir,
                 sandbox_registry.clone(),
+                workspace_root,
+                app.handle().clone(),
             )));
             let audit_logger = Arc::new(AuditLogger::new(10000));
             let watcher_registry = Arc::new(FileWatcherRegistry::new());

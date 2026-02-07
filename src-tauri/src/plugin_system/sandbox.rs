@@ -1,9 +1,11 @@
 // src-tauri/src/plugin_system/sandbox.rs
 
 use serde::Serialize;
+use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 use std::collections::HashMap;
 use std::sync::Arc;
+use tauri::AppHandle;
 use tokio::sync::RwLock;
 use crate::plugin_system::worker::PluginWorker;
 use crate::plugin_system::loader::PluginManifest;
@@ -24,10 +26,19 @@ pub struct ResourceLimits {
 }
 
 impl PluginSandbox {
-    pub fn new(manifest: PluginManifest) -> Result<Self, PluginError> {
+    pub fn new(
+        manifest: PluginManifest,
+        workspace_root: PathBuf,
+        app_handle: AppHandle,
+    ) -> Result<Self, PluginError> {
         // Create worker for thread-safe JavaScript execution
-        let worker = PluginWorker::new(manifest.name.clone(), manifest.capabilities.clone());
-        
+        let worker = PluginWorker::new(
+            manifest.name.clone(),
+            manifest.capabilities.clone(),
+            workspace_root,
+            app_handle,
+        );
+
         Ok(Self {
             id: manifest.name.clone(),
             capabilities: manifest.capabilities,
@@ -67,7 +78,7 @@ impl PluginSandbox {
             last_operation: SystemTime::now(),
         }
     }
-    
+
     /// Check if plugin is within resource limits
     pub fn check_resource_limits(&self) -> Result<(), PluginError> {
         // Resource limits are now handled by the worker thread
@@ -79,7 +90,7 @@ impl PluginSandbox {
     pub async fn cleanup(&mut self) -> Result<(), PluginError> {
         // Call plugin's deactivate hook if it exists
         let _ = self.call_hook("deactivate", vec![]).await;
-        
+
         // Worker cleanup is handled by the worker itself
         Ok(())
     }

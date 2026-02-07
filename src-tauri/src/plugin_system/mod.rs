@@ -4,6 +4,7 @@ pub mod api;
 pub mod capabilities;
 pub mod loader;
 pub mod manager;
+pub mod ops;
 pub mod sandbox;
 pub mod trust;
 pub mod worker;

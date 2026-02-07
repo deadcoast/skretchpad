@@ -2,11 +2,14 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+use tauri::AppHandle;
 use tokio::sync::oneshot;
 use crate::plugin_system::capabilities::PluginCapabilities;
+use crate::plugin_system::ops::PluginOpState;
 use crate::plugin_system::sandbox::{PluginError, ResourceLimits};
 
 /// Message sent to plugin worker
@@ -44,11 +47,16 @@ pub struct PluginWorker {
 }
 
 impl PluginWorker {
-    pub fn new(id: String, capabilities: PluginCapabilities) -> Self {
+    pub fn new(
+        id: String,
+        capabilities: PluginCapabilities,
+        workspace_root: PathBuf,
+        app_handle: AppHandle,
+    ) -> Self {
         let (tx, rx) = mpsc::channel();
-        
+
         let worker_id = id.clone();
-        let _worker_capabilities = capabilities.clone();
+        let worker_capabilities = capabilities.clone();
         let worker_limits = ResourceLimits {
             max_memory: 50 * 1024 * 1024, // 50MB
             max_cpu_time: Duration::from_secs(5),
@@ -56,11 +64,26 @@ impl PluginWorker {
         };
 
         let handle = thread::spawn(move || {
+            // Create the plugin ops extension
+            let ext = crate::plugin_system::ops::skretchpad_plugin_ops::init_ops_and_esm();
+
             let mut runtime = deno_core::JsRuntime::new(deno_core::RuntimeOptions {
                 module_loader: None,
-                extensions: vec![],
+                extensions: vec![ext],
                 ..Default::default()
             });
+
+            // Inject per-plugin state into OpState
+            {
+                let op_state = runtime.op_state();
+                let mut state = op_state.borrow_mut();
+                state.put(PluginOpState {
+                    plugin_id: worker_id.clone(),
+                    capabilities: worker_capabilities,
+                    workspace_root,
+                    app_handle,
+                });
+            }
 
             // Inject plugin API
             let api_script = include_str!("../../js/plugin_api.js");
@@ -110,16 +133,16 @@ impl PluginWorker {
     /// Execute JavaScript code in the worker thread
     pub async fn execute(&self, code: String) -> Result<serde_json::Value, PluginError> {
         let (tx, rx) = oneshot::channel();
-        
+
         let msg = WorkerMessage::Execute {
             code,
             response_tx: tx,
         };
 
         self.sender.send(msg).map_err(|_| PluginError::WorkerDisconnected)?;
-        
+
         let response = rx.await.map_err(|_| PluginError::WorkerDisconnected)?;
-        
+
         match response {
             WorkerResponse::Success(value) => Ok(value),
             WorkerResponse::Error(err) => Err(PluginError::ExecutionError(err)),
@@ -129,7 +152,7 @@ impl PluginWorker {
     /// Call a plugin hook in the worker thread
     pub async fn call_hook(&self, hook: String, args: serde_json::Value) -> Result<serde_json::Value, PluginError> {
         let (tx, rx) = oneshot::channel();
-        
+
         let msg = WorkerMessage::CallHook {
             hook,
             args,
@@ -137,9 +160,9 @@ impl PluginWorker {
         };
 
         self.sender.send(msg).map_err(|_| PluginError::WorkerDisconnected)?;
-        
+
         let response = rx.await.map_err(|_| PluginError::WorkerDisconnected)?;
-        
+
         match response {
             WorkerResponse::Success(value) => Ok(value),
             WorkerResponse::Error(err) => Err(PluginError::ExecutionError(err)),
@@ -239,12 +262,18 @@ impl WorkerRegistry {
         }
     }
 
-    pub fn create_worker(&mut self, id: String, capabilities: PluginCapabilities) -> Result<(), PluginError> {
+    pub fn create_worker(
+        &mut self,
+        id: String,
+        capabilities: PluginCapabilities,
+        workspace_root: PathBuf,
+        app_handle: AppHandle,
+    ) -> Result<(), PluginError> {
         if self.workers.contains_key(&id) {
             return Err(PluginError::WorkerAlreadyExists);
         }
 
-        let worker = PluginWorker::new(id.clone(), capabilities);
+        let worker = PluginWorker::new(id.clone(), capabilities, workspace_root, app_handle);
         self.workers.insert(id, worker);
         Ok(())
     }

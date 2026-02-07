@@ -2,9 +2,9 @@
 name = "skretchpad"
 version = "0.1.0"
 description = "A minimal, modern text editor for developers"
-authors = ["heat"]
+authors = ["deadcoast"]
 license = "MIT"
-repository = "https://github.com/yourusername/skretchpad"
+repository = "https://github.com/deadcoast/skretchpad"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -27,7 +27,7 @@ thiserror = "1.0"
 anyhow = "1.0"
 async-trait = "0.1.68"
 uuid = { version = "1.0", features = ["v4"] }
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "blocking"] }
 url = "2.4"
 
 [dependencies.tauri-plugin-fs]

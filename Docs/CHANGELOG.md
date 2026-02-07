@@ -5,6 +5,32 @@ All notable changes to skretchpad will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.5] - 2026-02-07
+
+### Added
+
+- **deno_core ops bridge**: 9 ops connecting plugin JS API to actual Rust operations (`ops.rs`)
+  - `op_plugin_read_file` -- `std::fs::read_to_string` with path canonicalization and filesystem capability validation
+  - `op_plugin_write_file` -- `std::fs::write` with parent-directory canonicalization and write capability validation
+  - `op_plugin_list_files` -- `std::fs::read_dir` with read capability validation
+  - `op_plugin_fetch` -- `reqwest::blocking::Client` with network domain allowlist validation
+  - `op_plugin_execute_command` -- `std::process::Command` with command allowlist and argument sanitization
+  - `op_plugin_show_notification` -- `AppHandle.emit()` with UI notification capability check
+  - `op_plugin_set_status_bar` -- `AppHandle.emit()` with UI status_bar capability check
+  - `op_plugin_get_editor_content` -- fire-and-forget event emission (sync return limitation)
+  - `op_plugin_get_active_file` -- fire-and-forget event emission (sync return limitation)
+- **`skretchpad_plugin_ops` extension**: Registered in worker.rs JsRuntime via `deno_core::extension!` macro
+- **`PluginOpState`**: Per-plugin state (plugin_id, capabilities, workspace_root, app_handle) injected into OpState
+- **reqwest blocking**: Added `blocking` feature for synchronous HTTP from worker threads
+
+### Changed
+
+- `plugin_api.js` rewritten to use `Deno.core.ops.op_plugin_*()` instead of request queue pattern
+- `worker.rs` integrates `skretchpad_plugin_ops` extension and injects `PluginOpState` into runtime
+- `sandbox.rs` accepts and passes `workspace_root` and `AppHandle` to worker
+- `manager.rs` stores `workspace_root` and `AppHandle`, passes to sandbox on activation
+- `main.rs` computes `workspace_root` (project root in dev, app_data_dir in release) and passes to PluginManager
+
 ## [0.0.4] - 2026-02-07
 
 ### Added
@@ -264,6 +290,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.0.5** - deno_core ops bridge (9 ops), plugin API calls execute real Rust operations
 - **0.0.4** - Native file I/O, file dialogs, DiffView, settings UI, permission dialog, file watcher cleanup
 - **0.0.3** - Compilation fixes, editor commands, command palette, notifications
 - **0.0.2** - Plugin system architecture (backend + frontend stores)

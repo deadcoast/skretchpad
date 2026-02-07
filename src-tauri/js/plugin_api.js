@@ -1,9 +1,8 @@
 // src-tauri/js/plugin_api.js (injected into deno_core sandbox)
 //
 // This API is available to plugins running in the V8 sandbox.
-// Since deno_core doesn't have Tauri IPC, API calls use a request queue
-// that the worker thread processes via Rust ops.
-// For now, calls log and return stubs until proper deno_core ops are wired.
+// API calls use deno_core ops to execute actual Rust operations
+// with capability validation enforced on the Rust side.
 
 // Hook registration system
 globalThis.__hooks__ = {};
@@ -22,64 +21,92 @@ globalThis.onDeactivate = function(handler) {
   globalThis.__hooks__.deactivate = handler;
 };
 
-// Request queue for async operations (processed by worker thread)
-globalThis.__pendingRequests__ = [];
-let __requestId__ = 0;
-
-function __queueRequest__(method, params) {
-  const id = ++__requestId__;
-  const request = { id, method, params, pluginId: globalThis.__PLUGIN_ID__ };
-  globalThis.__pendingRequests__.push(request);
-  // In the current implementation, requests are processed synchronously
-  // and results are not yet returned. This will be enhanced with deno_core ops.
-  return null;
-}
-
-// Plugin API
+// Plugin API backed by deno_core ops
 globalThis.skretchpad = {
   fs: {
-    async readFile(path) {
-      return __queueRequest__('plugin_read_file', { path });
+    readFile(path) {
+      try {
+        return Deno.core.ops.op_plugin_read_file(path);
+      } catch (e) {
+        throw new Error('fs.readFile: ' + e.message);
+      }
     },
 
-    async writeFile(path, content) {
-      return __queueRequest__('plugin_write_file', { path, content });
+    writeFile(path, content) {
+      try {
+        Deno.core.ops.op_plugin_write_file(path, content);
+      } catch (e) {
+        throw new Error('fs.writeFile: ' + e.message);
+      }
     },
 
-    async listFiles(directory) {
-      return __queueRequest__('plugin_list_files', { directory });
+    listFiles(directory) {
+      try {
+        return Deno.core.ops.op_plugin_list_files(directory);
+      } catch (e) {
+        throw new Error('fs.listFiles: ' + e.message);
+      }
     },
   },
 
   network: {
-    async fetch(url, options) {
-      return __queueRequest__('plugin_fetch', { url, options });
+    fetch(url, options) {
+      try {
+        return Deno.core.ops.op_plugin_fetch({
+          url: url,
+          method: options && options.method,
+          headers: options && options.headers,
+          body: options && options.body,
+        });
+      } catch (e) {
+        throw new Error('network.fetch: ' + e.message);
+      }
     },
   },
 
   commands: {
-    async execute(command, args) {
-      return __queueRequest__('plugin_execute_command', { command, args });
+    execute(command, args) {
+      try {
+        return Deno.core.ops.op_plugin_execute_command(command, args || []);
+      } catch (e) {
+        throw new Error('commands.execute: ' + e.message);
+      }
     },
   },
 
   ui: {
-    async showNotification(message, level) {
-      return __queueRequest__('plugin_show_notification', { message, level });
+    showNotification(message, level) {
+      try {
+        Deno.core.ops.op_plugin_show_notification(message, level || 'info');
+      } catch (e) {
+        throw new Error('ui.showNotification: ' + e.message);
+      }
     },
 
-    async setStatusBarItem(id, text, tooltip) {
-      return __queueRequest__('plugin_set_status_bar', { id, text, tooltip });
+    setStatusBarItem(id, text, tooltip) {
+      try {
+        Deno.core.ops.op_plugin_set_status_bar(id, text, tooltip || '');
+      } catch (e) {
+        throw new Error('ui.setStatusBarItem: ' + e.message);
+      }
     },
   },
 
   editor: {
-    async getActiveFile() {
-      return __queueRequest__('plugin_get_active_file', {});
+    getActiveFile() {
+      try {
+        return Deno.core.ops.op_plugin_get_active_file();
+      } catch (e) {
+        throw new Error('editor.getActiveFile: ' + e.message);
+      }
     },
 
-    async getContent() {
-      return __queueRequest__('plugin_get_editor_content', {});
+    getContent() {
+      try {
+        return Deno.core.ops.op_plugin_get_editor_content();
+      } catch (e) {
+        throw new Error('editor.getContent: ' + e.message);
+      }
     },
   },
 };

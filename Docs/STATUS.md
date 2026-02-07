@@ -1,6 +1,6 @@
 # Skretchpad Development Status
 
-> Last updated: v0.0.4 (2026-02-07)
+> Last updated: v0.0.5 (2026-02-07)
 
 ## Build Status
 
@@ -12,21 +12,22 @@
 
 ## Module Status
 
-### Backend (Rust) -- 11 files, ~4,500 LOC
+### Backend (Rust) -- 12 files, ~5,000 LOC
 
-| Module               | Status      | Description                                                               |
-|----------------------|-------------|---------------------------------------------------------------------------|
-| `main.rs`            | Operational | Tauri app setup, command registration, file I/O commands, dialog plugin   |
-| `sandbox.rs`         | Operational | V8 plugin sandboxing with deno_core, thread-safe SandboxRegistry (RwLock) |
-| `worker.rs`          | Operational | Worker thread JS execution, message passing                               |
-| `capabilities.rs`    | Operational | Capability-based permission model (filesystem/network/commands/UI)        |
-| `loader.rs`          | Operational | TOML manifest parser, plugin registry, discovery                          |
-| `manager.rs`         | Operational | Plugin lifecycle (discover/load/activate/deactivate)                      |
-| `api.rs`             | Operational | 25+ Tauri commands, FileWatcherRegistry, plugin_unwatch_path              |
-| `trust.rs`           | Operational | Trust levels (first-party, local, community)                              |
-| `window_manager.rs`  | Operational | Window controls                                                           |
-| `theme_engine.rs`    | Operational | Theme file loading                                                        |
-| `language_loader.rs` | Operational | Language definition loading                                               |
+| Module               | Status      | Description                                                                   |
+|----------------------|-------------|-------------------------------------------------------------------------------|
+| `main.rs`            | Operational | Tauri app setup, command registration, file I/O, workspace_root resolution    |
+| `ops.rs`             | Operational | 9 deno_core ops (fs/network/command/UI/editor) with capability validation     |
+| `sandbox.rs`         | Operational | V8 plugin sandboxing, SandboxRegistry (RwLock), passes AppHandle to worker    |
+| `worker.rs`          | Operational | Worker thread, skretchpad_plugin_ops extension, PluginOpState injection       |
+| `capabilities.rs`    | Operational | Capability-based permission model (filesystem/network/commands/UI)            |
+| `loader.rs`          | Operational | TOML manifest parser, plugin registry, discovery                              |
+| `manager.rs`         | Operational | Plugin lifecycle, stores workspace_root + AppHandle for sandbox creation      |
+| `api.rs`             | Operational | 25+ Tauri commands, FileWatcherRegistry, plugin_unwatch_path                  |
+| `trust.rs`           | Operational | Trust levels (first-party, local, community)                                  |
+| `window_manager.rs`  | Operational | Window controls                                                               |
+| `theme_engine.rs`    | Operational | Theme file loading                                                            |
+| `language_loader.rs` | Operational | Language definition loading                                                   |
 
 ### Frontend (TypeScript/Svelte) -- 24 files, ~10,000 LOC
 
@@ -58,6 +59,15 @@
 | `stores/notifications.ts` | Operational | Notification toast state, auto-dismiss, convenience methods |
 | `stores/ui.ts`            | Operational | UI utilities (color, animation, format, showNotification)   |
 | `utils/debounce.ts`       | Operational | Debounce utility                                            |
+
+### Plugin Sandbox
+
+| Component           | Status      | Description                                                          |
+|---------------------|-------------|----------------------------------------------------------------------|
+| `plugin_api.js`     | Operational | JS API injected into sandbox, calls `Deno.core.ops.op_plugin_*`     |
+| `ops.rs`            | Operational | 9 Rust ops: fs(3), network(1), command(1), UI(2), editor(2)         |
+| Extension           | Operational | `skretchpad_plugin_ops` deno_core extension registered in worker     |
+| State injection     | Operational | `PluginOpState` with capabilities, workspace_root, app_handle        |
 
 ### Plugins
 
@@ -96,9 +106,11 @@
 | SQL        | `@codemirror/lang-sql`              | Installed |
 | TOML       | `@codemirror/legacy-modes` (stream) | Installed |
 
-## What Works (v0.0.4)
+## What Works (v0.0.5)
 
 - Full Tauri 2.0 + Svelte 4 + CodeMirror 6 application compiles and builds
+- **Plugin API bridge**: 9 deno_core ops connect JS plugin calls to Rust operations
+- **Capability validation in ops**: filesystem path containment, network domain allowlist, command allowlist, UI permissions
 - 11 editor commands wired through CodeMirror 6 (undo, redo, comment, duplicate/delete/move lines, search)
 - Command palette (Ctrl+Shift+P) with 18+ built-in commands + plugin command integration
 - Native file open/save dialogs via `tauri-plugin-dialog`
@@ -109,22 +121,23 @@
 - File watcher registry with proper cleanup (unwatch support)
 - Notification toast system with auto-dismiss, color-coded types, action buttons
 - Always-on-top window toggle via Tauri API
-- Plugin system backend: sandbox, loader, manager, API, worker threads all compile
+- Plugin system backend: sandbox, loader, manager, API, worker threads, **ops** all compile
 - 30+ Tauri commands registered (plugin operations + file I/O)
-- Capability-based security model enforced on editor content APIs
+- Capability-based security model enforced in both Tauri commands and deno_core ops
 - Write path canonicalization (security hardening)
 - Theme and keybinding stores with default configurations
 - Keyboard shortcuts: Ctrl+O (open), Ctrl+N (new), Ctrl+S (save), Ctrl+Shift+S (save as), Ctrl+W (close), Ctrl+, (settings)
 
 ## What's Not Wired Yet
 
-- **Plugin deno_core ops**: Request queue in plugin sandbox needs Rust ops to execute actual API calls
-- **End-to-end plugin testing**: Plugin system compiles and code paths verified, needs runtime test with actual Tauri app
+- **End-to-end plugin testing**: Plugin system compiles and ops are wired, needs runtime test with actual Tauri app
+- **Editor ops (sync return)**: `getEditorContent` and `getActiveFile` fire events but can't return data synchronously (needs async op support)
 
 ## Version History
 
 | Version | Date       | Summary                                                                             |
 |---------|------------|-------------------------------------------------------------------------------------|
+| 0.0.5   | 2026-02-07 | deno_core ops bridge (9 ops), plugin API calls execute real Rust operations          |
 | 0.0.4   | 2026-02-07 | Native file I/O, dialogs, DiffView, settings UI, permission dialog, watcher cleanup |
 | 0.0.3   | 2026-02-07 | Compilation fixes, editor commands, command palette, notifications                  |
 | 0.0.2   | 2025-10-25 | Plugin system architecture (backend + frontend stores)                              |
