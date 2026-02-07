@@ -4,6 +4,8 @@
   import StatusBar from './components/StatusBar.svelte';
   import NotificationToast from './components/NotificationToast.svelte';
   import CommandPalette from './components/CommandPalette.svelte';
+  import SettingsPanel from './components/SettingsPanel.svelte';
+  import PluginPermissionDialog from './components/PluginPermissionDialog.svelte';
   import { onMount } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
@@ -14,6 +16,7 @@
   let chromeVisible = true;
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
+  let settingsVisible = false;
   let editorRef: Editor;
 
   // Reactive current file from editor store (used for window title updates)
@@ -71,6 +74,7 @@
       { id: 'view.commandPalette', label: 'Command Palette', keybinding: 'Ctrl+Shift+P', category: 'View' },
       { id: 'view.toggleChrome', label: 'Toggle Title Bar', category: 'View' },
       { id: 'view.toggleAlwaysOnTop', label: 'Toggle Always on Top', category: 'View' },
+      { id: 'view.openSettings', label: 'Open Settings', keybinding: 'Ctrl+,', category: 'View' },
     ];
 
     for (const cmd of builtins) {
@@ -107,6 +111,7 @@
       case 'view.commandPalette': commandPaletteVisible = true; break;
       case 'view.toggleChrome': toggleChrome(); break;
       case 'view.toggleAlwaysOnTop': toggleAlwaysOnTop(); break;
+      case 'view.openSettings': settingsVisible = true; break;
       default:
         console.log('Unhandled command:', commandId);
     }
@@ -161,6 +166,11 @@
       editorRef?.close();
       return;
     }
+    if (mod && e.key === ',') {
+      e.preventDefault();
+      settingsVisible = !settingsVisible;
+      return;
+    }
   }
 
   function toggleChrome() {
@@ -199,6 +209,17 @@
     bind:visible={commandPaletteVisible}
     on:execute={handleCommandExecute}
   />
+  <SettingsPanel
+    bind:visible={settingsVisible}
+    on:close={() => settingsVisible = false}
+  />
+  {#if $pluginsStore.pendingPermission}
+    <PluginPermissionDialog
+      plugin={$pluginsStore.pendingPermission}
+      onApprove={() => pluginsStore.approvePermission()}
+      onDeny={() => pluginsStore.denyPermission()}
+    />
+  {/if}
 </div>
 
 <style>

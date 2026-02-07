@@ -10,7 +10,8 @@
       "Bash(npm run build:*)",
       "Bash(cargo build:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File setup.ps1:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

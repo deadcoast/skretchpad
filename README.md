@@ -7,7 +7,11 @@ A minimal, modern text editor for developers built with Tauri 2.0, Svelte 4, and
 - **Liquid Glass UI** -- modern glass theme with backdrop blur and transparency
 - **Plugin System** -- sandboxed V8 runtime with capability-based security
 - **Command Palette** -- Ctrl+Shift+P quick access to all commands
-- **Syntax Highlighting** -- JavaScript, TypeScript, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL
+- **Native File I/O** -- open, save, read, write files via native dialogs
+- **Settings Panel** -- Ctrl+, for appearance, editor, keybinding, and file settings
+- **Diff Viewer** -- side-by-side diff with CodeMirror MergeView
+- **Format Document** -- Prettier integration for JS, TS, JSON, HTML, CSS, Markdown, YAML
+- **Syntax Highlighting** -- JavaScript, TypeScript, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
 - **Editor Commands** -- undo, redo, comment toggle, duplicate/delete/move lines, find & replace
 - **Always on Top** -- pin the window above other applications
 - **Chrome Toggle** -- hide title bar for distraction-free editing
@@ -21,8 +25,13 @@ A minimal, modern text editor for developers built with Tauri 2.0, Svelte 4, and
 
 - Full Tauri 2.0 + Svelte 4 + CodeMirror 6 application
 - Plugin system backend (sandbox, loader, manager, API, worker threads)
-- 25+ Tauri commands for plugin filesystem, network, command, UI, and editor operations
-- 13 built-in editor commands wired through command palette
+- 30+ Tauri commands for plugin operations + native file I/O
+- 18+ built-in commands wired through command palette
+- Native file open/save dialogs via `tauri-plugin-dialog`
+- Settings UI panel (appearance, editor, keybindings, files)
+- Side-by-side diff viewer with CodeMirror MergeView
+- Plugin permission approval dialog with risk badges
+- File watcher registry with cleanup (unwatch support)
 - Notification toast system (store + component)
 - Always-on-top window toggle via Tauri API
 - Theme and keybinding stores with default configurations
@@ -32,11 +41,8 @@ A minimal, modern text editor for developers built with Tauri 2.0, Svelte 4, and
 
 ### In Progress
 
-- DiffView component (placeholder UI)
-- File open/save dialogs (backend exists, frontend not wired)
-- Plugin command confirmation dialog
-- File watcher cleanup (no unwatch path)
-- Format document (needs external formatter integration)
+- End-to-end plugin runtime testing (code paths verified, needs full Tauri app launch)
+- Plugin deno_core ops (request queue needs Rust op wiring for actual API calls)
 
 ## Quick Start
 
@@ -92,6 +98,7 @@ skretchpad/
       CommandPalette.svelte       Ctrl+Shift+P command palette
       NotificationToast.svelte    Toast notification overlay
       PluginPermissionDialog.svelte  Plugin permission approval
+      SettingsPanel.svelte        Settings UI panel
       SideBar.svelte              Side panel for plugins
     lib/                        # Core libraries
       editor-loader.ts            CodeMirror 6 setup and language loading
@@ -106,7 +113,7 @@ skretchpad/
       utils/
         debounce.ts               Debounce utility
     features/
-      diff/DiffView.svelte        Diff viewer (placeholder)
+      diff/DiffView.svelte        Side-by-side diff viewer (MergeView)
     configs/
       keybindings.toml            Default keybinding definitions
     main.ts                       Svelte app entry point
@@ -116,7 +123,7 @@ skretchpad/
       main.rs                     Tauri app setup and command registration
       plugin_system/              Plugin system modules
         mod.rs                      Module re-exports
-        api.rs                      25+ Tauri commands (fs, network, UI, editor)
+        api.rs                      25+ Tauri commands, FileWatcherRegistry
         sandbox.rs                  V8 sandbox with resource limits
         worker.rs                   Worker thread JS execution (deno_core)
         manager.rs                  Plugin lifecycle (discover/load/activate/deactivate)
@@ -148,18 +155,23 @@ skretchpad/
 
 ## Keyboard Shortcuts
 
-| Shortcut     | Action          |
-|--------------|-----------------|
-| Ctrl+Shift+P | Command Palette |
-| Ctrl+Z       | Undo            |
-| Ctrl+Shift+Z | Redo            |
-| Ctrl+/       | Toggle Comment  |
-| Ctrl+Shift+D | Duplicate Line  |
-| Ctrl+Shift+K | Delete Line     |
-| Alt+Up       | Move Lines Up   |
-| Alt+Down     | Move Lines Down |
-| Ctrl+F       | Find            |
-| Ctrl+S       | Save            |
+| Shortcut       | Action          |
+|----------------|-----------------|
+| Ctrl+Shift+P   | Command Palette |
+| Ctrl+O         | Open File       |
+| Ctrl+N         | New File        |
+| Ctrl+S         | Save            |
+| Ctrl+Shift+S   | Save As         |
+| Ctrl+W         | Close File      |
+| Ctrl+,         | Settings        |
+| Ctrl+Z         | Undo            |
+| Ctrl+Shift+Z   | Redo            |
+| Ctrl+/         | Toggle Comment  |
+| Ctrl+Shift+D   | Duplicate Line  |
+| Ctrl+Shift+K   | Delete Line     |
+| Alt+Up         | Move Lines Up   |
+| Alt+Down       | Move Lines Down |
+| Ctrl+F         | Find            |
 
 ## Plugin System
 

@@ -550,12 +550,13 @@ class PluginContextImpl implements PluginContext {
 
     this.eventListeners.get(event)!.add(handler);
 
-    // Set up backend listener
-    const unlisten = listen(`plugin:${this.plugin.id}:${event}`, (e) => {
+    // Set up backend listener (listen() returns Promise<UnlistenFn>)
+    const unlistenPromise = listen(`plugin:${this.plugin.id}:${event}`, (e) => {
       handler(e.payload);
     });
 
-    this.unlisteners.push(unlisten as any);
+    // Resolve the promise and store the actual UnlistenFn
+    unlistenPromise.then((fn) => this.unlisteners.push(fn));
 
     // Return cleanup function
     return () => {

@@ -632,14 +632,55 @@
       cmRedo(editorView);
     }
 
-    function formatDocument() {
-      if (!editorView || !currentLanguage) return;
+    async function formatDocument() {
+      if (!editorView) return;
 
-      // Format based on language — requires external formatters
-      // For now, re-indent the entire document
-      const { state } = editorView;
-      const lines = state.doc.toString().split('\n');
-      console.log(`Format document: ${lines.length} lines (${currentLanguage})`);
+      const content = editorView.state.doc.toString();
+      const lang = currentLanguage || '';
+
+      // Map editor language to Prettier parser + plugin
+      const parserMap: Record<string, { parser: string; pluginImport: () => Promise<any> }> = {
+        javascript: { parser: 'babel', pluginImport: () => import('prettier/plugins/babel') },
+        typescript: { parser: 'typescript', pluginImport: () => import('prettier/plugins/typescript') },
+        json:       { parser: 'json', pluginImport: () => import('prettier/plugins/babel') },
+        html:       { parser: 'html', pluginImport: () => import('prettier/plugins/html') },
+        css:        { parser: 'css', pluginImport: () => import('prettier/plugins/postcss') },
+        markdown:   { parser: 'markdown', pluginImport: () => import('prettier/plugins/markdown') },
+        yaml:       { parser: 'yaml', pluginImport: () => import('prettier/plugins/yaml') },
+      };
+
+      const config = parserMap[lang];
+      if (!config) {
+        console.log(`No formatter available for language: ${lang || 'unknown'}`);
+        return;
+      }
+
+      try {
+        const [prettier, estreePlugin, langPlugin] = await Promise.all([
+          import('prettier/standalone'),
+          import('prettier/plugins/estree'),
+          config.pluginImport(),
+        ]);
+
+        const formatted = await prettier.default.format(content, {
+          parser: config.parser,
+          plugins: [estreePlugin.default, langPlugin.default],
+          tabWidth: 2,
+          singleQuote: true,
+          trailingComma: 'es5',
+        });
+
+        // Only update if content actually changed
+        if (formatted !== content) {
+          const cursor = editorView.state.selection.main.head;
+          editorView.dispatch({
+            changes: { from: 0, to: editorView.state.doc.length, insert: formatted },
+            selection: { anchor: Math.min(cursor, formatted.length) },
+          });
+        }
+      } catch (error) {
+        console.error('Format failed:', error);
+      }
     }
 
     function toggleComment() {

@@ -17,6 +17,7 @@ import {
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { lintKeymap } from '@codemirror/lint';
+import { StreamLanguage } from '@codemirror/language';
 import type { Theme } from './stores/theme';
 import type { Keybindings } from './stores/keybindings';
 
@@ -88,6 +89,7 @@ class LanguageRegistry {
         { name: 'yaml', extensions: ['yaml', 'yml'] },
         { name: 'xml', extensions: ['xml', 'svg'] },
         { name: 'sql', extensions: ['sql'] },
+        { name: 'toml', extensions: ['toml'] },
       ];
 
     for (const def of languageDefinitions) {
@@ -177,6 +179,11 @@ class LanguageRegistry {
         case 'sql':
           const { sql } = await import('@codemirror/lang-sql');
           support = sql();
+          break;
+
+        case 'toml':
+          const { toml } = await import('@codemirror/legacy-modes/mode/toml');
+          support = new LanguageSupport(StreamLanguage.define(toml));
           break;
 
         default:

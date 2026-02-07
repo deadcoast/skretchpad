@@ -18,6 +18,12 @@ pub enum TrustLevel {
     Local,
 }
 
+impl Default for TrustLevel {
+    fn default() -> Self {
+        TrustLevel::Community
+    }
+}
+
 impl TrustLevel {
     pub fn auto_grant_permissions(&self) -> bool {
         matches!(self, TrustLevel::FirstParty)

@@ -187,14 +187,21 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            // Get app data directory
-            let app_dir = app
-                .path()
-                .app_data_dir()
-                .expect("Failed to get app data directory");
-
-            // Create plugins directory
-            let plugins_dir = app_dir.join("plugins");
+            // Resolve plugins directory:
+            // In development, use project root's plugins/ directory
+            // In production, use resource_dir or app_data_dir
+            let plugins_dir = if cfg!(debug_assertions) {
+                // Development: project root is parent of src-tauri/
+                let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+                manifest_dir.parent().unwrap().join("plugins")
+            } else {
+                // Production: use app data directory
+                let app_dir = app
+                    .path()
+                    .app_data_dir()
+                    .expect("Failed to get app data directory");
+                app_dir.join("plugins")
+            };
             std::fs::create_dir_all(&plugins_dir)
                 .expect("Failed to create plugins directory");
 

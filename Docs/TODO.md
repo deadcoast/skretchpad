@@ -1,6 +1,6 @@
 # TODO - Skretchpad Development Tasks
 
-> Last updated: v0.0.3 (2026-02-07)
+> Last updated: v0.0.4 (2026-02-07)
 
 ## Completed
 
@@ -77,20 +77,77 @@
 - [x] Add capability validation on editor content APIs
 - [x] Fix JSON error propagation in `plugin_get_active_file`
 
+### v0.0.4 -- Feature Wiring & UI Completion
+
+**Native File I/O**
+- [x] Add `read_file`, `write_file`, `save_file` Tauri commands
+- [x] Add `get_file_metadata` and `emit_editor_event` commands
+- [x] Register all new commands in invoke_handler
+
+**File Dialogs**
+- [x] Add `tauri-plugin-dialog` (Rust + JS)
+- [x] Create `src-tauri/capabilities/default.json` for Tauri 2.0 permissions
+- [x] Replace `invoke('show_save_dialog')` with `@tauri-apps/plugin-dialog` API
+- [x] Wire file.open, file.new, file.saveAs, file.close commands in App.svelte
+- [x] Add Ctrl+O, Ctrl+N, Ctrl+Shift+S, Ctrl+W keyboard shortcuts
+
+**File Watcher Cleanup**
+- [x] Create `FileWatcherRegistry` (tokio::sync::Mutex<HashMap>)
+- [x] Fix watcher drop bug (persist in managed state)
+- [x] Add `plugin_unwatch_path` command
+
+**DiffView Component**
+- [x] Install `@codemirror/merge` package
+- [x] Rewrite `createDiffEditor` with MergeView
+- [x] Rebuild `DiffView.svelte` with proper lifecycle
+
+**Settings UI Panel**
+- [x] Create `SettingsPanel.svelte` (appearance, editor, keybindings, files)
+- [x] Wire Ctrl+, shortcut and view.openSettings command
+- [x] Custom toggle switches, glass-panel styling
+
+**Plugin Permission Dialog**
+- [x] Add permission approval flow to plugins.ts store
+- [x] Rebuild `PluginPermissionDialog.svelte` with risk badges
+- [x] Wire dialog in App.svelte
+
+**Setup Script**
+- [x] Create `setup.ps1` PowerShell install/verification script
+- [x] Fix Join-Path bug for PowerShell 5.1 compatibility
+
+**TOML Language Support**
+- [x] Install `@codemirror/legacy-modes` package
+- [x] Add TOML to language registry with StreamLanguage adapter
+- [x] Map `.toml` extension to TOML language
+
+**Format Document**
+- [x] Integrate Prettier (standalone browser build)
+- [x] Support JS, TS, JSON, HTML, CSS, Markdown, YAML formatting
+- [x] Lazy-load parser plugins for code splitting
+
+**Plugin Runtime Fixes**
+- [x] Fix `PluginManifest` struct to accept flexible TOML schemas (serde defaults, raw toml::Value)
+- [x] Fix plugin discovery path (dev mode resolves to project root, not AppData)
+- [x] Fix `plugin_api.js` to use request queue instead of non-existent `Tauri.invoke()`
+- [x] Fix `worker.rs` hook calling (use `globalThis.__hooks__` with graceful fallback)
+- [x] Fix worker timeout (check elapsed after execution, not before)
+- [x] Fix hook name memory leak (cached static HashMap via LazyLock)
+- [x] Fix plugin deactivation (set state to Loaded instead of removing from map)
+- [x] Fix event listener cleanup (await listen() Promise before storing UnlistenFn)
+- [x] Rewrite git plugin main.ts to use sandbox API
+- [x] Create git-status main.ts entry point
+- [x] Fix git-status plugin.toml schema
+- [x] Add TrustLevel Default impl
+- [x] Remove duplicate PluginSignature (re-export from trust.rs)
+
 ## Remaining Work
 
 ### HIGH Priority
 
-- [ ] Wire file open/save dialogs (backend exists, frontend needs dialog UI)
-- [ ] End-to-end plugin runtime testing (plugin system compiles but untested at runtime)
-- [ ] Implement file watcher cleanup (`unwatch` path)
+- [ ] Implement deno_core ops for plugin API bridge (request queue -> actual Rust operations)
+- [ ] End-to-end plugin runtime testing with actual Tauri app launch
 
 ### MEDIUM Priority
-
-- [ ] Build DiffView component logic (currently placeholder shell)
-- [ ] Wire plugin command confirmation dialog flow
-- [ ] Format document integration (needs external formatter like Prettier/rustfmt)
-- [ ] Add TOML language support (no official @codemirror/lang-toml -- may need community package)
 
 ### LOW Priority
 
@@ -101,7 +158,6 @@
 - [ ] Multi-tab / split editor support
 - [ ] Minimap component
 - [ ] Breadcrumb navigation
-- [ ] Settings UI panel
 
 ## Success Criteria
 
@@ -110,3 +166,6 @@
 3. **Plugin Execution**: Plugins can execute JavaScript in V8 sandbox -- **Compiles, needs runtime test**
 4. **Editor Commands**: All registered commands dispatch correctly -- **MET**
 5. **UI Integration**: Command palette, notifications, status bar functional -- **MET**
+6. **File I/O**: Native file open/save/read/write via dialogs -- **MET**
+7. **Settings UI**: Settings panel accessible via Ctrl+, -- **MET**
+8. **DiffView**: Side-by-side diff with MergeView -- **MET**

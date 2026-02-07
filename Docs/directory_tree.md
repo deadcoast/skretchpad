@@ -1,6 +1,6 @@
 # Directory Tree
 
-> Last updated: v0.0.3 (2026-02-07)
+> Last updated: v0.0.4 (2026-02-07)
 
 ## Status Legend
 
@@ -34,6 +34,8 @@ skretchpad/
 │   │   ├── icon.icns                      #       macOS app icon
 │   │   ├── icon.ico                       #       Windows app icon
 │   │   └── icon.png                       #       Linux app icon
+│   ├── capabilities/
+│   │   └── default.json                   # CFG   Tauri 2.0 permissions (core:default, dialog:default)
 │   ├── Cargo.toml                         # CFG   Rust dependencies and metadata
 │   ├── Cargo.lock                         # CFG   Generated lock file
 │   ├── tauri.conf.json                    # CFG   Tauri app configuration
@@ -48,7 +50,8 @@ skretchpad/
 │   │   ├── CommandPalette.svelte          # OK    Ctrl+Shift+P command palette
 │   │   ├── NotificationToast.svelte       # OK    Toast notifications (fly in/fade out)
 │   │   ├── SideBar.svelte                 # OK    Side panel for plugin UI
-│   │   └── PluginPermissionDialog.svelte  # OK    Plugin permission approval dialog
+│   │   ├── PluginPermissionDialog.svelte  # OK    Plugin permission approval with risk badges
+│   │   └── SettingsPanel.svelte           # OK    Settings UI (appearance, editor, keybindings, files)
 │   ├── lib/
 │   │   ├── editor-loader.ts               # OK    CodeMirror 6 setup, language loading
 │   │   ├── plugin-api.ts                  # OK    TypeScript bridge to Rust plugin API
@@ -63,7 +66,7 @@ skretchpad/
 │   │       └── debounce.ts                # OK    Debounce utility
 │   ├── features/
 │   │   └── diff/
-│   │       └── DiffView.svelte            # STUB  Diff viewer (placeholder UI only)
+│   │       └── DiffView.svelte            # OK    Side-by-side diff viewer (CodeMirror MergeView)
 │   ├── configs/
 │   │   └── keybindings.toml               # CFG   Default keybinding definitions
 │   └── main.ts                            # OK    Svelte app entry point
@@ -110,6 +113,7 @@ skretchpad/
 │           ├── 14_debounce.ts.md
 │           └── 15_ui.ts.md
 │
+├── setup.ps1                              #       PowerShell install/verification script (40 checks)
 ├── .gitignore                             # CFG
 ├── package.json                           # CFG   npm dependencies and scripts
 ├── package-lock.json                      # CFG   Generated lock file
@@ -127,9 +131,9 @@ skretchpad/
 
 | Category | Files | Approx LOC |
 |----------|-------|------------|
-| Rust backend | 11 | ~4,000 |
-| TypeScript/Svelte frontend | 17 | ~9,000 |
+| Rust backend | 11 | ~4,500 |
+| TypeScript/Svelte frontend | 24 | ~10,000 |
 | Plugin manifests/code | 3 | ~200 |
-| Config files | 10 | ~300 |
+| Config files | 11 | ~350 |
 | Documentation | 20+ | -- |
-| **Total source** | **31** | **~13,500** |
+| **Total source** | **38** | **~15,050** |

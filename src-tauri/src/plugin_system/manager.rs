@@ -222,8 +222,8 @@ impl PluginManager {
         // Unregister sandbox
         self.sandbox_registry.remove_sandbox(plugin_id).await;
 
-        // Remove from active plugins
-        self.active_plugins.remove(plugin_id);
+        // Set state back to Loaded (keep in map so plugin remains visible in UI)
+        self.active_plugins.insert(plugin_id.to_string(), PluginState::Loaded);
         self.errors.remove(plugin_id);
 
         Ok(())

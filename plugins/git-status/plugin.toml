@@ -1,20 +1,20 @@
 # plugins/git-status/plugin.toml
 name = "git-status"
 version = "0.1.0"
-author = "heat"
+author = "skretchpad"
+description = "Lightweight git branch and status display in the status bar"
+main = "main.ts"
+trust = "first-party"
 
 [permissions]
-filesystem = ["read"]
-commands = ["git"]
+filesystem = "WorkspaceRead"
+commands = { allowlist = ["git"], require_confirmation = false }
 
 [hooks]
 on_file_open = "check_git_status"
-on_save = "update_git_status"
+on_file_save = "update_git_status"
 
 [ui]
 status_bar = true
 sidebar = false
-
-[commands]
-git.status = { key = "Ctrl+G", label = "Git Status" }
-git.diff = { key = "Ctrl+Shift+G", label = "Git Diff" }
+notifications = false

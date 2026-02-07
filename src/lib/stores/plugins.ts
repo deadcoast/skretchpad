@@ -78,6 +78,7 @@ export interface PluginsStoreState {
   commands: Map<string, PluginCommand>;
   panels: Map<string, PluginPanel>;
   statusBarItems: Map<string, PluginStatusBarItem>;
+  pendingPermission: PluginStatus | null;
   loading: boolean;
   error: string | null;
 }
@@ -92,9 +93,13 @@ function createPluginsStore() {
     commands: new Map(),
     panels: new Map(),
     statusBarItems: new Map(),
+    pendingPermission: null,
     loading: false,
     error: null,
   });
+
+  // Resolve/reject for pending permission approval
+  let permissionResolve: ((approved: boolean) => void) | null = null;
 
   // Event listeners cleanup
   const eventListeners: UnlistenFn[] = [];
@@ -156,15 +161,50 @@ function createPluginsStore() {
     },
 
     /**
-     * Activate a plugin
+     * Activate a plugin (prompts for permission if needed)
      */
     async activate(pluginId: string): Promise<void> {
       try {
+        // Get plugin status to check capabilities
+        const state = get({ subscribe });
+        const plugin = state.plugins.get(pluginId);
+
+        // If plugin has non-trivial capabilities, request permission
+        if (plugin && needsPermissionApproval(plugin)) {
+          const approved = await requestPermission(plugin);
+          if (!approved) {
+            console.log(`Permission denied for plugin ${pluginId}`);
+            return;
+          }
+        }
+
         await invoke('activate_plugin', { pluginId });
         await pluginsStore.refreshStatus(pluginId);
       } catch (error) {
         console.error(`Failed to activate plugin ${pluginId}:`, error);
         throw error;
+      }
+    },
+
+    /**
+     * Approve pending permission request
+     */
+    approvePermission(): void {
+      update((s) => ({ ...s, pendingPermission: null }));
+      if (permissionResolve) {
+        permissionResolve(true);
+        permissionResolve = null;
+      }
+    },
+
+    /**
+     * Deny pending permission request
+     */
+    denyPermission(): void {
+      update((s) => ({ ...s, pendingPermission: null }));
+      if (permissionResolve) {
+        permissionResolve(false);
+        permissionResolve = null;
       }
     },
 
@@ -472,11 +512,34 @@ function createPluginsStore() {
         commands: new Map(),
         panels: new Map(),
         statusBarItems: new Map(),
+        pendingPermission: null,
         loading: false,
         error: null,
       });
     },
   };
+
+  // Helper: check if plugin capabilities need user approval
+  function needsPermissionApproval(plugin: PluginStatus): boolean {
+    const caps = plugin.capabilities;
+    if (!caps) return false;
+
+    // First-party plugins are auto-approved
+    // (trust level isn't on PluginStatus directly, so check capabilities)
+    const hasFs = caps.filesystem && caps.filesystem !== 'None';
+    const hasNet = caps.network && caps.network !== 'None';
+    const hasCmds = caps.commands?.allowlist?.length > 0;
+
+    return hasFs || hasNet || hasCmds;
+  }
+
+  // Helper: show permission dialog and wait for response
+  function requestPermission(plugin: PluginStatus): Promise<boolean> {
+    return new Promise((resolve) => {
+      permissionResolve = resolve;
+      update((s) => ({ ...s, pendingPermission: plugin }));
+    });
+  }
 }
 
 export const pluginsStore = createPluginsStore();

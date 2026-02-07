@@ -152,20 +152,36 @@ impl PluginWorker {
         code: &str,
         _limits: &ResourceLimits,
     ) -> WorkerResponse {
-        // Execute with timeout
         let start = std::time::Instant::now();
-        if start.elapsed() > _limits.max_cpu_time {
-            return WorkerResponse::Error("CPU time limit exceeded".to_string());
-        }
 
         match runtime.execute_script("<plugin>", deno_core::FastString::Owned(code.to_string().into())) {
             Ok(_result) => {
-                // For now, return a simple success response
-                // TODO: Implement proper V8 value to JSON conversion
+                // Check elapsed time after execution
+                if start.elapsed() > _limits.max_cpu_time {
+                    return WorkerResponse::Error("CPU time limit exceeded".to_string());
+                }
                 WorkerResponse::Success(serde_json::Value::Null)
             }
             Err(e) => WorkerResponse::Error(format!("Execution error: {}", e)),
         }
+    }
+
+    /// Get or create a cached static hook script name
+    fn cached_hook_name(hook: &str) -> &'static str {
+        use std::sync::Mutex;
+        use std::collections::HashMap as StdHashMap;
+        use std::sync::LazyLock;
+
+        static HOOK_NAMES: LazyLock<Mutex<StdHashMap<String, &'static str>>> =
+            LazyLock::new(|| Mutex::new(StdHashMap::new()));
+
+        let mut cache = HOOK_NAMES.lock().unwrap();
+        if let Some(&name) = cache.get(hook) {
+            return name;
+        }
+        let leaked: &'static str = Box::leak(format!("hook_{}", hook).into_boxed_str());
+        cache.insert(hook.to_string(), leaked);
+        leaked
     }
 
     /// Call a plugin hook in the worker thread (internal)
@@ -175,25 +191,27 @@ impl PluginWorker {
         args: &serde_json::Value,
         _limits: &ResourceLimits,
     ) -> WorkerResponse {
-        // Execute with timeout
         let start = std::time::Instant::now();
-        if start.elapsed() > _limits.max_cpu_time {
-            return WorkerResponse::Error("CPU time limit exceeded".to_string());
-        }
 
+        // Call hooks registered on globalThis.__hooks__ (set up by plugin code)
+        // Falls back gracefully if hook is not registered
         let script = format!(
-            "globalThis.plugin.hooks.{}({})",
-            hook,
-            serde_json::to_string(args).unwrap_or_else(|_| "null".to_string())
+            "(function() {{ \
+                if (typeof globalThis.__hooks__ !== 'undefined' && typeof globalThis.__hooks__.{hook} === 'function') {{ \
+                    return globalThis.__hooks__.{hook}({args}); \
+                }} \
+                return null; \
+            }})()",
+            hook = hook,
+            args = serde_json::to_string(args).unwrap_or_else(|_| "null".to_string())
         );
 
-        // Use a leaked string for the script name since deno_core requires 'static lifetime.
-        // This is a small, bounded set of hook names so the leak is negligible.
-        let hook_name: &'static str = Box::leak(format!("hook_{}", hook).into_boxed_str());
+        let hook_name = Self::cached_hook_name(hook);
         match runtime.execute_script(hook_name, deno_core::FastString::Owned(script.into())) {
             Ok(_result) => {
-                // For now, return a simple success response
-                // TODO: Implement proper V8 value to JSON conversion
+                if start.elapsed() > _limits.max_cpu_time {
+                    return WorkerResponse::Error("CPU time limit exceeded".to_string());
+                }
                 WorkerResponse::Success(serde_json::Value::Null)
             }
             Err(e) => WorkerResponse::Error(format!("Hook execution error: {}", e)),
