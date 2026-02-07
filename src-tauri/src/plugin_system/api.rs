@@ -2,7 +2,7 @@
 
 use crate::plugin_system::{
     capabilities::{
-        FilesystemCapability, NetworkCapability, PluginCapabilities,
+        CommandCapability, FilesystemCapability, NetworkCapability, PluginCapabilities,
     },
     manager::PluginManager,
     sandbox::SandboxRegistry,

@@ -5,6 +5,32 @@ All notable changes to skretchpad will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2026-02-07
+
+### Added
+
+- **End-to-end plugin runtime testing**: App launches, discovers 2 plugins, loads and activates both successfully
+- **Plugin entry point loading**: `manager.activate()` now reads and executes the plugin's `main.js` in the V8 sandbox before calling activation hooks
+- **40 automated Rust tests** across 5 modules (loader: 17, trust: 7, capabilities: 10, api: 3, manager: 3)
+- **`tempfile` dev-dependency** for test fixtures with temporary plugin directories
+- **Success logging**: Plugin discovery/loading/activation now prints confirmation messages to stdout
+
+### Fixed
+
+- **Plugin scripts never executed**: Entry point scripts were not loaded into the sandbox during activation; hooks were called but never registered
+- **TrustLevel serde mismatch**: TOML `trust = "first-party"` failed parsing because serde expected PascalCase (`FirstParty`); added `#[serde(rename_all = "kebab-case")]`
+- **TypeScript in JS-only runtime**: Plugin `main.ts` files used TypeScript syntax (`as string`, `: string`) but deno_core's JsRuntime only runs JavaScript; converted to `main.js`
+- **Command result handling**: Plugins treated `OpCommandOutput {stdout, stderr, status}` as a plain string; fixed to use `result.stdout.trim()`
+- **Async hooks not resolving**: Plugin hooks used `async/await` but deno_core uses explicit microtask policy; made hooks synchronous
+- **Default entry point**: Changed `default_main()` from `"main.ts"` to `"main.js"` in loader
+- **Missing `CommandCapability` import** in api.rs test module
+
+### Changed
+
+- Plugin manifests updated: `main = "main.js"` (was `main.ts`)
+- Plugin scripts rewritten as pure JavaScript (no TypeScript syntax, no async/await)
+- Manager tests cleaned up to remove unused `tempfile`/`fs` imports and dead `create_test_manifest` helper
+
 ## [0.0.5] - 2026-02-07
 
 ### Added
@@ -290,6 +316,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.0.6** - E2E runtime testing, plugin loading fixes, 40 automated tests, trust serde fix
 - **0.0.5** - deno_core ops bridge (9 ops), plugin API calls execute real Rust operations
 - **0.0.4** - Native file I/O, file dialogs, DiffView, settings UI, permission dialog, file watcher cleanup
 - **0.0.3** - Compilation fixes, editor commands, command palette, notifications

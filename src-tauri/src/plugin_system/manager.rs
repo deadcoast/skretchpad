@@ -181,7 +181,7 @@ impl PluginManager {
             .register_sandbox(plugin_id.to_string(), sandbox)
             .await;
 
-        // Get sandbox and initialize
+        // Get sandbox, load entry point, and activate
         if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id).await {
             let sandbox = sandbox.read().await;
 
@@ -193,7 +193,30 @@ impl PluginManager {
                 return Err(ManagerError::Sandbox(e.to_string()));
             }
 
-            // Call activation hook
+            // Load and execute the plugin's entry point script
+            // This registers hooks (onActivate, onDeactivate, registerHook)
+            let entry_point = &plugin_info.manifest.main;
+            let entry_path = plugin_info.path.join(entry_point);
+            let script = std::fs::read_to_string(&entry_path).map_err(|e| {
+                ManagerError::Internal(format!(
+                    "Failed to read plugin entry point '{}': {}",
+                    entry_path.display(),
+                    e
+                ))
+            })?;
+
+            if let Err(e) = sandbox.execute(script).await {
+                self.errors
+                    .insert(plugin_id.to_string(), e.to_string());
+                self.active_plugins
+                    .insert(plugin_id.to_string(), PluginState::Error);
+                return Err(ManagerError::Sandbox(format!(
+                    "Failed to execute entry point '{}': {}",
+                    entry_point, e
+                )));
+            }
+
+            // Call activation hook (registered by the entry point script above)
             if let Err(e) = sandbox
                 .call_hook("activate", vec![serde_json::json!({})])
                 .await
@@ -402,53 +425,49 @@ impl PluginManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
-    use tempfile::TempDir;
-
-    fn create_test_manifest(dir: &std::path::Path, name: &str, deps: Vec<&str>) {
-        let deps_str = deps
-            .iter()
-            .map(|d| format!(r#""{}""#, d))
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        let manifest = format!(
-            r#"
-name = "{}"
-version = "1.0.0"
-author = "test"
-description = "Test plugin"
-trust = "first-party"
-dependencies = [{}]
-
-[permissions]
-filesystem = "WorkspaceReadWrite"
-
-[permissions.network]
-type = "None"
-
-[permissions.commands]
-allowlist = []
-
-[permissions.ui]
-status_bar = true
-"#,
-            name, deps_str
-        );
-
-        fs::write(dir.join("plugin.toml"), manifest).unwrap();
-        fs::write(dir.join("main.ts"), "// test").unwrap();
-    }
 
     // Note: Manager tests that require activate/deactivate need an AppHandle,
-    // which is only available in a running Tauri app. These tests validate
-    // the non-Tauri portions (load, discover, dependencies, events).
+    // which is only available in a running Tauri app. Loader-level and
+    // capabilities tests are in their respective modules.
+    // These tests validate the non-Tauri portions (state, events).
 
     #[test]
     fn test_event_listeners_standalone() {
-        // This test doesn't require AppHandle since it only tests
-        // listener registration (not plugin loading/activation)
-        let listeners: HashMap<String, HashSet<String>> = HashMap::new();
+        let mut listeners: HashMap<String, HashSet<String>> = HashMap::new();
         assert!(listeners.is_empty());
+
+        // Simulate register
+        listeners
+            .entry("on_file_save".to_string())
+            .or_insert_with(HashSet::new)
+            .insert("git".to_string());
+
+        assert_eq!(listeners.get("on_file_save").unwrap().len(), 1);
+        assert!(listeners.get("on_file_save").unwrap().contains("git"));
+    }
+
+    #[test]
+    fn test_plugin_state_transitions() {
+        // Verify state enum values serialize correctly
+        assert_eq!(
+            serde_json::to_string(&PluginState::Loaded).unwrap(),
+            r#""loaded""#
+        );
+        assert_eq!(
+            serde_json::to_string(&PluginState::Active).unwrap(),
+            r#""active""#
+        );
+        assert_eq!(
+            serde_json::to_string(&PluginState::Activating).unwrap(),
+            r#""activating""#
+        );
+        assert_eq!(
+            serde_json::to_string(&PluginState::Deactivating).unwrap(),
+            r#""deactivating""#
+        );
+        assert_eq!(
+            serde_json::to_string(&PluginState::Error).unwrap(),
+            r#""error""#
+        );
     }
 }

@@ -4,16 +4,17 @@ use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum TrustLevel {
     /// Official plugins (shipped with skretchpad)
     FirstParty,
-    
+
     /// Verified by maintainers (signature check)
     Verified,
-    
+
     /// Community plugins (user discretion)
     Community,
-    
+
     /// Local development plugins
     Local,
 }
@@ -89,5 +90,102 @@ impl TrustVerifier {
     
     pub fn remove_trusted_key(&mut self, key: &str) -> bool {
         self.trusted_keys.remove(key)
+    }
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_trust_level_serde_kebab_case() {
+        // Serialize
+        assert_eq!(
+            serde_json::to_string(&TrustLevel::FirstParty).unwrap(),
+            r#""first-party""#
+        );
+        assert_eq!(
+            serde_json::to_string(&TrustLevel::Community).unwrap(),
+            r#""community""#
+        );
+        assert_eq!(
+            serde_json::to_string(&TrustLevel::Local).unwrap(),
+            r#""local""#
+        );
+        assert_eq!(
+            serde_json::to_string(&TrustLevel::Verified).unwrap(),
+            r#""verified""#
+        );
+    }
+
+    #[test]
+    fn test_trust_level_deserialize_kebab_case() {
+        assert_eq!(
+            serde_json::from_str::<TrustLevel>(r#""first-party""#).unwrap(),
+            TrustLevel::FirstParty
+        );
+        assert_eq!(
+            serde_json::from_str::<TrustLevel>(r#""community""#).unwrap(),
+            TrustLevel::Community
+        );
+        assert_eq!(
+            serde_json::from_str::<TrustLevel>(r#""local""#).unwrap(),
+            TrustLevel::Local
+        );
+        assert_eq!(
+            serde_json::from_str::<TrustLevel>(r#""verified""#).unwrap(),
+            TrustLevel::Verified
+        );
+    }
+
+    #[test]
+    fn test_trust_level_toml_round_trip() {
+        #[derive(serde::Serialize, serde::Deserialize)]
+        struct Wrapper {
+            trust: TrustLevel,
+        }
+
+        let toml_str = r#"trust = "first-party""#;
+        let w: Wrapper = toml::from_str(toml_str).unwrap();
+        assert_eq!(w.trust, TrustLevel::FirstParty);
+
+        let toml_str = r#"trust = "community""#;
+        let w: Wrapper = toml::from_str(toml_str).unwrap();
+        assert_eq!(w.trust, TrustLevel::Community);
+    }
+
+    #[test]
+    fn test_trust_level_default() {
+        assert_eq!(TrustLevel::default(), TrustLevel::Community);
+    }
+
+    #[test]
+    fn test_trust_level_auto_grant() {
+        assert!(TrustLevel::FirstParty.auto_grant_permissions());
+        assert!(!TrustLevel::Verified.auto_grant_permissions());
+        assert!(!TrustLevel::Community.auto_grant_permissions());
+        assert!(!TrustLevel::Local.auto_grant_permissions());
+    }
+
+    #[test]
+    fn test_trust_level_is_trusted() {
+        assert!(TrustLevel::FirstParty.is_trusted());
+        assert!(TrustLevel::Verified.is_trusted());
+        assert!(!TrustLevel::Community.is_trusted());
+        assert!(!TrustLevel::Local.is_trusted());
+    }
+
+    #[test]
+    fn test_trust_verifier() {
+        let verifier = TrustVerifier::new();
+        let sig = PluginSignature::new("skretchpad-official".to_string(), vec![1, 2, 3]);
+        assert!(verifier.verify_signature(&sig));
+
+        let bad_sig = PluginSignature::new("unknown-key".to_string(), vec![1, 2, 3]);
+        assert!(!verifier.verify_signature(&bad_sig));
     }
 }

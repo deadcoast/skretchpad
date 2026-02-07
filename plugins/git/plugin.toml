@@ -2,6 +2,7 @@
 name = "git"
 version = "1.0.0"
 author = "skretchpad"
+main = "main.js"
 trust = "first-party"
 
 [permissions]

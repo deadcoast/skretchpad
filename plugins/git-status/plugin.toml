@@ -3,7 +3,7 @@ name = "git-status"
 version = "0.1.0"
 author = "skretchpad"
 description = "Lightweight git branch and status display in the status bar"
-main = "main.ts"
+main = "main.js"
 trust = "first-party"
 
 [permissions]

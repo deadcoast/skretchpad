@@ -42,6 +42,9 @@ default = ["custom-protocol"]
 # This feature enables the custom protocol for production builds
 custom-protocol = ["tauri/custom-protocol"]
 
+[dev-dependencies]
+tempfile = "3.10"
+
 [profile.release]
 panic = "abort"   # Strip expensive panic clean-up logic
 codegen-units = 1 # Compile crates one after another for better optimization

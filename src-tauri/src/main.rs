@@ -245,6 +245,7 @@ fn main() {
                             eprintln!("Failed to load plugin {}: {}", plugin_id, e);
                             continue;
                         }
+                        println!("  Loaded plugin: {}", plugin_id);
 
                         // Auto-activate first-party plugins
                         if let Some(info) = manager.loader().get(&plugin_id) {
@@ -252,8 +253,9 @@ fn main() {
                                 info.manifest.trust,
                                 plugin_system::trust::TrustLevel::FirstParty
                             ) {
-                                if let Err(e) = manager.activate(&plugin_id).await {
-                                    eprintln!("Failed to activate plugin {}: {}", plugin_id, e);
+                                match manager.activate(&plugin_id).await {
+                                    Ok(()) => println!("  Activated plugin: {} (first-party)", plugin_id),
+                                    Err(e) => eprintln!("  Failed to activate plugin {}: {}", plugin_id, e),
                                 }
                             }
                         }

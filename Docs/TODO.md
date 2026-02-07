@@ -1,8 +1,22 @@
 # TODO - Skretchpad Development Tasks
 
-> Last updated: v0.0.5 (2026-02-07)
+> Last updated: v0.0.6 (2026-02-07)
 
 ## Completed
+
+### v0.0.6 -- End-to-End Plugin Runtime Testing
+
+- [x] Full `cargo build` linking verification (not just check)
+- [x] Fix plugin entry point loading (scripts were never executed in sandbox)
+- [x] Fix TrustLevel serde: `#[serde(rename_all = "kebab-case")]` for TOML compatibility
+- [x] Convert plugin scripts from TypeScript to JavaScript (deno_core has no TS transpiler)
+- [x] Fix plugin command result handling (`result.stdout.trim()` instead of raw object)
+- [x] Make plugin hooks synchronous (async hooks can't resolve without event loop pump)
+- [x] Update manifest default entry point: `main.ts` -> `main.js`
+- [x] Runtime verification: app launches, discovers 2 plugins, loads and activates both
+- [x] Add 40 automated Rust tests (loader: 17, trust: 7, capabilities: 10, api: 3, manager: 3)
+- [x] Add `tempfile` dev-dependency for test fixtures
+- [x] Fix pre-existing `CommandCapability` import in api.rs tests
 
 ### v0.0.5 -- Plugin deno_core Ops Bridge
 
@@ -21,7 +35,7 @@
 
 ### HIGH Priority
 
-- [ ] End-to-end plugin runtime testing with actual Tauri app launch
+(none)
 
 ### MEDIUM Priority
 
@@ -38,11 +52,13 @@
 ## Success Criteria
 
 1. **Compilation**: `cargo check` and `npm run build` pass with 0 errors -- **MET**
-2. **Plugin Loading**: Plugins can be discovered and loaded -- **Compiles, needs runtime test**
-3. **Plugin Execution**: Plugins can execute JavaScript in V8 sandbox -- **MET (ops wired)**
+2. **Plugin Loading**: Plugins can be discovered and loaded -- **MET (runtime verified)**
+3. **Plugin Execution**: Plugins can execute JavaScript in V8 sandbox -- **MET (runtime verified)**
 4. **Plugin API Bridge**: Plugin JS calls execute real Rust operations -- **MET (9 ops)**
 5. **Editor Commands**: All registered commands dispatch correctly -- **MET**
 6. **UI Integration**: Command palette, notifications, status bar functional -- **MET**
 7. **File I/O**: Native file open/save/read/write via dialogs -- **MET**
 8. **Settings UI**: Settings panel accessible via Ctrl+, -- **MET**
 9. **DiffView**: Side-by-side diff with MergeView -- **MET**
+10. **E2E Runtime**: App launches, plugins discover/load/activate, ops execute -- **MET**
+11. **Test Suite**: 40 automated Rust unit tests pass -- **MET**

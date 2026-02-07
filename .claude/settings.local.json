@@ -14,7 +14,8 @@
       "WebSearch",
       "WebFetch(domain:docs.rs)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:choubey.gitbook.io)"
+      "WebFetch(domain:choubey.gitbook.io)",
+      "Bash(cargo test:*)"
     ],
     "deny": [],
     "ask": []
