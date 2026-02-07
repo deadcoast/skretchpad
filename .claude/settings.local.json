@@ -11,7 +11,10 @@
       "Bash(cargo build:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File setup.ps1:*)",
       "Bash(npx vite build)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:choubey.gitbook.io)"
     ],
     "deny": [],
     "ask": []

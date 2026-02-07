@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TOML language support**: Via `@codemirror/legacy-modes` StreamLanguage parser
 - **Format document**: Prettier integration (JS, TS, JSON, HTML, CSS, Markdown, YAML) with lazy-loaded parsers
 - **Setup script**: `setup.ps1` PowerShell install/verification script (40 checks)
+- **TrustLevel Default impl**: Added `Default` impl for `TrustLevel` enum (required by serde)
+- **Tauri commands**: `read_file`, `write_file`, `save_file`
+- **Commands**: `get_file_metadata` and `emit_editor_event`, `plugin_unwatch_path`
+- **(Rust + JS)**: `tauri-plugin-dialog`
+- **StreamLanguage adapter**: TOML to language registry
+- **Permission approval:** flow to plugins.ts store
+- **Keybindings**: Ctrl+O, Ctrl+N, Ctrl+Shift+S, Ctrl+W
 
 ### Fixed
 
@@ -30,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **setup.ps1 Join-Path bug**: Fixed 3+ argument `Join-Path` calls for PowerShell 5.1 compatibility
 - **Plugin manifest parsing**: `PluginManifest` now uses flexible TOML parsing with `#[serde(default)]` and raw `toml::Value` for permissions/UI sections
 - **Plugin discovery path**: Development mode now resolves plugins/ from project root instead of empty AppData directory
-- **Plugin sandbox bridge**: `plugin_api.js` replaced `Tauri.invoke()` (unavailable in deno_core) with request queue pattern and `__hooks__` registration system
+- **Plugin sandbox bridge**: `plugin_api.js` replaced `Tauri.invoke()` with request queue pattern and `__hooks__` registration system
 - **Worker hook calling**: Changed from non-existent `globalThis.plugin.hooks` to `globalThis.__hooks__` with graceful fallback
 - **Worker timeout**: Timeout check now executes after script runs instead of being a no-op (checked immediately after `Instant::now()`)
 - **Hook name memory leak**: Cached hook names in static `LazyLock<Mutex<HashMap>>` instead of `Box::leak` on every call
@@ -53,66 +60,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `loader.rs` manifest parsing now handles flexible TOML structures for permissions and UI sections
 - `worker.rs` hook system uses cached names and post-execution timeout checks
 - `main.rs` plugin discovery resolves to project root in development mode
+
 - **Native File I/O**
-- [x] Add `read_file`, `write_file`, `save_file` Tauri commands
-- [x] Add `get_file_metadata` and `emit_editor_event` commands
-- [x] Register all new commands in invoke_handler
+- Register all new commands in invoke_handler
 
 - **File Dialogs**
-- [x] Add `tauri-plugin-dialog` (Rust + JS)
-- [x] Create `src-tauri/capabilities/default.json` for Tauri 2.0 permissions
-- [x] Replace `invoke('show_save_dialog')` with `@tauri-apps/plugin-dialog` API
-- [x] Wire file.open, file.new, file.saveAs, file.close commands in App.svelte
-- [x] Add Ctrl+O, Ctrl+N, Ctrl+Shift+S, Ctrl+W keyboard shortcuts
+- Create `src-tauri/capabilities/default.json` for Tauri 2.0 permissions
+- Replace `invoke('show_save_dialog')` with `@tauri-apps/plugin-dialog` API
+- Wire file.open, file.new, file.saveAs, file.close commands in App.svelte
 
 - **File Watcher Cleanup**
-- [x] Create `FileWatcherRegistry` (tokio::sync::Mutex<HashMap>)
-- [x] Fix watcher drop bug (persist in managed state)
-- [x] Add `plugin_unwatch_path` command
+- Create `FileWatcherRegistry` (tokio::sync::Mutex<HashMap>)
+- Fix watcher drop bug (persist in managed state)
 
 - **DiffView Component**
-- [x] Install `@codemirror/merge` package
-- [x] Rewrite `createDiffEditor` with MergeView
-- [x] Rebuild `DiffView.svelte` with proper lifecycle
+- Install `@codemirror/merge` package
+- Rewrite `createDiffEditor` with MergeView
+- Rebuild `DiffView.svelte` with proper lifecycle
 
 - **Settings UI Panel**
-- [x] Create `SettingsPanel.svelte` (appearance, editor, keybindings, files)
-- [x] Wire Ctrl+, shortcut and view.openSettings command
-- [x] Custom toggle switches, glass-panel styling
+- Create `SettingsPanel.svelte` (appearance, editor, keybindings, files)
+- Wire Ctrl+, shortcut and view.openSettings command
+- Custom toggle switches, glass-panel styling
 
 - **Plugin Permission Dialog**
-- [x] Add permission approval flow to plugins.ts store
-- [x] Rebuild `PluginPermissionDialog.svelte` with risk badges
-- [x] Wire dialog in App.svelte
+- Rebuild `PluginPermissionDialog.svelte` with risk badges
+- Wire dialog in App.svelte
 
 - **Setup Script**
-- [x] Create `setup.ps1` PowerShell install/verification script
-- [x] Fix Join-Path bug for PowerShell 5.1 compatibility
+- Create `setup.ps1` PowerShell install/verification script
+- Fix Join-Path bug for PowerShell 5.1 compatibility
 
 - **TOML Language Support**
-- [x] Install `@codemirror/legacy-modes` package
-- [x] Add TOML to language registry with StreamLanguage adapter
-- [x] Map `.toml` extension to TOML language
+- Install `@codemirror/legacy-modes` package
+- Map `.toml` extension to TOML language
 
 - **Format Document**
-- [x] Integrate Prettier (standalone browser build)
-- [x] Support JS, TS, JSON, HTML, CSS, Markdown, YAML formatting
-- [x] Lazy-load parser plugins for code splitting
+- Integrate Prettier (standalone browser build)
+- Support JS, TS, JSON, HTML, CSS, Markdown, YAML formatting
+- Lazy-load parser plugins for code splitting
 
 - **Plugin Runtime Fixes**
-- [x] Fix `PluginManifest` struct to accept flexible TOML schemas (serde defaults, raw toml::Value)
-- [x] Fix plugin discovery path (dev mode resolves to project root, not AppData)
-- [x] Fix `plugin_api.js` to use request queue instead of non-existent `Tauri.invoke()`
-- [x] Fix `worker.rs` hook calling (use `globalThis.__hooks__` with graceful fallback)
-- [x] Fix worker timeout (check elapsed after execution, not before)
-- [x] Fix hook name memory leak (cached static HashMap via LazyLock)
-- [x] Fix plugin deactivation (set state to Loaded instead of removing from map)
-- [x] Fix event listener cleanup (await listen() Promise before storing UnlistenFn)
-- [x] Rewrite git plugin main.ts to use sandbox API
-- [x] Create git-status main.ts entry point
-- [x] Fix git-status plugin.toml schema
-- [x] Add TrustLevel Default impl
-- [x] Remove duplicate PluginSignature (re-export from trust.rs)
+- Fix `PluginManifest` struct to accept flexible TOML schemas (serde defaults, raw toml::Value)
+- Fix plugin discovery path (dev mode resolves to project root, not AppData)
+- Fix `plugin_api.js` to use request queue instead of non-existent `Tauri.invoke()`
+- Fix `worker.rs` hook calling (use `globalThis.__hooks__` with graceful fallback)
+- Fix worker timeout (check elapsed after execution, not before)
+- Fix hook name memory leak (cached static HashMap via LazyLock)
+- Fix plugin deactivation (set state to Loaded instead of removing from map)
+- Fix event listener cleanup (await listen() Promise before storing UnlistenFn)
+- Rewrite git plugin main.ts to use sandbox API
+- Create git-status main.ts entry point
+- Fix git-status plugin.toml schema
+- Remove duplicate PluginSignature (re-export from trust.rs)
 
 ## [0.0.3] - 2026-02-07
 
@@ -136,6 +136,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Always-on-top** window toggle wired to Tauri `setAlwaysOnTop()` API
 - **3 CodeMirror language supports**: YAML (`@codemirror/lang-yaml`), XML (`@codemirror/lang-xml`), SQL (`@codemirror/lang-sql`)
 - **`editorCommands` export** on Editor component for external command dispatch
+- **(security fix)**: Write path canonicalization
+- **Content APIs**: Capability validation on editor
 
 ### Changed
 
@@ -145,42 +147,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `_editorAPI` console.log removed; replaced with proper `editorCommands` export
 
 - **Phase 1: Dependency Resolution**
-- [x] Fix async-trait, uuid, reqwest, url dependency resolution
-- [x] Resolve all E0432 (unresolved import) errors
-- [x] Resolve all E0433 (failed to resolve) errors
-- [x] `cargo check` passes without dependency errors
+- Fix async-trait, uuid, reqwest, url dependency resolution
+- Resolve all E0432 (unresolved import) errors
+- Resolve all E0433 (failed to resolve) errors
+- `cargo check` passes without dependency errors
 
 - **Phase 2: API Mismatches**
-- [x] Align SandboxRegistry API (register/get/remove methods)
-- [x] Fix PluginSandbox constructor parameter mismatch
-- [x] Fix `plugin_info.capabilities` vs `plugin_info.manifest.capabilities`
-- [x] Fix Arc<SandboxRegistry> mutability with RwLock
+- Align SandboxRegistry API (register/get/remove methods)
+- Fix PluginSandbox constructor parameter mismatch
+- Fix `plugin_info.capabilities` vs `plugin_info.manifest.capabilities`
+- Fix Arc<SandboxRegistry> mutability with RwLock
 
 - **Phase 3: Thread Safety**
-- [x] Fix Arc<SandboxRegistry> interior mutability (RwLock wrapping HashMap)
-- [x] Fix `hook_name` lifetime in worker.rs (Box::leak for static strings)
-- [x] All methods on SandboxRegistry take `&self` with async lock
+- Fix Arc<SandboxRegistry> interior mutability (RwLock wrapping HashMap)
+- Fix `hook_name` lifetime in worker.rs (Box::leak for static strings)
+- All methods on SandboxRegistry take `&self` with async lock
 
 - **Phase 4: Serialization**
-- [x] Fix notify::Event serialization (manual JSON payload)
-- [x] Fix FileInfo deserialization (added Deserialize derive)
-- [x] Replace broken `emit_and_wait` with oneshot channel pattern
+- Fix notify::Event serialization (manual JSON payload)
+- Fix FileInfo deserialization (added Deserialize derive)
+- Replace broken `emit_and_wait` with oneshot channel pattern
 
 - **Phase 5: Remaining Compilation**
-- [x] Fix PluginError to ManagerError conversion (Send + Sync bounds)
-- [x] Fix return type mismatches in manager.rs
-- [x] Fix `Window` -> `WebviewWindow` (9 occurrences in api.rs)
-- [x] Eliminate all 35 compiler warnings (dead code, unused imports/variables)
+- Fix PluginError to ManagerError conversion (Send + Sync bounds)
+- Fix return type mismatches in manager.rs
+- Fix `Window` -> `WebviewWindow` (9 occurrences in api.rs)
+- Eliminate all 35 compiler warnings (dead code, unused imports/variables)
 
 - **Phase 6: Frontend Wiring**
-- [x] Wire 11 editor commands to CodeMirror 6 (undo, redo, comment, duplicate, delete, move, search)
-- [x] Wire command palette (Ctrl+Shift+P) with 13 built-in commands
-- [x] Wire always-on-top toggle to Tauri `setAlwaysOnTop()` API
-- [x] Create notification toast system (store + component)
-- [x] Install and enable YAML, XML, SQL language support
-- [x] Add write path canonicalization (security fix)
-- [x] Add capability validation on editor content APIs
-- [x] Fix JSON error propagation in `plugin_get_active_file`
+- Wire 11 editor commands to CodeMirror 6 (undo, redo, comment, duplicate, delete, move, search)
+- Wire command palette (Ctrl+Shift+P) with 13 built-in commands
+- Wire always-on-top toggle to Tauri `setAlwaysOnTop()` API
+- Create notification toast system (store + component)
+- Install and enable YAML, XML, SQL language support
+- Fix JSON error propagation in `plugin_get_active_file`
 
 ## [0.0.2] - 2025-10-25
 
@@ -211,30 +211,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- [x] `sandbox.rs` -- V8 sandbox with resource limits
-- [x] `capabilities.rs` -- Capability-based permission model
-- [x] `api.rs` -- 25+ Tauri commands (filesystem, network, UI, editor)
-- [x] `loader.rs` -- TOML manifest parser and plugin registry
-- [x] `manager.rs` -- Plugin lifecycle management
-- [x] `worker.rs` -- Worker thread JS execution (deno_core)
-- [x] `trust.rs` -- Trust levels (first-party, local, community)
-- [x] `main.rs` -- Tauri app setup and command registration
-- [x] `plugin-api.ts` -- TypeScript bridge to Rust plugin API
-- [x] `editor-loader.ts` -- CodeMirror 6 setup with compartments
-- [x] `theme.ts` -- Theme loading with CSS variable injection
-- [x] `keybindings.ts` -- Keybinding schemes (Default, Vim, Emacs)
-- [x] `editor.ts` -- Editor state and file management store
-- [x] `plugins.ts` -- Plugin registry and command store
-- [x] `ui.ts` -- UI utilities
-- [x] `debounce.ts` -- Debounce utility
-- [x] `Editor.svelte` -- CodeMirror 6 editor wrapper
-- [x] `StatusBar.svelte` -- Status bar with plugin items
-- [x] `SideBar.svelte` -- Side panel for plugins
-- [x] `CommandPalette.svelte` -- Command palette component
-- [x] `PluginPermissionDialog.svelte` -- Permission approval dialog
-- [x] Git plugin manifest (`plugins/git/plugin.toml`)
-- [x] Git status plugin manifest (`plugins/git-status/plugin.toml`)
-- [x] Example git plugin entry point (`plugins/git/main.ts`)
+- `sandbox.rs` -- V8 sandbox with resource limits
+- `capabilities.rs` -- Capability-based permission model
+- `api.rs` -- 25+ Tauri commands (filesystem, network, UI, editor)
+- `loader.rs` -- TOML manifest parser and plugin registry
+- `manager.rs` -- Plugin lifecycle management
+- `worker.rs` -- Worker thread JS execution (deno_core)
+- `trust.rs` -- Trust levels (first-party, local, community)
+- `main.rs` -- Tauri app setup and command registration
+- `plugin-api.ts` -- TypeScript bridge to Rust plugin API
+- `editor-loader.ts` -- CodeMirror 6 setup with compartments
+- `theme.ts` -- Theme loading with CSS variable injection
+- `keybindings.ts` -- Keybinding schemes (Default, Vim, Emacs)
+- `editor.ts` -- Editor state and file management store
+- `plugins.ts` -- Plugin registry and command store
+- `ui.ts` -- UI utilities
+- `debounce.ts` -- Debounce utility
+- `Editor.svelte` -- CodeMirror 6 editor wrapper
+- `StatusBar.svelte` -- Status bar with plugin items
+- `SideBar.svelte` -- Side panel for plugins
+- `CommandPalette.svelte` -- Command palette component
+- `PluginPermissionDialog.svelte` -- Permission approval dialog
+- Git plugin manifest (`plugins/git/plugin.toml`)
+- Git status plugin manifest (`plugins/git-status/plugin.toml`)
+- Example git plugin entry point (`plugins/git/main.ts`)
 
 ### Known Issues
 
