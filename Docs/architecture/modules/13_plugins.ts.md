@@ -456,7 +456,7 @@ export const sortedStatusBarItems = derived(pluginsStore, ($plugins) =>
 
 Status bar items sorted by priority (high to low).
 
-**Used by**: [`StatusBar.svelte`](./StatusBar.svelte.md)
+**Used by**: [`StatusBar.svelte`](StatusBar.svelte.md)
 
 ---
 
@@ -511,7 +511,7 @@ import { sortedStatusBarItems } from '$lib/stores/plugins';
 {/each}
 ```
 
-**Actual implementation**: [`StatusBar.svelte`](./StatusBar.svelte.md)
+**Actual implementation**: [`StatusBar.svelte`](StatusBar.svelte.md)
 
 ---
 
@@ -519,19 +519,19 @@ import { sortedStatusBarItems } from '$lib/stores/plugins';
 
 ### Components Using This Store
 
-- **[StatusBar.svelte](./StatusBar.svelte.md)** - Displays status bar items and plugin menu
-- **[App.svelte](./0_App.svelte.md)** - Initializes plugin system on mount
+- **[StatusBar.svelte](StatusBar.svelte.md)** - Displays status bar items and plugin menu
+- **[App.svelte](0_App.svelte.md)** - Initializes plugin system on mount
 
 ### Backend Integration
 
-- **[main.rs](./11_main.rs.md)** - Plugin management commands (7 commands)
-- **[manager.rs](./10_manager.rs.md)** - Plugin lifecycle management
-- **[api.rs](./3_api.rs.md)** - Plugin API commands (18 commands)
+- **[main.rs](11_main.rs.md)** - Plugin management commands (7 commands)
+- **[manager.rs](10_manager.rs.md)** - Plugin lifecycle management
+- **[api.rs](3_api.rs.md)** - Plugin API commands (18 commands)
 
 ### Related Frontend Files
 
-- **[plugin-api.ts](./8_plugin-api.ts.md)** - Plugin API types
-- **[editor.ts](./12_editor.ts.md)** - Emits events plugins can listen to
+- **[plugin-api.ts](8_plugin-api.ts.md)** - Plugin API types
+- **[editor.ts](12_editor.ts.md)** - Emits events plugins can listen to
 
 ### Project Documentation
 

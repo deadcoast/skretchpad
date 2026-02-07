@@ -270,14 +270,14 @@ function applyGlassTheme() {
 
 ### Component Documentation
 
-- **[Chrome.svelte Documentation](./Chrome.svelte.md)** - Title bar component (to be created)
-- **[Editor.svelte Documentation](./2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte Documentation](./StatusBar.svelte.md)** - Status bar component (to be created)
+- **[Chrome.svelte Documentation](Chrome.svelte.md)** - Title bar component (to be created)
+- **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
+- **[StatusBar.svelte Documentation](StatusBar.svelte.md)** - Status bar component (to be created)
 
 ### Related Modules
 
 - **[Theme Engine (theme_engine.rs)](../../../src-tauri/src/theme_engine.rs)** - Backend theme loading
-- **[Main TypeScript (main.ts)](./4_main.ts.md)** - Frontend entry point
+- **[Main TypeScript (main.ts)](4_main.ts.md)** - Frontend entry point
 
 ### Project Status
 

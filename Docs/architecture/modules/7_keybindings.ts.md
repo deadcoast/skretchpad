@@ -726,8 +726,8 @@ if (result) {
 
 ### Components Using This Store
 
-- **[App.svelte](./0_App.svelte.md)** - Root component, initializes keybindings
-- **[Editor.svelte](./2_Editor.svelte.md)** - Editor receives keyboard events
+- **[App.svelte](0_App.svelte.md)** - Root component, initializes keybindings
+- **[Editor.svelte](2_Editor.svelte.md)** - Editor receives keyboard events
 - **Settings Component** (planned) - Keybinding customization UI
 
 ### Backend Commands
@@ -738,8 +738,8 @@ if (result) {
 
 ### Related Frontend Files
 
-- **[editor.ts](./12_editor.ts.md)** - Editor store that receives keybinding commands
-- **[plugins.ts](./13_plugins.ts.md)** - Plugins can register custom commands
+- **[editor.ts](12_editor.ts.md)** - Editor store that receives keybinding commands
+- **[plugins.ts](13_plugins.ts.md)** - Plugins can register custom commands
 
 ### Project Documentation
 

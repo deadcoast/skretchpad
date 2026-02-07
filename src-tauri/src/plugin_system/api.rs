@@ -530,6 +530,7 @@ pub struct WatchPathParams {
 pub async fn plugin_watch_path(
     params: WatchPathParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
+    watcher_registry: State<'_, Arc<FileWatcherRegistry>>,
     audit: State<'_, Arc<AuditLogger>>,
     app: AppHandle,
     window: WebviewWindow,
@@ -571,11 +572,15 @@ pub async fn plugin_watch_path(
     let plugin_id_clone = params.plugin_id.clone();
     let window_clone = window.clone();
 
-    // Spawn watcher task
+    // Store watcher in registry so it persists and can be cleaned up
+    watcher_registry
+        .register(watch_id.clone(), watcher)
+        .await;
+
+    // Spawn event relay task
     tokio::spawn(async move {
         while let Ok(event) = rx.recv() {
             if let Ok(event) = event {
-                // Convert notify::Event to a serializable representation
                 let payload = serde_json::json!({
                     "kind": format!("{:?}", event.kind),
                     "paths": event.paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
@@ -601,6 +606,45 @@ pub async fn plugin_watch_path(
         .await;
 
     Ok(watch_id)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UnwatchPathParams {
+    plugin_id: String,
+    watch_id: String,
+}
+
+#[tauri::command]
+pub async fn plugin_unwatch_path(
+    params: UnwatchPathParams,
+    watcher_registry: State<'_, Arc<FileWatcherRegistry>>,
+    audit: State<'_, Arc<AuditLogger>>,
+) -> Result<(), ApiError> {
+    let removed = watcher_registry.unregister(&params.watch_id).await;
+
+    audit
+        .log(AuditEvent {
+            plugin_id: params.plugin_id.clone(),
+            operation: "fs.unwatch".to_string(),
+            resource: params.watch_id.clone(),
+            timestamp: SystemTime::now(),
+            success: removed,
+            error: if removed {
+                None
+            } else {
+                Some(format!("Watch ID not found: {}", params.watch_id))
+            },
+        })
+        .await;
+
+    if removed {
+        Ok(())
+    } else {
+        Err(ApiError::InternalError(format!(
+            "Watch ID not found: {}",
+            params.watch_id
+        )))
+    }
 }
 
 // ============================================================================

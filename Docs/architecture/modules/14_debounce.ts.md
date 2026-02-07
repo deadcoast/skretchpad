@@ -57,7 +57,7 @@ const handleChange = debounce((value: string) => {
 }, 300);
 ```
 
-**Used in**: [`Editor.svelte:425`](./2_Editor.svelte.md) - Content change handler (300ms delay)
+**Used in**: [`Editor.svelte:425`](2_Editor.svelte.md) - Content change handler (300ms delay)
 
 ---
 
@@ -342,12 +342,12 @@ handleChange(123, 0);     // ❌ Error: wrong type
 
 ### Usage in Components
 
-- **[Editor.svelte](./2_Editor.svelte.md)** - Content change debouncing (line 425)
+- **[Editor.svelte](2_Editor.svelte.md)** - Content change debouncing (line 425)
 
 ### Store Usage
 
-- **[editor.ts](./12_editor.ts.md)** - State update debouncing
-- **[theme.ts](./6_theme.ts.md)** - Theme change debouncing
+- **[editor.ts](12_editor.ts.md)** - State update debouncing
+- **[theme.ts](6_theme.ts.md)** - Theme change debouncing
 
 ### Project Documentation
 

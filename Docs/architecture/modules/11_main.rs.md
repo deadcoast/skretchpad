@@ -278,7 +278,7 @@ if matches!(
 - **Verified**: Manual activation required
 - **Unverified**: Manual activation with warnings
 
-See [`capabilities.rs`](./1.1_capabilities.rs.md) for trust level definitions.
+See [`capabilities.rs`](1.1_capabilities.rs.md) for trust level definitions.
 
 ---
 
@@ -341,14 +341,14 @@ See [`capabilities.rs`](./1.1_capabilities.rs.md) for trust level definitions.
 | Category | Commands | Defined In |
 |----------|----------|------------|
 | **Plugin Management** | 7 | main.rs (this file) |
-| **Filesystem** | 4 | [`api.rs`](./3_api.rs.md) |
-| **Network** | 1 | [`api.rs`](./3_api.rs.md) |
-| **Command Execution** | 1 | [`api.rs`](./3_api.rs.md) |
-| **UI Operations** | 5 | [`api.rs`](./3_api.rs.md) |
-| **Editor Operations** | 3 | [`api.rs`](./3_api.rs.md) |
-| **Event System** | 2 | [`api.rs`](./3_api.rs.md) |
-| **Plugin Hooks** | 1 | [`api.rs`](./3_api.rs.md) |
-| **Audit Logs** | 2 | [`api.rs`](./3_api.rs.md) |
+| **Filesystem** | 4 | [`api.rs`](3_api.rs.md) |
+| **Network** | 1 | [`api.rs`](3_api.rs.md) |
+| **Command Execution** | 1 | [`api.rs`](3_api.rs.md) |
+| **UI Operations** | 5 | [`api.rs`](3_api.rs.md) |
+| **Editor Operations** | 3 | [`api.rs`](3_api.rs.md) |
+| **Event System** | 2 | [`api.rs`](3_api.rs.md) |
+| **Plugin Hooks** | 1 | [`api.rs`](3_api.rs.md) |
+| **Audit Logs** | 2 | [`api.rs`](3_api.rs.md) |
 
 ---
 
@@ -356,17 +356,17 @@ See [`capabilities.rs`](./1.1_capabilities.rs.md) for trust level definitions.
 
 ### Plugin System Architecture
 
-- **[sandbox.rs](./1_sandbox.rs.md)** - JavaScript sandboxing with V8
-- **[capabilities.rs](./1.1_capabilities.rs.md)** - Permission system and trust levels
-- **[api.rs](./3_api.rs.md)** - Plugin API commands (18 commands)
-- **[loader.rs](./9_loader.rs.md)** - Plugin manifest loading
-- **[manager.rs](./10_manager.rs.md)** - Plugin lifecycle management
+- **[sandbox.rs](1_sandbox.rs.md)** - JavaScript sandboxing with V8
+- **[capabilities.rs](1.1_capabilities.rs.md)** - Permission system and trust levels
+- **[api.rs](3_api.rs.md)** - Plugin API commands (18 commands)
+- **[loader.rs](9_loader.rs.md)** - Plugin manifest loading
+- **[manager.rs](10_manager.rs.md)** - Plugin lifecycle management
 
 ### Frontend Integration
 
-- **[plugin-api.ts](./8_plugin-api.ts.md)** - TypeScript plugin API
-- **[plugins.ts](./13_plugins.ts.md)** - Frontend plugin store
-- **[StatusBar.svelte](./StatusBar.svelte.md)** - Plugin UI integration
+- **[plugin-api.ts](8_plugin-api.ts.md)** - TypeScript plugin API
+- **[plugins.ts](13_plugins.ts.md)** - Frontend plugin store
+- **[StatusBar.svelte](StatusBar.svelte.md)** - Plugin UI integration
 
 ### Configuration
 

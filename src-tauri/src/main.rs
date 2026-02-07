@@ -8,12 +8,13 @@ mod plugin_system;
 
 use plugin_system::{
     api::{
-        AuditLogger, clear_audit_logs, get_audit_logs, plugin_add_status_bar_item,
-        plugin_emit_event, plugin_execute_command, plugin_execute_hook, plugin_fetch,
-        plugin_get_active_file, plugin_get_editor_content, plugin_hide_panel,
-        plugin_list_directory, plugin_read_file, plugin_register_event,
-        plugin_remove_status_bar_item, plugin_set_editor_content, plugin_show_notification,
-        plugin_show_panel, plugin_watch_path, plugin_write_file,
+        AuditLogger, FileWatcherRegistry, clear_audit_logs, get_audit_logs,
+        plugin_add_status_bar_item, plugin_emit_event, plugin_execute_command,
+        plugin_execute_hook, plugin_fetch, plugin_get_active_file,
+        plugin_get_editor_content, plugin_hide_panel, plugin_list_directory,
+        plugin_read_file, plugin_register_event, plugin_remove_status_bar_item,
+        plugin_set_editor_content, plugin_show_notification, plugin_show_panel,
+        plugin_unwatch_path, plugin_watch_path, plugin_write_file,
     },
     manager::PluginManager,
     sandbox::SandboxRegistry,
@@ -204,11 +205,13 @@ fn main() {
                 sandbox_registry.clone(),
             )));
             let audit_logger = Arc::new(AuditLogger::new(10000));
+            let watcher_registry = Arc::new(FileWatcherRegistry::new());
 
             // Store state
             app.manage(plugin_manager.clone());
             app.manage(sandbox_registry.clone());
             app.manage(audit_logger.clone());
+            app.manage(watcher_registry.clone());
 
             // Auto-discover and load plugins
             tauri::async_runtime::spawn(async move {
@@ -261,6 +264,7 @@ fn main() {
             plugin_write_file,
             plugin_list_directory,
             plugin_watch_path,
+            plugin_unwatch_path,
             // Network operations
             plugin_fetch,
             // Command execution

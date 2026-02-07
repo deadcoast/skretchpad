@@ -1,38 +1,151 @@
-// src/features/diff/DiffView.svelte
+<!-- src/features/diff/DiffView.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
-  // TODO: Implement diff view using CodeMirror merge addon
-  // import { createDiffEditor } from 'monaco-editor';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { createDiffEditor } from '../../lib/editor-loader';
 
   export let original: string;
   export let modified: string;
+  export let originalLabel: string = 'Original';
+  export let modifiedLabel: string = 'Modified';
 
-  let _container: HTMLDivElement;
-  // let _diffEditor: any;
+  let container: HTMLDivElement;
+  let destroyFn: (() => void) | null = null;
 
-  onMount(() => {
-    // TODO: Replace with CodeMirror diff implementation
-    console.log('Diff view placeholder - original:', original.substring(0, 100));
-    console.log('Diff view placeholder - modified:', modified.substring(0, 100));
-    console.log('Container:', _container);
-    /*
-    diffEditor = createDiffEditor(container, {
-      theme: 'glass-dark',
-      readOnly: false,
-      renderSideBySide: true,
-      lineNumbers: 'on',
-      minimap: { enabled: false },
-      scrollbar: { vertical: 'hidden' }
-    });
+  const dispatch = createEventDispatcher<{ close: void }>();
 
-    diffEditor.setModel({
-      original: monaco.editor.createModel(original),
-      modified: monaco.editor.createModel(modified)
-    });
-    */
+  onMount(async () => {
+    if (!container) return;
+
+    try {
+      const result = await createDiffEditor(container, { original, modified });
+      destroyFn = result.destroy;
+    } catch (err) {
+      console.error('Failed to create diff editor:', err);
+    }
+  });
+
+  onDestroy(() => {
+    if (destroyFn) {
+      destroyFn();
+      destroyFn = null;
+    }
   });
 </script>
 
-<div bind:this={_container} class="diff-view">
-  <p>Diff view placeholder - implementation pending</p>
+<div class="diff-view">
+  <div class="diff-header">
+    <div class="diff-header-labels">
+      <span class="diff-label diff-label--original">{originalLabel}</span>
+      <span class="diff-label diff-label--modified">{modifiedLabel}</span>
+    </div>
+    <button class="diff-close" on:click={() => dispatch('close')} title="Close diff view">
+      &times;
+    </button>
+  </div>
+  <div class="diff-container" bind:this={container}></div>
 </div>
+
+<style>
+  .diff-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background: var(--editor-bg, #1e1e1e);
+  }
+
+  .diff-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: var(--chrome-bg, rgba(30, 30, 30, 0.85));
+    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+    flex-shrink: 0;
+  }
+
+  .diff-header-labels {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+  }
+
+  .diff-label {
+    font-size: 12px;
+    font-family: monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .diff-label--original {
+    color: var(--color-error, #ff6b6b);
+    background: rgba(255, 107, 107, 0.1);
+  }
+
+  .diff-label--modified {
+    color: var(--color-success, #51cf66);
+    background: rgba(81, 207, 102, 0.1);
+  }
+
+  .diff-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, rgba(228, 228, 228, 0.6));
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 4px;
+    transition: all 150ms ease;
+    line-height: 1;
+  }
+
+  .diff-close:hover {
+    color: var(--text-primary, #e4e4e4);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .diff-container {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* MergeView styling */
+  :global(.cm-merge-a .cm-changedLine) {
+    background: rgba(255, 107, 107, 0.12);
+  }
+
+  :global(.cm-merge-b .cm-changedLine) {
+    background: rgba(81, 207, 102, 0.12);
+  }
+
+  :global(.cm-merge-a .cm-changedText) {
+    background: rgba(255, 107, 107, 0.25);
+  }
+
+  :global(.cm-merge-b .cm-changedText) {
+    background: rgba(81, 207, 102, 0.25);
+  }
+
+  :global(.cm-merge-spacer) {
+    background: var(--gutter-bg, rgba(0, 0, 0, 0.2));
+  }
+
+  :global(.cm-mergeView) {
+    height: 100%;
+  }
+
+  :global(.cm-mergeViewEditors) {
+    height: 100%;
+  }
+
+  :global(.cm-mergeViewEditor) {
+    height: 100%;
+    overflow: auto;
+  }
+
+  :global(.cm-collapsedLines) {
+    color: var(--text-secondary, rgba(228, 228, 228, 0.4));
+    background: var(--gutter-bg, rgba(0, 0, 0, 0.2));
+    cursor: pointer;
+  }
+</style>

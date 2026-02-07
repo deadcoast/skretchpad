@@ -85,7 +85,7 @@ export interface ChromeProps {
 
 | Component | Relationship | Data Flow |
 |-----------|--------------|-----------|
-| **[App.svelte](./0_App.svelte.md)** | Parent | Passes props and event handlers |
+| **[App.svelte](0_App.svelte.md)** | Parent | Passes props and event handlers |
 
 ### External Dependencies
 
@@ -307,9 +307,9 @@ When `alwaysOnTop` is `true`, the `.pinned` class applies cyan color (`#00d9ff`)
 
 ### Component Documentation
 
-- **[App.svelte Documentation](./0_App.svelte.md)** - Parent root component
-- **[Editor.svelte Documentation](./2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte Documentation](./StatusBar.svelte.md)** - Status bar component (to be created)
+- **[App.svelte Documentation](0_App.svelte.md)** - Parent root component
+- **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
+- **[StatusBar.svelte Documentation](StatusBar.svelte.md)** - Status bar component (to be created)
 
 ### Project Status
 

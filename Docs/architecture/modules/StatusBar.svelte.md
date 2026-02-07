@@ -62,17 +62,17 @@
 
 | Store | Source | Type | Purpose |
 |-------|--------|------|---------|
-| `pluginsStore` | [`$lib/stores/plugins`](./13_plugins.ts.md) | `PluginStore` | Plugin registry and state management |
-| `sortedStatusBarItems` | [`$lib/stores/plugins`](./13_plugins.ts.md) | `Readable<StatusBarItem[]>` | Sorted plugin status bar items |
-| `editorStore` | [`$lib/stores/editor`](./12_editor.ts.md) | `EditorStore` | Editor state (cursor, selection) |
-| `activeFile` | [`$lib/stores/editor`](./12_editor.ts.md) | `Readable<FileInfo?>` | Active file metadata |
+| `pluginsStore` | [`$lib/stores/plugins`](13_plugins.ts.md) | `PluginStore` | Plugin registry and state management |
+| `sortedStatusBarItems` | [`$lib/stores/plugins`](13_plugins.ts.md) | `Readable<StatusBarItem[]>` | Sorted plugin status bar items |
+| `editorStore` | [`$lib/stores/editor`](12_editor.ts.md) | `EditorStore` | Editor state (cursor, selection) |
+| `activeFile` | [`$lib/stores/editor`](12_editor.ts.md) | `Readable<FileInfo?>` | Active file metadata |
 
 ### Utility Imports
 
 | Function | Source | Purpose |
 |----------|--------|---------|
-| `formatShortcut` | [`$lib/utils/ui`](./15_ui.ts.md) | Format keyboard shortcuts for display |
-| `isMac` | [`$lib/utils/ui`](./15_ui.ts.md) | Detect macOS platform |
+| `formatShortcut` | [`$lib/utils/ui`](15_ui.ts.md) | Format keyboard shortcuts for display |
+| `isMac` | [`$lib/utils/ui`](15_ui.ts.md) | Detect macOS platform |
 
 ---
 
@@ -82,7 +82,7 @@
 
 | Component | Relationship | Data Flow |
 |-----------|--------------|-----------|
-| **[App.svelte](./0_App.svelte.md)** | Parent | No props - uses stores for state |
+| **[App.svelte](0_App.svelte.md)** | Parent | No props - uses stores for state |
 
 ### Store Integration
 
@@ -385,21 +385,21 @@ $: pluginItems = $sortedStatusBarItems;
 
 ### Component Documentation
 
-- **[App.svelte Documentation](./0_App.svelte.md)** - Parent root component
-- **[Chrome.svelte Documentation](./Chrome.svelte.md)** - Title bar component
-- **[Editor.svelte Documentation](./2_Editor.svelte.md)** - Main editor component
+- **[App.svelte Documentation](0_App.svelte.md)** - Parent root component
+- **[Chrome.svelte Documentation](Chrome.svelte.md)** - Title bar component
+- **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
 
 ### Store Documentation
 
-- **[plugins.ts Documentation](./13_plugins.ts.md)** - Plugin store implementation
-- **[editor.ts Documentation](./12_editor.ts.md)** - Editor state store
-- **[ui.ts Documentation](./15_ui.ts.md)** - UI utility functions
+- **[plugins.ts Documentation](13_plugins.ts.md)** - Plugin store implementation
+- **[editor.ts Documentation](12_editor.ts.md)** - Editor state store
+- **[ui.ts Documentation](15_ui.ts.md)** - UI utility functions
 
 ### Plugin System
 
-- **[plugin-api.ts Documentation](./8_plugin-api.ts.md)** - Plugin API types and interfaces
-- **[manager.rs Documentation](./10_manager.rs.md)** - Backend plugin manager
-- **[api.rs Documentation](./3_api.rs.md)** - Tauri plugin commands
+- **[plugin-api.ts Documentation](8_plugin-api.ts.md)** - Plugin API types and interfaces
+- **[manager.rs Documentation](10_manager.rs.md)** - Backend plugin manager
+- **[api.rs Documentation](3_api.rs.md)** - Tauri plugin commands
 
 ### Project Status
 

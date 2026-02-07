@@ -191,11 +191,11 @@ Plugins are auto-discovered from the `plugins/` directory and first-party plugin
 
 ## Documentation
 
-- [Architecture Overview](Docs/architecture/1_overview.md)
-- [Tech Stack](Docs/architecture/2_techstack.md)
-- [Technical Details](Docs/architecture/3_technical-details.md)
-- [Configuration](Docs/architecture/4_configs.md)
-- [Status](Docs/STATUS.md)
+- [Architecture Overview](docs/architecture/1_overview.md)
+- [Tech Stack](docs/architecture/2_techstack.md)
+- [Technical Details](docs/architecture/3_technical-details.md)
+- [Configuration](docs/architecture/4_configs.md)
+- [Status](docs/STATUS.md)
 - [Changelog](CHANGELOG.md)
 
 ## License

@@ -534,9 +534,9 @@ listen<string>('theme:reload', async (event) => {
 
 ### Components Using This Store
 
-- **[App.svelte](./0_App.svelte.md)** - Applies initial glass theme
-- **[Editor.svelte](./2_Editor.svelte.md)** - Uses editor theme settings
-- **[editor.ts](./12_editor.ts.md)** - Editor store subscribes to theme changes
+- **[App.svelte](0_App.svelte.md)** - Applies initial glass theme
+- **[Editor.svelte](2_Editor.svelte.md)** - Uses editor theme settings
+- **[editor.ts](12_editor.ts.md)** - Editor store subscribes to theme changes
 
 ### Backend Commands
 

@@ -1,6 +1,7 @@
 // src/lib/editor-loader.ts
 
-import { EditorView, ViewUpdate, keymap, highlightActiveLine, drawSelection } from '@codemirror/view';
+import { EditorView, ViewUpdate, keymap, highlightActiveLine, drawSelection, lineNumbers } from '@codemirror/view';
+import { MergeView } from '@codemirror/merge';
 import { EditorState, Compartment, type Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import {
@@ -462,81 +463,41 @@ export async function createEditor(
 export async function createDiffEditor(
   parent: HTMLElement,
   options: DiffEditorOptions
-): Promise<{ original: EditorView; modified: EditorView }> {
-  const { original, modified, readOnly = true, theme } = options;
+): Promise<{ mergeView: MergeView; destroy: () => void }> {
+  const { original, modified } = options;
 
-  // Create container for side-by-side layout
-  const container = document.createElement('div');
-  container.className = 'diff-editor-container';
-  container.style.display = 'flex';
-  container.style.height = '100%';
-  parent.appendChild(container);
-
-  // Original (left) pane
-  const originalContainer = document.createElement('div');
-  originalContainer.className = 'diff-editor-original';
-  originalContainer.style.flex = '1';
-  originalContainer.style.borderRight = '1px solid var(--border-color)';
-  container.appendChild(originalContainer);
-
-  // Modified (right) pane
-  const modifiedContainer = document.createElement('div');
-  modifiedContainer.className = 'diff-editor-modified';
-  modifiedContainer.style.flex = '1';
-  container.appendChild(modifiedContainer);
-
-  // Create original editor
-  const originalView = await createEditor(originalContainer, {
-    theme,
-    readOnly,
-  });
-
-  // Create modified editor
-  const modifiedView = await createEditor(modifiedContainer, {
-    theme,
-    readOnly: false, // Allow editing modified version
-  });
-
-  // Set content
-  originalView.dispatch({
-    changes: {
-      from: 0,
-      to: originalView.state.doc.length,
-      insert: original,
+  const mergeView = new MergeView({
+    a: {
+      doc: original,
+      extensions: [
+        EditorView.editable.of(false),
+        EditorState.readOnly.of(true),
+        highlightActiveLine(),
+        drawSelection(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        lineNumbers(),
+      ],
     },
-  });
-
-  modifiedView.dispatch({
-    changes: {
-      from: 0,
-      to: modifiedView.state.doc.length,
-      insert: modified,
+    b: {
+      doc: modified,
+      extensions: [
+        EditorView.editable.of(false),
+        EditorState.readOnly.of(true),
+        highlightActiveLine(),
+        drawSelection(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        lineNumbers(),
+      ],
     },
+    parent,
+    collapseUnchanged: { margin: 3, minSize: 4 },
+    gutter: true,
   });
 
-  // Sync scrolling
-  let isScrolling = false;
-
-  const syncScroll = (source: EditorView, target: EditorView) => {
-    if (isScrolling) return;
-    isScrolling = true;
-
-    target.scrollDOM.scrollTop = source.scrollDOM.scrollTop;
-
-    requestAnimationFrame(() => {
-      isScrolling = false;
-    });
+  return {
+    mergeView,
+    destroy: () => mergeView.destroy(),
   };
-
-  originalView.scrollDOM.addEventListener('scroll', () => {
-    syncScroll(originalView, modifiedView);
-  });
-
-  modifiedView.scrollDOM.addEventListener('scroll', () => {
-    syncScroll(modifiedView, originalView);
-  });
-
-  return { original: originalView, modified: modifiedView };
 }
 
 // ============================================================================

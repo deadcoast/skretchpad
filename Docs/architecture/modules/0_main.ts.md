@@ -45,7 +45,7 @@ const app = new App({
 });
 ```
 
-- **Import**: Imports root [`App.svelte`](./0_App.svelte.md) component
+- **Import**: Imports root [`App.svelte`](0_App.svelte.md) component
 - **Target**: Mounts to `#app` DOM element (defined in `index.html`)
 - **Non-null assertion**: Uses `!` operator assuming element exists
 
@@ -111,7 +111,7 @@ npm run build
 
 ### Component Documentation
 
-- **[App.svelte](./0_App.svelte.md)** - Root application component
+- **[App.svelte](0_App.svelte.md)** - Root application component
 
 ### Configuration
 
@@ -141,7 +141,7 @@ While `main.ts` doesn't directly reference Tauri, the Svelte app it bootstraps u
 - `@tauri-apps/api/core` - `invoke()` for backend commands
 - `@tauri-apps/api/event` - `listen()` for event subscriptions
 
-See [`Editor.svelte`](./2_Editor.svelte.md) for Tauri integration examples.
+See [`Editor.svelte`](2_Editor.svelte.md) for Tauri integration examples.
 
 ---
 

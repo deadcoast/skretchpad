@@ -76,7 +76,7 @@ export function setContent(content: string): void
 | `pluginStore` | `../lib/stores/plugins` | Active plugins |
 | `keybindingStore` | `../lib/stores/keybindings` | Keybinding schemes |
 
-**References**: See [`12_editor.ts.md`](./12_editor.ts.md), [`6_theme.ts.md`](./6_theme.ts.md), [`13_plugins.ts.md`](./13_plugins.ts.md)
+**References**: See [`12_editor.ts.md`](12_editor.ts.md), [`6_theme.ts.md`](6_theme.ts.md), [`13_plugins.ts.md`](13_plugins.ts.md)
 
 ### Utilities
 
@@ -88,7 +88,7 @@ export function setContent(content: string): void
 | `updateTheme` | `../lib/editor-loader` | Applies theme |
 | `debounce` | `../lib/utils/debounce` | Debounces handlers |
 
-**Reference**: [`5_editor-loader.ts.md`](./5_editor-loader.ts.md), [`14_debounce.ts.md`](./14_debounce.ts.md)
+**Reference**: [`5_editor-loader.ts.md`](5_editor-loader.ts.md), [`14_debounce.ts.md`](14_debounce.ts.md)
 
 ### CodeMirror 6 Language Modes
 
@@ -389,27 +389,27 @@ Displays when no file is open with action buttons.
 
 ### Component Documentation
 
-- **[App.svelte](./0_App.svelte.md)** - Root component
-- **[Chrome.svelte](./Chrome.svelte.md)** - Title bar
-- **[StatusBar.svelte](./StatusBar.svelte.md)** - Status bar with plugin items
+- **[App.svelte](0_App.svelte.md)** - Root component
+- **[Chrome.svelte](Chrome.svelte.md)** - Title bar
+- **[StatusBar.svelte](StatusBar.svelte.md)** - Status bar with plugin items
 
 ### Store Documentation
 
-- **[editor.ts](./12_editor.ts.md)** - Editor state store
-- **[theme.ts](./6_theme.ts.md)** - Theme management
-- **[plugins.ts](./13_plugins.ts.md)** - Plugin registry
-- **[keybindings.ts](./7_keybindings.ts.md)** - Keybinding schemes
+- **[editor.ts](12_editor.ts.md)** - Editor state store
+- **[theme.ts](6_theme.ts.md)** - Theme management
+- **[plugins.ts](13_plugins.ts.md)** - Plugin registry
+- **[keybindings.ts](7_keybindings.ts.md)** - Keybinding schemes
 
 ### Utility Documentation
 
-- **[editor-loader.ts](./5_editor-loader.ts.md)** - CodeMirror setup
-- **[debounce.ts](./14_debounce.ts.md)** - Debounce utility
-- **[plugin-api.ts](./8_plugin-api.ts.md)** - Plugin types
+- **[editor-loader.ts](5_editor-loader.ts.md)** - CodeMirror setup
+- **[debounce.ts](14_debounce.ts.md)** - Debounce utility
+- **[plugin-api.ts](8_plugin-api.ts.md)** - Plugin types
 
 ### Backend Documentation
 
-- **[api.rs](./3_api.rs.md)** - Tauri commands
-- **[manager.rs](./10_manager.rs.md)** - Plugin manager
+- **[api.rs](3_api.rs.md)** - Tauri commands
+- **[manager.rs](10_manager.rs.md)** - Plugin manager
 
 ### Project Status
 
