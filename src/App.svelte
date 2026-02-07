@@ -2,14 +2,18 @@
   import Editor from './components/Editor.svelte';
   import Chrome from './components/Chrome.svelte';
   import StatusBar from './components/StatusBar.svelte';
+  import NotificationToast from './components/NotificationToast.svelte';
+  import CommandPalette from './components/CommandPalette.svelte';
   import { onMount } from 'svelte';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
   import { pluginsStore } from './lib/stores/plugins';
   import { keybindingStore } from './lib/stores/keybindings';
   import { activeFile } from './lib/stores/editor';
-
   let chromeVisible = true;
   let alwaysOnTop = false;
+  let commandPaletteVisible = false;
+  let editorRef: Editor;
 
   // Reactive current file from editor store (used for window title updates)
   $: currentFile = $activeFile?.path || '';
@@ -30,13 +34,10 @@
 
   async function initializeApp() {
     // Theme and keybinding stores auto-initialize on import
-    // Apply default theme to document
     if ($themeStore.current) {
-      // Theme is already applied in store initialization
       console.log('Theme loaded:', $themeStore.current.metadata.name);
     }
 
-    // Initialize keybinding store (ensure default scheme is loaded)
     if ($keybindingStore.currentScheme) {
       console.log('Keybindings loaded:', $keybindingStore.currentScheme.name);
     }
@@ -44,33 +45,101 @@
     // Initialize plugin system (discover and load plugins)
     await pluginsStore.initialize();
 
+    // Register built-in editor commands for the command palette
+    registerBuiltinCommands();
+
     console.log('App initialized successfully');
+  }
+
+  function registerBuiltinCommands() {
+    const builtins = [
+      { id: 'editor.undo', label: 'Undo', keybinding: 'Ctrl+Z', category: 'Editor' },
+      { id: 'editor.redo', label: 'Redo', keybinding: 'Ctrl+Shift+Z', category: 'Editor' },
+      { id: 'editor.toggleComment', label: 'Toggle Comment', keybinding: 'Ctrl+/', category: 'Editor' },
+      { id: 'editor.duplicateLine', label: 'Duplicate Line', keybinding: 'Ctrl+Shift+D', category: 'Editor' },
+      { id: 'editor.deleteLine', label: 'Delete Line', keybinding: 'Ctrl+Shift+K', category: 'Editor' },
+      { id: 'editor.moveLinesUp', label: 'Move Lines Up', keybinding: 'Alt+Up', category: 'Editor' },
+      { id: 'editor.moveLinesDown', label: 'Move Lines Down', keybinding: 'Alt+Down', category: 'Editor' },
+      { id: 'editor.find', label: 'Find', keybinding: 'Ctrl+F', category: 'Editor' },
+      { id: 'editor.formatDocument', label: 'Format Document', keybinding: 'Ctrl+Shift+F', category: 'Editor' },
+      { id: 'file.save', label: 'Save File', keybinding: 'Ctrl+S', category: 'File' },
+      { id: 'view.commandPalette', label: 'Command Palette', keybinding: 'Ctrl+Shift+P', category: 'View' },
+      { id: 'view.toggleChrome', label: 'Toggle Title Bar', category: 'View' },
+      { id: 'view.toggleAlwaysOnTop', label: 'Toggle Always on Top', category: 'View' },
+    ];
+
+    for (const cmd of builtins) {
+      pluginsStore.registerCommand({ ...cmd, plugin_id: 'builtin' });
+    }
+  }
+
+  function handleCommandExecute(event: CustomEvent<{ commandId: string }>) {
+    const { commandId } = event.detail;
+    const commands = editorRef?.editorCommands;
+
+    switch (commandId) {
+      case 'editor.undo': commands?.undo(); break;
+      case 'editor.redo': commands?.redo(); break;
+      case 'editor.toggleComment': commands?.toggleComment(); break;
+      case 'editor.duplicateLine': commands?.duplicateLine(); break;
+      case 'editor.deleteLine': commands?.deleteLine(); break;
+      case 'editor.moveLinesUp': commands?.moveLinesUp(); break;
+      case 'editor.moveLinesDown': commands?.moveLinesDown(); break;
+      case 'editor.find': commands?.openSearchReplace(); break;
+      case 'editor.formatDocument': commands?.formatDocument(); break;
+      case 'file.save': editorRef?.save(); break;
+      case 'view.commandPalette': commandPaletteVisible = true; break;
+      case 'view.toggleChrome': toggleChrome(); break;
+      case 'view.toggleAlwaysOnTop': toggleAlwaysOnTop(); break;
+      default:
+        console.log('Unhandled command:', commandId);
+    }
+  }
+
+  // Global keyboard shortcut for command palette
+  function handleKeydown(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
+      e.preventDefault();
+      commandPaletteVisible = !commandPaletteVisible;
+    }
   }
 
   function toggleChrome() {
     chromeVisible = !chromeVisible;
   }
 
-  function toggleAlwaysOnTop() {
+  async function toggleAlwaysOnTop() {
     alwaysOnTop = !alwaysOnTop;
-    // TODO: Implement Tauri command
+    try {
+      await getCurrentWindow().setAlwaysOnTop(alwaysOnTop);
+    } catch (e) {
+      console.error('Failed to set always on top:', e);
+      alwaysOnTop = !alwaysOnTop; // revert on failure
+    }
   }
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <div class="app glass-window">
   {#if chromeVisible}
-    <Chrome 
-      {alwaysOnTop} 
-      onToggleChrome={toggleChrome} 
+    <Chrome
+      {alwaysOnTop}
+      onToggleChrome={toggleChrome}
       onTogglePin={toggleAlwaysOnTop}
     />
   {/if}
-  
+
   <div class="editor-container">
-    <Editor />
+    <Editor bind:this={editorRef} />
   </div>
-  
+
   <StatusBar />
+  <NotificationToast />
+  <CommandPalette
+    bind:visible={commandPaletteVisible}
+    on:execute={handleCommandExecute}
+  />
 </div>
 
 <style>

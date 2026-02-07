@@ -1,6 +1,6 @@
 // src-tauri/src/plugin_system/sandbox.rs
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::time::{Duration, SystemTime};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -38,6 +38,13 @@ impl PluginSandbox {
                 max_operations: 100,
             },
         })
+    }
+
+    /// Initialize the sandbox (load plugin entry point)
+    pub async fn initialize(&self) -> Result<(), PluginError> {
+        // Plugin initialization is handled by the worker thread during creation.
+        // This hook allows for any additional setup if needed.
+        Ok(())
     }
 
     pub async fn call_hook(&self, hook: &str, args: Vec<serde_json::Value>) -> Result<serde_json::Value, PluginError> {
@@ -86,31 +93,31 @@ pub struct ResourceStats {
     pub last_operation: SystemTime,
 }
 
-/// Registry for managing multiple plugin sandboxes
+/// Registry for managing multiple plugin sandboxes (thread-safe via interior mutability)
 pub struct SandboxRegistry {
-    sandboxes: HashMap<String, Arc<RwLock<PluginSandbox>>>,
+    sandboxes: RwLock<HashMap<String, Arc<RwLock<PluginSandbox>>>>,
 }
 
 impl SandboxRegistry {
     pub fn new() -> Self {
         Self {
-            sandboxes: HashMap::new(),
+            sandboxes: RwLock::new(HashMap::new()),
         }
     }
 
-    pub async fn create_sandbox(&mut self, manifest: PluginManifest) -> Result<(), PluginError> {
-        let id = manifest.name.clone();
-        let sandbox = PluginSandbox::new(manifest)?;
-        self.sandboxes.insert(id, Arc::new(RwLock::new(sandbox)));
-        Ok(())
+    pub async fn register_sandbox(&self, id: String, sandbox: PluginSandbox) {
+        let mut sandboxes = self.sandboxes.write().await;
+        sandboxes.insert(id, Arc::new(RwLock::new(sandbox)));
     }
 
-    pub fn get_sandbox(&self, id: &str) -> Option<&Arc<RwLock<PluginSandbox>>> {
-        self.sandboxes.get(id)
+    pub async fn get_sandbox(&self, id: &str) -> Option<Arc<RwLock<PluginSandbox>>> {
+        let sandboxes = self.sandboxes.read().await;
+        sandboxes.get(id).cloned()
     }
 
-    pub async fn remove_sandbox(&mut self, id: &str) -> bool {
-        if let Some(sandbox) = self.sandboxes.remove(id) {
+    pub async fn remove_sandbox(&self, id: &str) -> bool {
+        let mut sandboxes = self.sandboxes.write().await;
+        if let Some(sandbox) = sandboxes.remove(id) {
             let mut sandbox = sandbox.write().await;
             let _ = sandbox.cleanup().await;
             true
@@ -119,8 +126,9 @@ impl SandboxRegistry {
         }
     }
 
-    pub fn list_sandboxes(&self) -> Vec<String> {
-        self.sandboxes.keys().cloned().collect()
+    pub async fn list_sandboxes(&self) -> Vec<String> {
+        let sandboxes = self.sandboxes.read().await;
+        sandboxes.keys().cloned().collect()
     }
 }
 

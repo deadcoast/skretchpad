@@ -3,6 +3,7 @@
 // Prevent console window on Windows in release mode
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+#[allow(dead_code)]
 mod plugin_system;
 
 use plugin_system::{
@@ -17,7 +18,6 @@ use plugin_system::{
     manager::PluginManager,
     sandbox::SandboxRegistry,
 };
-use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Manager, State};
 use tokio::sync::RwLock;
@@ -26,6 +26,8 @@ use tokio::sync::RwLock;
 // STATE INITIALIZATION
 // ============================================================================
 
+// AppState will be used when we add app-level state beyond Tauri managed state
+#[allow(dead_code)]
 struct AppState {
     plugin_manager: Arc<RwLock<PluginManager>>,
     sandbox_registry: Arc<SandboxRegistry>,

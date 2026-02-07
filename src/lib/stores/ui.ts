@@ -516,14 +516,20 @@ export interface NotificationOptions {
 }
 
 /**
- * Show notification (to be implemented with notification system)
+ * Show notification via the notification store
  */
 export function showNotification(
   message: string,
   options: NotificationOptions = {}
 ): void {
-  // This is a placeholder - actual implementation would integrate with notification system
-  console.log(`[${options.type || 'info'}] ${message}`);
+  // Dynamic import to avoid circular dependencies
+  import('./notifications').then(({ notifications }) => {
+    notifications.add(message, {
+      type: options.type,
+      duration: options.duration,
+      action: options.action,
+    });
+  });
 }
 
 // ============================================================================

@@ -3,7 +3,7 @@
 use crate::plugin_system::trust::TrustLevel;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 #[derive(Debug, thiserror::Error)]
@@ -75,7 +75,7 @@ impl PluginLoader {
         }
     }
 
-    pub fn discover(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    pub fn discover(&self) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         let mut plugin_ids = Vec::new();
         
         if !self.plugins_dir.exists() {
@@ -99,7 +99,7 @@ impl PluginLoader {
         Ok(plugin_ids)
     }
 
-    pub fn load_manifest(&self, plugin_id: &str) -> Result<PluginManifest, Box<dyn std::error::Error>> {
+    pub fn load_manifest(&self, plugin_id: &str) -> Result<PluginManifest, Box<dyn std::error::Error + Send + Sync>> {
         let plugin_path = self.plugins_dir.join(plugin_id);
         let manifest_path = plugin_path.join("plugin.toml");
         
@@ -122,7 +122,7 @@ impl PluginLoader {
         Ok(manifest)
     }
 
-    pub fn load(&mut self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn load(&mut self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let manifest = self.load_manifest(plugin_id)?;
         let plugin_path = self.plugins_dir.join(plugin_id);
         
@@ -148,7 +148,7 @@ impl PluginLoader {
         self.plugins.remove(plugin_id).is_some()
     }
 
-    pub fn verify_dependencies(&self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn verify_dependencies(&self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Some(plugin_info) = self.plugins.get(plugin_id) {
             for dependency in &plugin_info.manifest.dependencies {
                 if !self.plugins.contains_key(dependency) {

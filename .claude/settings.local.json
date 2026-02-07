@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run check:*)"
+      "Bash(npm run check:*)",
+      "Bash(ls -la \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\_depreciated\"\" 2>nul || echo \"Directory check \")",
+      "Bash(npm ls:*)",
+      "Bash(cargo check:*)",
+      "Bash(npm install:*)",
+      "Bash(npx svelte-check:*)",
+      "Bash(npm run build:*)",
+      "Bash(cargo build:*)"
     ],
     "deny": [],
     "ask": []

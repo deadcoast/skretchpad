@@ -2,18 +2,17 @@
 
 use crate::plugin_system::{
     capabilities::{
-        CommandCapability, FilesystemCapability, NetworkCapability, PluginCapabilities,
-        UiCapability,
+        FilesystemCapability, NetworkCapability, PluginCapabilities,
     },
     manager::PluginManager,
-    sandbox::{PluginSandbox, SandboxRegistry},
+    sandbox::SandboxRegistry,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
-use tauri::{AppHandle, Emitter, Listener, Manager, State, Window};
+use tauri::{AppHandle, Emitter, Listener, Manager, State, WebviewWindow};
 use tokio::sync::RwLock;
 
 // ============================================================================
@@ -354,7 +353,36 @@ pub async fn plugin_write_file(
     app: AppHandle,
 ) -> Result<(), ApiError> {
     let start_time = SystemTime::now();
-    let path = PathBuf::from(&params.path);
+
+    // Ensure parent directory exists before canonicalizing
+    let raw_path = PathBuf::from(&params.path);
+    if let Some(parent) = raw_path.parent() {
+        if !parent.exists() {
+            return Err(ApiError::InvalidPath {
+                path: params.path.clone(),
+            });
+        }
+    }
+
+    // Canonicalize the parent and re-attach the filename for new files
+    let path = if raw_path.exists() {
+        raw_path.canonicalize().map_err(|_| ApiError::InvalidPath {
+            path: params.path.clone(),
+        })?
+    } else {
+        let parent = raw_path
+            .parent()
+            .ok_or_else(|| ApiError::InvalidPath {
+                path: params.path.clone(),
+            })?
+            .canonicalize()
+            .map_err(|_| ApiError::InvalidPath {
+                path: params.path.clone(),
+            })?;
+        parent.join(raw_path.file_name().ok_or_else(|| ApiError::InvalidPath {
+            path: params.path.clone(),
+        })?)
+    };
 
     // Get workspace root
     let workspace_root = app
@@ -475,7 +503,7 @@ pub async fn plugin_watch_path(
     manager: State<'_, Arc<RwLock<PluginManager>>>,
     audit: State<'_, Arc<AuditLogger>>,
     app: AppHandle,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<String, ApiError> {
     let path = PathBuf::from(&params.path)
         .canonicalize()
@@ -518,10 +546,14 @@ pub async fn plugin_watch_path(
     tokio::spawn(async move {
         while let Ok(event) = rx.recv() {
             if let Ok(event) = event {
-                // Emit event to frontend
+                // Convert notify::Event to a serializable representation
+                let payload = serde_json::json!({
+                    "kind": format!("{:?}", event.kind),
+                    "paths": event.paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+                });
                 let _ = window_clone.emit(
                     &format!("plugin:{}:file_change", plugin_id_clone),
-                    serde_json::to_value(event).unwrap_or_default(),
+                    payload,
                 );
             }
         }
@@ -738,7 +770,7 @@ pub struct ShowNotificationParams {
 pub async fn plugin_show_notification(
     params: ShowNotificationParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<(), ApiError> {
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -775,7 +807,7 @@ pub struct AddStatusBarItemParams {
 pub async fn plugin_add_status_bar_item(
     params: AddStatusBarItemParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<String, ApiError> {
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -810,7 +842,7 @@ pub struct RemoveStatusBarItemParams {
 pub async fn plugin_remove_status_bar_item(
     params: RemoveStatusBarItemParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<(), ApiError> {
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -845,7 +877,7 @@ pub struct ShowPanelParams {
 pub async fn plugin_show_panel(
     params: ShowPanelParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<(), ApiError> {
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -880,7 +912,7 @@ pub struct HidePanelParams {
 pub async fn plugin_hide_panel(
     params: HidePanelParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<(), ApiError> {
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -915,18 +947,36 @@ pub struct GetEditorContentParams {
 pub async fn plugin_get_editor_content(
     params: GetEditorContentParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<String, ApiError> {
-    // Get capabilities
-    let _capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
+    // Get and validate capabilities
+    let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
+    validate_ui(&capabilities, "webview")?;
 
-    // Request content from frontend
-    // This is a synchronous operation that waits for response
-    let content = window
-        .emit_and_wait("plugin:editor:get_content", ())
-        .await
+    // Request content from frontend via event round-trip
+    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+    let tx = std::sync::Arc::new(std::sync::Mutex::new(Some(tx)));
+
+    let response_event = "plugin:editor:get_content_response";
+    let tx_clone = tx.clone();
+    window.once(response_event, move |event| {
+        let payload = event.payload().to_string();
+        if let Some(tx) = tx_clone.lock().unwrap().take() {
+            let _ = tx.send(payload);
+        }
+    });
+
+    window
+        .emit("plugin:editor:get_content", ())
         .map_err(|e| ApiError::InternalError(e.to_string()))?;
 
+    let content = tokio::time::timeout(std::time::Duration::from_secs(5), rx)
+        .await
+        .map_err(|_| ApiError::InternalError("Timeout waiting for editor content".to_string()))?
+        .map_err(|_| ApiError::InternalError("Failed to receive editor content".to_string()))?;
+
+    // Strip surrounding quotes if JSON-encoded string
+    let content = serde_json::from_str::<String>(&content).unwrap_or(content);
     Ok(content)
 }
 
@@ -940,10 +990,11 @@ pub struct SetEditorContentParams {
 pub async fn plugin_set_editor_content(
     params: SetEditorContentParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<(), ApiError> {
-    // Get capabilities
-    let _capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
+    // Get and validate capabilities
+    let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
+    validate_ui(&capabilities, "webview")?;
 
     // Send content to frontend
     window
@@ -963,7 +1014,7 @@ pub struct GetActiveFileParams {
     plugin_id: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FileInfo {
     path: String,
     language: Option<String>,
@@ -974,17 +1025,36 @@ pub struct FileInfo {
 pub async fn plugin_get_active_file(
     params: GetActiveFileParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<Option<FileInfo>, ApiError> {
-    // Get capabilities
-    let _capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
+    // Get and validate capabilities
+    let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
+    validate_ui(&capabilities, "webview")?;
 
-    // Request from frontend
-    let file_info = window
-        .emit_and_wait("plugin:editor:get_active_file", serde_json::Value::Null)
-        .await
+    // Request from frontend via event round-trip
+    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+    let tx = std::sync::Arc::new(std::sync::Mutex::new(Some(tx)));
+
+    let response_event = "plugin:editor:get_active_file_response";
+    let tx_clone = tx.clone();
+    window.once(response_event, move |event| {
+        let payload = event.payload().to_string();
+        if let Some(tx) = tx_clone.lock().unwrap().take() {
+            let _ = tx.send(payload);
+        }
+    });
+
+    window
+        .emit("plugin:editor:get_active_file", ())
         .map_err(|e| ApiError::InternalError(e.to_string()))?;
 
+    let response = tokio::time::timeout(std::time::Duration::from_secs(5), rx)
+        .await
+        .map_err(|_| ApiError::InternalError("Timeout waiting for active file info".to_string()))?
+        .map_err(|_| ApiError::InternalError("Failed to receive active file info".to_string()))?;
+
+    let file_info: Option<FileInfo> = serde_json::from_str(&response)
+        .map_err(|e| ApiError::InternalError(format!("Failed to parse active file info: {}", e)))?;
     Ok(file_info)
 }
 
@@ -1003,7 +1073,7 @@ pub async fn plugin_register_event(
     params: RegisterEventParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
 ) -> Result<(), ApiError> {
-    // Get capabilities
+    // Validate plugin exists and is loaded
     let _capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
 
     // Register event listener in plugin manager
@@ -1024,9 +1094,9 @@ pub struct EmitEventParams {
 pub async fn plugin_emit_event(
     params: EmitEventParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: Window,
+    window: WebviewWindow,
 ) -> Result<(), ApiError> {
-    // Get capabilities
+    // Validate plugin exists and is loaded
     let _capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
 
     // Emit event
@@ -1062,12 +1132,13 @@ pub async fn plugin_execute_hook(
     // Get sandbox
     let sandbox = registry
         .get_sandbox(&params.plugin_id)
+        .await
         .ok_or_else(|| ApiError::PluginNotFound {
             plugin_id: params.plugin_id.clone(),
         })?;
 
     // Execute hook
-    let mut sandbox = sandbox.write().await;
+    let sandbox = sandbox.read().await;
     let result = sandbox
         .call_hook(&params.hook_name, vec![params.data.clone()])
         .await;
@@ -1112,53 +1183,6 @@ pub async fn get_audit_logs(
 pub async fn clear_audit_logs(audit: State<'_, Arc<AuditLogger>>) -> Result<(), ApiError> {
     audit.clear().await;
     Ok(())
-}
-
-// ============================================================================
-// HELPER: Extension trait for Window to add emit_and_wait
-// ============================================================================
-
-use async_trait::async_trait;
-
-#[async_trait]
-trait WindowExt {
-    async fn emit_and_wait<R: serde::de::DeserializeOwned>(
-        &self,
-        event: &str,
-        payload: impl Serialize + Send,
-    ) -> Result<R, tauri::Error>;
-}
-
-#[async_trait]
-impl WindowExt for Window {
-    async fn emit_and_wait<R: serde::de::DeserializeOwned>(
-        &self,
-        event: &str,
-        payload: impl Serialize + Send,
-    ) -> Result<R, tauri::Error> {
-        // Create response channel
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        let response_event = format!("{}_response", event);
-
-        // Listen for response
-        let unlisten = self.once(&response_event, move |event| {
-            if let Some(payload) = event.payload() {
-                let _ = tx.send(payload.to_string());
-            }
-        });
-
-        // Emit request
-        self.emit(event, payload.clone())?;
-
-        // Wait for response with timeout
-        let response = tokio::time::timeout(std::time::Duration::from_secs(5), rx)
-            .await
-            .map_err(|_| tauri::Error::FailedToReceiveMessage)?
-            .map_err(|_| tauri::Error::FailedToReceiveMessage)?;
-
-        // Parse response
-        serde_json::from_str(&response).map_err(|e| tauri::Error::InvalidArgs("", "", e))
-    }
 }
 
 #[cfg(test)]

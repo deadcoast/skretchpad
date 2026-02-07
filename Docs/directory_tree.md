@@ -1,168 +1,135 @@
-# 1. Complete Directory Tree
+# Directory Tree
+
+> Last updated: v0.0.3 (2026-02-07)
 
 ## Status Legend
 
-- ✅ = Implemented - Feature is complete and functional
-- 🚧 = In Progress - Feature is partially implemented
-- 📋 = Planned - Feature is designed but not yet implemented
-- ⚙️ = Settings or Config - Configuration files
+- **OK** = Implemented and compiling
+- **STUB** = File exists but functionality is placeholder
+- **MANIFEST** = Declaration/config only (no runtime logic)
+- **CFG** = Configuration file
 
-## Implementation Status
-
-- Core Architecture: ✅ Complete
-- UI Components: ✅ Complete  
-- Theme System: ✅ Basic implementation
-- Language Support: ✅ Basic implementation
-- Plugin System: 📋 Planned
-- File Operations: 📋 Planned
+## Project Structure
 
 ```plaintext
 skretchpad/
-├── .git/
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       └── release.yml
-│
-├── src-tauri/                         # Rust backend (Tauri)
+├── src-tauri/                             # Rust backend (Tauri 2.0)
 │   ├── src/
-│   │   ├── main.rs                    # ✅ Application entry point
-│   │   ├── window_manager.rs          # ✅ Window controls (always-on-top, chrome toggle)
-│   │   ├── theme_engine.rs            # ✅ Theme loading and CSS generation
-│   │   ├── language_loader.rs         # ✅ Language definition loading
-│   │   ├── plugin_system/             # 📋 Plugin system modules
-│   │   │   ├── sandbox.rs             # 📋 Plugin isolation
-│   │   │   ├── api.rs                 # 📋 Plugin API commands
-│   │   │   ├── capabilities.rs        # 📋 Capability model
-│   │   │   └── trust.rs               # 📋 Plugin trust levels
-│   │   └── security/                  # 📋 Security modules
-│   │       └── threat_matrix.rs       # 📋 Security threat analysis
-│   ├── icons/                         # App icons (various sizes)
-│   │   ├── icon.icns                  # macOS
-│   │   ├── icon.ico                   # Windows
-│   │   └── icon.png                   # Linux
-│   ├── Cargo.toml                     # ⚙️ Rust dependencies & metadata
-│   ├── Cargo.lock                     # Lock file (generated)
-│   ├── tauri.conf.json                # ⚙️ Tauri app configuration
-│   └── build.rs                       # Build script (if needed)
+│   │   ├── main.rs                        # OK    Tauri app setup, command registration
+│   │   ├── window_manager.rs              # OK    Window controls (always-on-top, chrome toggle)
+│   │   ├── theme_engine.rs                # OK    Theme loading from TOML files
+│   │   ├── language_loader.rs             # OK    Language definition loading from JSON
+│   │   └── plugin_system/                 # OK    Plugin system modules
+│   │       ├── mod.rs                     # OK    Module re-exports
+│   │       ├── sandbox.rs                 # OK    V8 sandbox, SandboxRegistry (RwLock)
+│   │       ├── worker.rs                  # OK    Worker thread JS execution (deno_core)
+│   │       ├── capabilities.rs            # OK    Permission model (filesystem/network/commands/UI)
+│   │       ├── loader.rs                  # OK    TOML manifest parser, plugin discovery
+│   │       ├── manager.rs                 # OK    Plugin lifecycle (discover/load/activate/deactivate)
+│   │       ├── api.rs                     # OK    25+ Tauri commands for plugin operations
+│   │       └── trust.rs                   # OK    Trust levels (first-party/local/community)
+│   ├── js/
+│   │   └── plugin_api.js                  # OK    JavaScript API injected into plugin sandboxes
+│   ├── icons/
+│   │   ├── icon.icns                      #       macOS app icon
+│   │   ├── icon.ico                       #       Windows app icon
+│   │   └── icon.png                       #       Linux app icon
+│   ├── Cargo.toml                         # CFG   Rust dependencies and metadata
+│   ├── Cargo.lock                         # CFG   Generated lock file
+│   ├── tauri.conf.json                    # CFG   Tauri app configuration
+│   └── build.rs                           # CFG   Build script
 │
-├── src/                               # Frontend (Svelte + TypeScript)
+├── src/                                   # Frontend (Svelte 4 + TypeScript)
 │   ├── components/
-│   │   ├── App.svelte                 # ✅ Main application component
-│   │   ├── Editor.svelte              # ✅ CodeMirror 6 editor wrapper
-│   │   ├── Chrome.svelte              # ✅ Title bar / menu bar
-│   │   └── StatusBar.svelte           # ✅ Bottom status bar
-│   ├── lib/                           # 📋 Planned library modules
-│   │   ├── theme-engine.ts            # 📋 Theme loading & transitions
-│   │   ├── editor-loader.ts           # 📋 CodeMirror setup utilities
-│   │   ├── plugin-api.ts              # 📋 Plugin API types & interfaces
-│   │   ├── keybindings.ts             # 📋 Keyboard shortcut manager
-│   │   └── stores/
-│   │       ├── editor.ts              # 📋 Editor state management
-│   │       ├── theme.ts               # 📋 Theme state management
-│   │       ├── ui.ts                  # 📋 UI visibility state
-│   │       └── plugins.ts             # 📋 Plugin state management
-│   ├── features/                      # 📋 Planned feature modules
-│   │   ├── syntax/
-│   │   ├── diff/
-│   │   └── search/
-│   ├── styles/                        # 📋 Planned styling modules
-│   │   ├── global.css
-│   │   ├── theme-transitions.css
-│   │   ├── glass-effects.css
-│   │   └── editor.css
-│   └── main.ts                        # ✅ Application entry point
+│   │   ├── App.svelte                     # OK    Main app shell, command dispatch, shortcuts
+│   │   ├── Editor.svelte                  # OK    CodeMirror 6 wrapper, 11 editor commands
+│   │   ├── Chrome.svelte                  # OK    Title bar, window controls, pin button
+│   │   ├── StatusBar.svelte               # OK    Bottom status bar with plugin items
+│   │   ├── CommandPalette.svelte          # OK    Ctrl+Shift+P command palette
+│   │   ├── NotificationToast.svelte       # OK    Toast notifications (fly in/fade out)
+│   │   ├── SideBar.svelte                 # OK    Side panel for plugin UI
+│   │   └── PluginPermissionDialog.svelte  # OK    Plugin permission approval dialog
+│   ├── lib/
+│   │   ├── editor-loader.ts               # OK    CodeMirror 6 setup, language loading
+│   │   ├── plugin-api.ts                  # OK    TypeScript bridge to Rust plugin API
+│   │   ├── stores/
+│   │   │   ├── editor.ts                  # OK    Editor state and file management
+│   │   │   ├── theme.ts                   # OK    Theme loading, CSS variable injection
+│   │   │   ├── keybindings.ts             # OK    Keybinding schemes (Default/Vim/Emacs)
+│   │   │   ├── plugins.ts                 # OK    Plugin registry and command store
+│   │   │   ├── notifications.ts           # OK    Notification toast state
+│   │   │   └── ui.ts                      # OK    UI utilities (color, animation, format)
+│   │   └── utils/
+│   │       └── debounce.ts                # OK    Debounce utility
 │   ├── features/
-│   │   ├── syntax/
-│   │   │   ├── highlighter.ts         # Syntax highlighting logic
-│   │   │   └── theme-mapper.ts        # Map tokens to theme colors
-│   │   ├── diff/
-│   │   │   ├── parser.ts              # Git diff parser
-│   │   │   └── renderer.ts            # Diff UI renderer
-│   │   └── search/
-│   │       ├── finder.ts              # In-file search
-│   │       └── SearchBar.svelte       # Search UI
-│   ├── styles/
-│   │   ├── global.css                 # Global styles
-│   │   ├── theme-transitions.css      # Theme switching animations
-│   │   ├── glass-effects.css          # Liquid glass styling
-│   │   └── editor.css                 # Editor-specific styles
-│   ├── App.svelte                     # Root component
-│   ├── main.ts                        # Entry point
-│   └── vite-env.d.ts                  # Vite type definitions
+│   │   └── diff/
+│   │       └── DiffView.svelte            # STUB  Diff viewer (placeholder UI only)
+│   ├── configs/
+│   │   └── keybindings.toml               # CFG   Default keybinding definitions
+│   └── main.ts                            # OK    Svelte app entry point
 │
-├── languages/                         # Language definitions
-│   ├── python.lang.json
-│   ├── rust.lang.json
-│   ├── javascript.lang.json
-│   ├── typescript.lang.json
-│   ├── markdown.lang.json
-│   ├── json.lang.json
-│   ├── yaml.lang.json
-│   ├── toml.lang.json
-│   ├── html.lang.json
-│   ├── css.lang.json
-│   └── README.md                      # Language definition schema docs
+├── plugins/                               # Plugin directory
+│   ├── git/
+│   │   ├── plugin.toml                    # MANIFEST  Git integration plugin manifest
+│   │   └── main.ts                        # OK        Plugin entry point (written, not runtime-tested)
+│   └── git-status/
+│       └── plugin.toml                    # MANIFEST  Git status plugin manifest
 │
-├── themes/                            # Theme files
-│   ├── glass-dark.toml                # ✅ Default glass dark theme
-│   ├── glass-light.toml               # 📋 Planned light variant
-│   ├── cyberpunk.toml                 # 📋 Planned community theme
-│   ├── nord.toml                      # 📋 Planned Nord color scheme
-│   └── README.md                      # 📋 Theme format documentation
+├── themes/                                # Theme definitions (TOML)
+│   ├── glass-dark.toml                    # OK    Default dark glass theme
+│   └── glass-light.toml                   # OK    Light glass theme
 │
-├── languages/                         # Language definitions
-│   ├── python.lang.json               # ✅ Python language configuration
-│   ├── rust.lang.json                 # ✅ Rust language configuration
-│   ├── markdown.lang.json             # ✅ Markdown language configuration
-│   ├── javascript.lang.json           # 📋 Planned JavaScript configuration
-│   ├── json.lang.json                 # 📋 Planned JSON configuration
-│   └── README.md                      # 📋 Language definition documentation
+├── languages/                             # Language definitions (JSON)
+│   ├── python.lang.json                   # OK    Python language config
+│   ├── rust.lang.json                     # OK    Rust language config
+│   └── markdown.lang.json                 # OK    Markdown language config
 │
-├── plugins/                           # Plugin directory
-│   ├── git/                           # 📋 Planned Git plugin
-│   │   ├── plugin.toml                # 📋 Plugin manifest
-│   │   ├── main.ts                    # 📋 Plugin entry point
-│   │   ├── components/
-│   │   │   ├── StatusPanel.svelte     # 📋 Git status panel
-│   │   │   ├── BranchManager.svelte   # 📋 Branch management
-│   │   │   └── CommitDialog.svelte    # 📋 Commit dialog
-│   │   ├── lib/
-│   │   │   ├── git-commands.ts        # 📋 Git CLI wrappers
-│   │   │   └── diff-parser.ts         # 📋 Diff parsing utilities
-│   │   └── README.md
-│   ├── .gitkeep                       # Keep directory in git
-│   └── README.md                      # 📋 Plugin development guide
+├── Docs/                                  # Documentation
+│   ├── STATUS.md                          #       Module status and build state
+│   ├── TODO.md                            #       Development task tracking
+│   ├── directory_tree.md                  #       This file
+│   └── architecture/
+│       ├── 1_overview.md                  #       Project overview and design goals
+│       ├── 2_techstack.md                 #       Technology stack and framework choices
+│       ├── 3_technical-details.md         #       Deep technical implementation details
+│       ├── 4_configs.md                   #       Configuration and setup details
+│       └── modules/                       #       Per-module documentation
+│           ├── 1_sandbox.rs.md
+│           ├── 1.1_capabilities.rs.md
+│           ├── 1.1_worker.rs.md
+│           ├── 2_Editor.svelte.md
+│           ├── 3_api.rs.md
+│           ├── 4_main.ts.md
+│           ├── 5_editor-loader.ts.md
+│           ├── 8_plugin-api.ts.md
+│           ├── 9_loader.rs.md
+│           ├── 10_manager.rs.md
+│           ├── 11_main.rs.md
+│           ├── 12_editor.ts.md
+│           ├── 13_plugins.ts.md
+│           ├── 14_debounce.ts.md
+│           └── 15_ui.ts.md
 │
-├── keybindings/                       # Keybinding configurations
-│   ├── default.toml                   # Default keybindings
-│   ├── vim.toml                       # Vim-style bindings
-│   └── README.md
-│
-├── docs/                              # Documentation
-│   ├── ARCHITECTURE.md                # System architecture
-│   ├── PLUGIN_API.md                  # Plugin development guide
-│   ├── THEME_GUIDE.md                 # Theme creation guide
-│   ├── LANGUAGE_GUIDE.md              # Adding language support
-│   └── CONTRIBUTING.md
-│
-├── public/                            # Static assets
-│   └── favicon.ico
-│
-├── dist/                              # Build output (gitignored)
-├── node_modules/                      # npm dependencies (gitignored)
-├── target/                            # Rust build artifacts (gitignored)
-│
-├── .gitignore                         # ⚙️ Git ignore rules
-├── .eslintrc.cjs                      # ⚙️ ESLint config
-├── .prettierrc                        # ⚙️ Prettier config
-├── package.json                       # ⚙️ npm dependencies & scripts
-├── package-lock.json                  # npm lock file (generated)
-├── tsconfig.json                      # ⚙️ TypeScript compiler config
-├── tsconfig.node.json                 # ⚙️ TypeScript config for Node
-├── svelte.config.js                   # ⚙️ Svelte compiler config
-├── vite.config.ts                     # ⚙️ Vite bundler config
-├── rust-toolchain.toml                # ⚙️ Rust toolchain version
-├── LICENSE                            # MIT/Apache-2.0
-└── README.md                          # Project overview
+├── .gitignore                             # CFG
+├── package.json                           # CFG   npm dependencies and scripts
+├── package-lock.json                      # CFG   Generated lock file
+├── tsconfig.json                          # CFG   TypeScript compiler config
+├── tsconfig.node.json                     # CFG   TypeScript config for Node
+├── svelte.config.js                       # CFG   Svelte compiler config
+├── vite.config.ts                         # CFG   Vite bundler config
+├── AGENTS.md                              # CFG   Repository guidelines for agents
+├── CHANGELOG.md                           #       Version changelog
+├── README.md                              #       Project overview
+└── LICENSE                                #       MIT License
 ```
+
+## File Counts
+
+| Category | Files | Approx LOC |
+|----------|-------|------------|
+| Rust backend | 11 | ~4,000 |
+| TypeScript/Svelte frontend | 17 | ~9,000 |
+| Plugin manifests/code | 3 | ~200 |
+| Config files | 10 | ~300 |
+| Documentation | 20+ | -- |
+| **Total source** | **31** | **~13,500** |

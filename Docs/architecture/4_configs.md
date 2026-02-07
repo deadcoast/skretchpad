@@ -11,7 +11,7 @@ Purpose: Rust package manifest - defines dependencies, metadata, and build setti
 [package]
 name = "skretchpad"
 version = "0.1.0"
-description = "A minimal, modern text editor for developers"
+description = "A minimal, modern skratchpad text editor for developers"
 authors = ["heat"]
 license = "MIT"
 repository = "https://github.com/yourusername/skretchpad"
@@ -486,20 +486,20 @@ src-tauri/Cargo.lock
 
 ## Summary Table
 
-| Technology | Config File | Path | Purpose |
-|------------|------------|------|---------|
-| Rust | `Cargo.toml` | `/src-tauri/Cargo.toml` | Dependencies & package metadata |
-| Rust | `Cargo.lock` | `/src-tauri/Cargo.lock` | Dependency lock file (auto-generated) |
-| Rust | `rust-toolchain.toml` | `/rust-toolchain.toml` | Rust version pinning (optional) |
-| Tauri | `tauri.conf.json` | `/src-tauri/tauri.conf.json` | App configuration, permissions, window settings |
-| TypeScript | `package.json` | `/package.json` | npm dependencies & scripts |
-| TypeScript | `tsconfig.json` | `/tsconfig.json` | TypeScript compiler options |
-| TypeScript | `tsconfig.node.json` | `/tsconfig.node.json` | TypeScript for Node scripts |
-| Svelte | `svelte.config.js` | `/svelte.config.js` | Svelte compiler configuration |
-| Vite | `vite.config.ts` | `/vite.config.ts` | Build tool & dev server config |
-| ESLint | `.eslintrc.cjs` | `/.eslintrc.cjs` | Linting rules |
-| Prettier | `.prettierrc` | `/.prettierrc` | Code formatting rules |
-| Git | `.gitignore` | `/.gitignore` | Files to exclude from version control |
+| Technology | Config File           | Path                         | Purpose                                         |
+|------------|-----------------------|------------------------------|-------------------------------------------------|
+| Rust       | `Cargo.toml`          | `/src-tauri/Cargo.toml`      | Dependencies & package metadata                 |
+| Rust       | `Cargo.lock`          | `/src-tauri/Cargo.lock`      | Dependency lock file (auto-generated)           |
+| Rust       | `rust-toolchain.toml` | `/rust-toolchain.toml`       | Rust version pinning (optional)                 |
+| Tauri      | `tauri.conf.json`     | `/src-tauri/tauri.conf.json` | App configuration, permissions, window settings |
+| TypeScript | `package.json`        | `/package.json`              | npm dependencies & scripts                      |
+| TypeScript | `tsconfig.json`       | `/tsconfig.json`             | TypeScript compiler options                     |
+| TypeScript | `tsconfig.node.json`  | `/tsconfig.node.json`        | TypeScript for Node scripts                     |
+| Svelte     | `svelte.config.js`    | `/svelte.config.js`          | Svelte compiler configuration                   |
+| Vite       | `vite.config.ts`      | `/vite.config.ts`            | Build tool & dev server config                  |
+| ESLint     | `.eslintrc.cjs`       | `/.eslintrc.cjs`             | Linting rules                                   |
+| Prettier   | `.prettierrc`         | `/.prettierrc`               | Code formatting rules                           |
+| Git        | `.gitignore`          | `/.gitignore`                | Files to exclude from version control           |
 
 ---
 

@@ -2,14 +2,13 @@
 
 use crate::plugin_system::{
     capabilities::PluginCapabilities,
-    loader::{PluginInfo, PluginLoader, LoaderError},
+    loader::{PluginLoader, LoaderError},
     sandbox::{PluginSandbox, SandboxRegistry},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
 // ============================================================================
 // ERROR TYPES
@@ -21,7 +20,7 @@ pub enum ManagerError {
     Loader(#[from] LoaderError),
     
     #[error("Standard error: {0}")]
-    StdError(#[from] Box<dyn std::error::Error>),
+    StdError(#[from] Box<dyn std::error::Error + Send + Sync>),
 
     #[error("Plugin not loaded: {0}")]
     PluginNotLoaded(String),
@@ -123,14 +122,14 @@ impl PluginManager {
     }
 
     /// Load a plugin
-    pub fn load(&mut self, plugin_id: &str) -> Result<&PluginInfo> {
-        let plugin_info = self.loader.load(plugin_id)?;
-        
+    pub fn load(&mut self, plugin_id: &str) -> Result<()> {
+        self.loader.load(plugin_id).map_err(|e| ManagerError::Internal(e.to_string()))?;
+
         // Set initial state
         self.active_plugins
             .insert(plugin_id.to_string(), PluginState::Loaded);
-        
-        Ok(plugin_info.clone())
+
+        Ok(())
     }
 
     /// Activate a plugin
@@ -156,7 +155,8 @@ impl PluginManager {
             .insert(plugin_id.to_string(), PluginState::Activating);
 
         // Create sandbox
-        let sandbox = PluginSandbox::new(plugin_info.manifest.clone())?;
+        let sandbox = PluginSandbox::new(plugin_info.manifest.clone())
+            .map_err(|e| ManagerError::Sandbox(e.to_string()))?;
 
         // Register sandbox
         self.sandbox_registry
@@ -164,9 +164,9 @@ impl PluginManager {
             .await;
 
         // Get sandbox and initialize
-        if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id) {
-            let mut sandbox = sandbox.write().await;
-            
+        if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id).await {
+            let sandbox = sandbox.read().await;
+
             if let Err(e) = sandbox.initialize().await {
                 self.errors
                     .insert(plugin_id.to_string(), e.to_string());
@@ -212,8 +212,8 @@ impl PluginManager {
             .insert(plugin_id.to_string(), PluginState::Deactivating);
 
         // Call deactivation hook
-        if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id) {
-            let mut sandbox = sandbox.write().await;
+        if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id).await {
+            let sandbox = sandbox.read().await;
             let _ = sandbox
                 .call_hook("deactivate", vec![serde_json::json!({})])
                 .await;
@@ -255,7 +255,7 @@ impl PluginManager {
             name: plugin_info.manifest.name.clone(),
             version: plugin_info.manifest.version.clone(),
             state,
-            capabilities: plugin_info.capabilities.clone(),
+            capabilities: plugin_info.manifest.capabilities.clone(),
             error: self.errors.get(plugin_id).cloned(),
         })
     }
@@ -265,7 +265,7 @@ impl PluginManager {
         self.loader
             .get_all()
             .iter()
-            .filter_map(|info| self.get_status(&info.id))
+            .filter_map(|(id, _info)| self.get_status(id))
             .collect()
     }
 
@@ -309,8 +309,8 @@ impl PluginManager {
     pub async fn emit_event(&self, event_name: &str, data: serde_json::Value) {
         if let Some(listeners) = self.event_listeners.get(event_name) {
             for plugin_id in listeners {
-                if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id) {
-                    let mut sandbox = sandbox.write().await;
+                if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id).await {
+                    let sandbox = sandbox.read().await;
                     let _ = sandbox
                         .call_hook(event_name, vec![data.clone()])
                         .await;

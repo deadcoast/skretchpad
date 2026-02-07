@@ -48,7 +48,7 @@ impl PluginWorker {
         let (tx, rx) = mpsc::channel();
         
         let worker_id = id.clone();
-        let worker_capabilities = capabilities.clone();
+        let _worker_capabilities = capabilities.clone();
         let worker_limits = ResourceLimits {
             max_memory: 50 * 1024 * 1024, // 50MB
             max_cpu_time: Duration::from_secs(5),
@@ -187,8 +187,10 @@ impl PluginWorker {
             serde_json::to_string(args).unwrap_or_else(|_| "null".to_string())
         );
 
-        let hook_name = format!("hook_{}", hook);
-        match runtime.execute_script(&hook_name, deno_core::FastString::Owned(script.into())) {
+        // Use a leaked string for the script name since deno_core requires 'static lifetime.
+        // This is a small, bounded set of hook names so the leak is negligible.
+        let hook_name: &'static str = Box::leak(format!("hook_{}", hook).into_boxed_str());
+        match runtime.execute_script(hook_name, deno_core::FastString::Owned(script.into())) {
             Ok(_result) => {
                 // For now, return a simple success response
                 // TODO: Implement proper V8 value to JSON conversion

@@ -84,11 +84,9 @@ class LanguageRegistry {
         { name: 'markdown', extensions: ['md', 'markdown'] },
         { name: 'html', extensions: ['html', 'htm'] },
         { name: 'css', extensions: ['css'] },
-        // TODO: Install missing packages: @codemirror/lang-yaml, @codemirror/lang-toml, @codemirror/lang-xml, @codemirror/lang-sql
-        // { name: 'yaml', extensions: ['yaml', 'yml'] },
-        // { name: 'toml', extensions: ['toml'] },
-        // { name: 'xml', extensions: ['xml', 'svg'] },
-        // { name: 'sql', extensions: ['sql'] },
+        { name: 'yaml', extensions: ['yaml', 'yml'] },
+        { name: 'xml', extensions: ['xml', 'svg'] },
+        { name: 'sql', extensions: ['sql'] },
       ];
 
     for (const def of languageDefinitions) {
@@ -165,26 +163,20 @@ class LanguageRegistry {
           support = css();
           break;
 
-        // TODO: Uncomment when packages are installed
-        // case 'yaml':
-        //   const { yaml } = await import('@codemirror/lang-yaml');
-        //   support = yaml();
-        //   break;
+        case 'yaml':
+          const { yaml } = await import('@codemirror/lang-yaml');
+          support = yaml();
+          break;
 
-        // case 'toml':
-        //   const { toml } = await import('@codemirror/lang-toml');
-        //   support = toml();
-        //   break;
+        case 'xml':
+          const { xml } = await import('@codemirror/lang-xml');
+          support = xml();
+          break;
 
-        // case 'xml':
-        //   const { xml } = await import('@codemirror/lang-xml');
-        //   support = xml();
-        //   break;
-
-        // case 'sql':
-        //   const { sql } = await import('@codemirror/lang-sql');
-        //   support = sql();
-        //   break;
+        case 'sql':
+          const { sql } = await import('@codemirror/lang-sql');
+          support = sql();
+          break;
 
         default:
           return null;
