@@ -312,6 +312,8 @@ fn main() {
             // Theme engine
             theme_engine::load_theme,
             theme_engine::apply_theme,
+            theme_engine::get_theme_metadata,
+            theme_engine::list_themes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

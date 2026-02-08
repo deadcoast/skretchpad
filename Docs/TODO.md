@@ -24,7 +24,7 @@
 - [ ] Minimap component
 - [ ] Breadcrumb navigation
 
-## Plan to implement
+## TODO 0.0.1 - Plan to implement
 
 Skretchpad v0.1.0 -- Comprehensive Revision Plan
 
@@ -421,5 +421,439 @@ All visual changes must adhere to:
 - Monospace secondary font for technical UI elements
 
 ## Success Criteria
+
+---
+
+## TODO 0.0.2 - Plan to implement                                                                                                    │
+
+Skretchpad -- Testing Suite & CI/CD Pipeline
+
+>Context
+
+Skretchpad is at a stable, working state with 48 Rust tests but zero frontend tests, no CI/CD, no pre-commit hooks, and no coverage tooling. The user wants to establish a professional testing baseline at 90% coverage before continuing feature development, integrated into GitHub commits and workflows. This plan builds a complete quality assurance pipeline from scratch.
+
+Current state: 48 Rust tests across 6 of 12 modules. Security-critical modules (ops.rs, worker.rs, sandbox.rs) have 0 tests. No frontend test framework installed.
+
+---
+
+## Phase 1: Frontend Test Infrastructure
+
+1A. Install dependencies
+
+```ps1
+npm install -D vitest @testing-library/svelte @testing-library/jest-dom jsdom @vitest/coverage-v8 husky lint-staged  
+```
+
+1B. Create vitest.config.ts (project root)
+
+ Separate config from vite.config.ts. Key features:
+- jsdom environment
+- $lib path alias matching vite.config.ts
+- Global test setup file
+- Tauri API module aliases pointing to mock files
+- V8 coverage provider with 90% line/function/statement thresholds, 85% branch threshold
+- Coverage includes src/lib/**/*.ts and src/lib/**/*.svelte, excludes src/lib/icons/** (SVG exports, not logic)
+
+1C. Create test setup and mock files
+
+src/test/setup.ts -- Global setup:
+- Import @testing-library/jest-dom/vitest for DOM matchers
+- Mock window.matchMedia, requestAnimationFrame, cancelAnimationFrame
+- Mock navigator.clipboard (writeText, readText)
+- Set navigator.platform to 'Win32'
+
+src/test/mocks/tauri-core.ts -- Mock @tauri-apps/api/core:
+- invoke as vi.fn with handler registry
+- Helper: mockInvokeHandler(cmd, handler) for per-test command mocking
+- Helper: clearInvokeHandlers() for cleanup
+
+src/test/mocks/tauri-event.ts -- Mock @tauri-apps/api/event:
+- listen, emit, once as vi.fn with in-memory listener map
+- Helper: emitTestEvent(event, payload) to simulate backend events
+- Helper: clearListeners() for cleanup
+
+src/test/mocks/tauri-dialog.ts -- Mock @tauri-apps/plugin-dialog:
+- save, open, ask, confirm, message as vi.fn returning defaults
+
+src/test/mocks/tauri-path.ts -- Mock @tauri-apps/api/path
+
+src/test/mocks/tauri-fs.ts -- Mock @tauri-apps/plugin-fs
+
+1D. Add npm scripts to package.json
+```json
+ "test": "vitest run",
+ "test:watch": "vitest",
+ "test:coverage": "vitest run --coverage",
+ "test:rust": "cd src-tauri && cargo test",
+ "test:all": "npm run test:coverage && npm run test:rust",
+ "prepare": "husky"
+```
+
+---
+
+## Phase 2: Frontend Tests -- Pure Functions (highest ROI)
+
+2A. src/lib/utils/debounce.test.ts (~15 tests)
+
+All 7 exported functions tested with vi.useFakeTimers():
+
+- debounce: calls after wait, not before, deduplicates rapid calls, uses latest args
+- debounceImmediate: immediate=true fires first call, suppresses during wait
+- throttle: fires immediately, blocks during wait, fires trailing call
+- debounceAsync: returns promise, debounces async calls
+- debounceLeading: fires on leading edge, suppresses during wait
+- debounceWithCancel: cancel() prevents execution, flush() fires immediately
+- debounceWithMaxWait: guarantees execution within maxWait even under continuous debouncing
+
+2B. src/lib/utils/ui.test.ts (~30 tests)
+
+Color utilities (pure math, no DOM):
+
+- hexToRgb: valid hex, hex without hash, invalid hex, short hex (null)
+- rgbToHex: standard values, single digit padding
+- parseColor: hex input, rgb input, rgba input, invalid input
+- getLuminance: black (~0), white (~1)
+- isDark: black (true), white (false)
+- getContrastRatio: black vs white (~21)
+- lighten, darken, withAlpha: verify output format and values
+
+Format utilities (pure string manipulation):
+
+- formatFileSize: 0 B, 1024 -> 1 KB, 1.5 MB
+- formatDuration: seconds only, minutes+seconds, hours
+- formatRelativeTime: seconds ago, minutes ago, hours ago, just now
+- truncate: short (unchanged), long (ellipsis)
+- truncatePath: short path, long path with first/.../filename
+
+Keyboard utilities:
+
+- getModifierKey: returns 'Ctrl' on Win32
+- formatShortcut: replaces Ctrl/Alt/Shift for platform
+
+Platform detection:
+
+- isWindows, isMac, isLinux, getPlatform with mocked navigator.platform
+
+Easing functions (pure math):
+
+- easeInOutCubic: t=0 returns 0, t=1 returns 1, t=0.5 returns 0.5
+- easeOutExpo: t=1 returns 1
+- easeInOutExpo: t=0 returns 0, t=1 returns 1
+
+Async utilities:
+
+- sleep: resolves after ms (fake timers)
+- withTimeout: resolves before timeout, rejects on timeout
+- retry: succeeds on first try, retries on failure, gives up after maxAttempts
+
+---
+
+## Phase 3: Frontend Tests -- Svelte Stores
+
+3A. src/lib/stores/notifications.test.ts (~12 tests)
+
+- Store starts empty
+- add() creates notification with defaults (type='info', duration=4000)
+- add() returns unique IDs
+- Custom type and duration options work
+- Duration=0 creates persistent notification (no auto-dismiss)
+- Adding >5 notifications trims to most recent 5
+- dismiss(id) removes specific notification
+- dismiss() with non-existent ID is no-op
+- clear() removes all
+- info(), success(), warning(), error() set correct types
+- Auto-dismiss fires after duration (vi.useFakeTimers)
+- notificationCount derived store tracks length
+
+3B. src/lib/stores/plugins.test.ts (~8 tests)
+
+> Tests with mocked invoke:
+
+- Starts with empty state
+- registerCommand / unregisterCommand lifecycle
+- registerPanel / showPanel / hidePanel lifecycle
+- registerStatusBarItem / sort by priority
+- Permission approval flow
+
+3C. src/lib/stores/settings.test.ts (~6 tests)
+- Default settings values
+- Update individual settings
+- Nested settings merge correctly
+- Reset to defaults
+
+3D. src/lib/stores/keybindings.test.ts (~8 tests)
+- Default scheme loaded
+- Scheme switching
+- Custom binding add/remove
+- Key parsing and formatting
+
+3E. src/lib/stores/theme.test.ts (~6 tests)
+- Default theme loaded
+- Theme switching updates current theme
+- CSS variable application
+
+---
+
+## Phase 4: Rust Test Expansion -- Security Critical
+
+4A. src-tauri/src/plugin_system/ops.rs -- Extract + test sanitization (NEW: ~15 tests)
+
+> Refactor: Extract inline sanitization into a testable function:
+
+```rust
+ pub(crate) fn sanitize_args(args: &[String]) -> Vec<String> {
+     args.iter()
+         .map(|arg| arg.replace(&['|', '&', ';', '>', '<', '`', '$', '\n', '\r'][..], ""))
+         .collect()
+ }
+```
+
+> Sanitization tests (9):
+
+- Strips |, ;, &, >, <, `, $, \n, \r individually
+- Preserves clean arguments unchanged
+- Combined injection: "git; rm -rf /" -> "git rm -rf /"
+
+Capability validation tests via filesystem (6, using tempfile):
+- Read file allowed within workspace (WorkspaceRead capability)
+- Read file denied outside workspace
+- Write file denied with read-only capability
+- Path traversal ../../etc/passwd blocked after canonicalization
+- List files denied outside workspace
+- Write file allowed with ReadWrite within workspace
+
+4B. src-tauri/src/plugin_system/api.rs -- Expand from 3 to ~25 tests
+
+ validate_fs_read (5 new): None denies all, Scoped allows in-scope, Scoped denies out-of-scope, WorkspaceRead allows  
+ in workspace, denies outside
+ validate_fs_write (5 new): None denies, WorkspaceRead denies writes, ReadWrite allows in workspace, denies outside,  
+ Scoped works
+ validate_network (4 new): None denies, Unrestricted allows, invalid URL errors, URL without host errors
+ validate_ui (5 new): status_bar, sidebar, notifications, webview capability checks, unknown operation
+ AuditLogger (4 new): creation, log+retrieve, rotation at max_events, filter by plugin, clear
+ FileWatcherRegistry (2 new): register increases count, unregister decreases count
+
+4C. src-tauri/src/plugin_system/sandbox.rs -- NEW: ~6 tests
+
+- PluginError Display implementations for all variants
+- ResourceLimits default values (50MB, 5s, 100 ops)
+- ResourceStats construction and field access
+- SandboxConfig builder pattern
+
+4D. src-tauri/src/plugin_system/worker.rs -- NEW: ~4 tests
+
+- WorkerResponse::Success serialization
+- WorkerResponse::Error serialization
+- Hook name caching returns static reference
+- Different hook names produce different statics
+
+4E. src-tauri/src/plugin_system/capabilities.rs -- Expand from 9 to ~18 tests
+
+- FilesystemCapability::None denies both read and write
+- NetworkCapability::None denies all domains
+- Unrestricted allows any domain
+- add_domain on None creates DomainAllowlist
+- disallow_command removes from allowlist
+- UiCapability::all() has all fields true
+- Capabilities merge (Scoped union, DomainAllowlist union)
+- is_subset checks
+- None is subset of everything
+
+4F. src-tauri/src/plugin_system/manager.rs -- Expand from 2 to ~6 tests
+
+- PluginState serialization (all variants)
+- ManagerError Display implementations
+- Event listener register/unregister
+
+---
+
+Phase 5: Integration Tests
+
+5A. src-tauri/tests/integration_ops.rs
+
+> Cross-module integration tests using tempfile:
+
+- Full filesystem op flow: create workspace -> set capability -> read/write/list
+- Path traversal prevention end-to-end
+- Capability denial end-to-end
+
+5B. Svelte Component Tests (~3 components)
+
+src/components/NotificationToast.test.ts (~4 tests):
+- Renders notification message text
+- Correct CSS class for each type
+- Dismiss button works
+- Action button calls callback
+
+src/components/StatusBar.test.ts (~3 tests):
+- Renders file name
+- Shows line/column position
+- Shows language indicator
+
+src/components/CommandPalette.test.ts (~4 tests):
+- Renders when visible
+- Filters commands by input
+- Arrow keys move selection
+- Enter executes, Escape closes
+
+---
+
+## Phase 6: CI/CD Pipeline
+
+6A. Create .github/workflows/ci.yml
+
+Jobs (5 total, with dependencies):
+
+1. lint-frontend (ubuntu-latest):
+- checkout, setup-node 20, npm ci
+- npm run lint (ESLint)
+- npx prettier --check "src/**/*.{ts,svelte,css}"
+- npm run check (svelte-check)
+
+1. lint-rust (ubuntu-latest):
+- checkout, dtolnay/rust-toolchain@stable (rustfmt, clippy)
+- Swatinem/rust-cache@v2 (workspaces: src-tauri)
+- Install Linux system deps (libwebkit2gtk-4.1-dev, libgtk-3-dev, etc.)
+- cargo fmt --all -- --check
+- cargo clippy --all-targets --all-features -- -D warnings
+
+1. test-frontend (matrix: ubuntu-latest, windows-latest), needs lint-frontend:
+- checkout, setup-node 20, npm ci
+- npm run test:coverage
+- Upload coverage artifact (ubuntu only)
+
+1. test-rust (matrix: ubuntu-latest, windows-latest), needs lint-rust:
+- checkout, rust-toolchain (llvm-tools-preview), rust-cache
+- Install system deps (Linux only)
+- taiki-e/install-action@cargo-llvm-cov
+- cargo llvm-cov --lcov --output-path ../coverage/rust-lcov.info
+- Upload coverage artifact (ubuntu only)
+
+1. build-check (matrix: ubuntu-latest, windows-latest), needs test-*:
+- Full build verification: npm run build + cargo check
+
+> Key choices:
+- cargo-llvm-cov over cargo-tarpaulin because tarpaulin doesn't support Windows
+- taiki-e/install-action for pre-built binary install (no compile time)
+- Swatinem/rust-cache@v2 saves 3-5 minutes per Rust build
+- Coverage uploaded from Ubuntu only to avoid duplicate reports
+- Matrix strategy ensures cross-platform compatibility
+
+6B. Pre-commit hooks via Husky
+
+> .husky/pre-commit:
+```ps1
+ npx lint-staged
+ cd src-tauri && cargo fmt --all -- --check
+```
+
+```json
+ package.json lint-staged config:
+ "lint-staged": {
+   "src/**/*.{ts,svelte}": ["eslint --fix", "prettier --write"],
+   "src/**/*.css": ["prettier --write"]
+ }
+```
+
+Tests are NOT in pre-commit (too slow). They run in CI.
+
+---
+
+## Phase 7: Test File Organization
+
+Convention: Colocated .test.ts files next to the code they test.
+```txt
+ src/
+   test/
+     setup.ts
+     mocks/
+       tauri-core.ts
+       tauri-event.ts
+       tauri-dialog.ts
+       tauri-path.ts
+       tauri-fs.ts
+   lib/
+     utils/
+       debounce.test.ts          # ~15 tests
+       ui.test.ts                # ~30 tests
+     stores/
+       notifications.test.ts    # ~12 tests
+       plugins.test.ts          # ~8 tests
+       settings.test.ts         # ~6 tests
+       theme.test.ts            # ~6 tests
+       keybindings.test.ts      # ~8 tests
+   components/
+     NotificationToast.test.ts  # ~4 tests
+     StatusBar.test.ts          # ~3 tests
+     CommandPalette.test.ts     # ~4 tests
+
+ src-tauri/
+   src/plugin_system/
+     ops.rs          # +15 tests (currently 0)
+     sandbox.rs      # +6 tests (currently 0)
+     worker.rs       # +4 tests (currently 0)
+     api.rs          # +22 tests (currently 3)
+     capabilities.rs # +9 tests (currently 9)
+     manager.rs      # +4 tests (currently 2)
+   tests/
+     integration_ops.rs  # ~6 tests
+```
+
+---
+
+> Implementation Order
+
+```txt
+ ┌──────┬──────────────────────────────────────┬───────────┬──────────────────────────────────────────────────┐
+ │ Step │                 What                 │ New Tests │              Files Created/Modified              │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 1    │ Install npm packages                 │ 0         │ package.json                                     │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 2    │ Create vitest.config.ts              │ 0         │ vitest.config.ts                                 │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 3    │ Create test setup + Tauri mocks      │ 0         │ src/test/setup.ts, src/test/mocks/*.ts (5 files) │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 4    │ Add npm scripts                      │ 0         │ package.json                                     │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 5    │ Write debounce.test.ts               │ ~15       │ src/lib/utils/debounce.test.ts                   │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 6    │ Write ui.test.ts                     │ ~30       │ src/lib/utils/ui.test.ts                         │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 7    │ Write notifications.test.ts          │ ~12       │ src/lib/stores/notifications.test.ts             │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 8    │ Write remaining store tests          │ ~28       │ 4 test files                                     │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 9    │ Extract ops.rs sanitize_args + tests │ ~15       │ ops.rs                                           │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 10   │ Expand api.rs tests                  │ ~22       │ api.rs                                           │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 11   │ Add sandbox.rs + worker.rs tests     │ ~10       │ sandbox.rs, worker.rs                            │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 12   │ Expand capabilities.rs + manager.rs  │ ~13       │ capabilities.rs, manager.rs                      │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 13   │ Create integration_ops.rs            │ ~6        │ src-tauri/tests/integration_ops.rs               │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 14   │ Write component tests                │ ~11       │ 3 test files                                     │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 15   │ Setup husky + lint-staged            │ 0         │ .husky/pre-commit, package.json                  │
+ ├──────┼──────────────────────────────────────┼───────────┼──────────────────────────────────────────────────┤
+ │ 16   │ Create CI workflow                   │ 0         │ .github/workflows/ci.yml                         │
+ └──────┴──────────────────────────────────────┴───────────┴──────────────────────────────────────────────────┘
+```
+> Total new tests: ~162 (96 frontend + 66 Rust) added to existing 48 Rust = ~210 total
+
+---
+
+Verification Plan:
+
+> After implementation:
+
+1. npm test -- all frontend tests pass
+2. npm run test:coverage -- 90%+ coverage, exits cleanly
+3. cd src-tauri && cargo test -- all ~114 Rust tests pass
+4. cd src-tauri && cargo clippy -- -D warnings -- 0 warnings
+5. git commit -- husky pre-commit hook runs lint-staged + cargo fmt check
+6. Push to GitHub -- CI workflow runs all 5 jobs, all pass green
+7. Coverage artifacts uploaded and viewable
 
 ---

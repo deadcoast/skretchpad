@@ -1,3 +1,4 @@
+# ----
 ```
  ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄
 ███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██
@@ -119,59 +120,6 @@ cd src-tauri && cargo check
 - 70+ CSS variables injected at runtime
 - TOML-based theme definitions
 - MilkyText default theme (dark, high-contrast, warm accents)
-
-## Architecture
-
-```
-skretchpad/
-├── src/                          # Frontend (Svelte + TypeScript)
-│   ├── components/               # 9 Svelte components
-│   │   ├── BootScreen.svelte     #   Retro boot sequence
-│   │   ├── Chrome.svelte         #   Title bar + menus + window controls
-│   │   ├── Editor.svelte         #   CodeMirror 6 wrapper
-│   │   ├── CommandPalette.svelte #   Ctrl+Shift+P command launcher
-│   │   ├── StatusBar.svelte      #   File info + cursor + plugins
-│   │   ├── SettingsPanel.svelte  #   Configuration UI
-│   │   ├── SideBar.svelte        #   Plugin panel host
-│   │   ├── NotificationToast.svelte
-│   │   └── PluginPermissionDialog.svelte
-│   ├── features/
-│   │   └── diff/DiffView.svelte  # Side-by-side diff viewer
-│   ├── lib/
-│   │   ├── editor-loader.ts      # CodeMirror setup + syntax highlighting
-│   │   ├── plugin-api.ts         # Frontend plugin API bridge
-│   │   ├── icons/index.ts        # SVG icon system
-│   │   ├── stores/               # 7 Svelte stores (editor, theme, plugins, ...)
-│   │   └── utils/                # Debounce, UI helpers
-│   └── App.svelte                # Root component
-│
-├── src-tauri/                    # Backend (Rust)
-│   ├── src/
-│   │   ├── main.rs               # Tauri entry + command registration
-│   │   ├── theme_engine.rs       # TOML theme parsing
-│   │   ├── security/             # Threat matrix
-│   │   └── plugin_system/        # 8 modules
-│   │       ├── sandbox.rs        #   V8 isolate management
-│   │       ├── worker.rs         #   Thread pool execution
-│   │       ├── ops.rs            #   9 deno_core op bridges
-│   │       ├── capabilities.rs   #   Permission model
-│   │       ├── loader.rs         #   Discovery + manifest parsing
-│   │       ├── manager.rs        #   Lifecycle orchestration
-│   │       └── api.rs            #   Tauri command handlers
-│   └── js/plugin_api.js          # Sandbox-side JS API
-│
-├── plugins/                      # First-party plugins
-│   ├── git/                      #   Git operations
-│   └── git-status/               #   Repository status
-│
-├── themes/                       # TOML theme definitions
-│   ├── milkytext.toml            #   Default theme
-│   └── glass-dark.toml           #   Glass dark variant
-│
-└── docs/                         # Architecture docs, module guides
-```
-
-**~15,000 lines of code** across 40+ source files.
 
 ## Plugin Manifest
 

@@ -29,7 +29,10 @@
       "Bash(timeout:*)",
       "Bash(tasklist:*)",
       "Bash(taskkill:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "mcp__plugin_serena_serena__list_dir",
+      "Bash(wc:*)",
+      "mcp__plugin_serena_serena__list_memories"
     ],
     "deny": [],
     "ask": []
