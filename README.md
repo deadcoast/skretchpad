@@ -47,9 +47,9 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 - Auto-discovery from `plugins/` directory
 - First-party plugins activate on startup
 
+### Editor
 ![milkytext-rust](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-rust.png)
 
-### Editor
 - CodeMirror 6 with compartment-based hot-swapping
 - 12 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
 - Custom syntax highlighting from theme palette (40+ Lezer tag mappings)
