@@ -19,6 +19,7 @@ Tauri 2.0 &middot; Svelte 4 &middot; CodeMirror 6 &middot; Rust &middot; deno_co
 
 Skretchpad is a desktop text editor that prioritizes three things: **speed**, **extensibility**, and **visual integrity**. The frontend renders through a native WebView with glass morphism and full theme control. The backend is Rust. Plugins execute in isolated V8 sandboxes on dedicated worker threads with capability-based security. Every pixel is intentional.
 
+[!]
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  [pin] [eye]    File  Edit  View         [─] [□] [×]    │  Chrome
