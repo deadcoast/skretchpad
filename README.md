@@ -37,9 +37,9 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 
 ## Features
 
+### Plugin System
 ![plugin-boot](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/plugin-boot.png)
 
-### Plugin System
 - Sandboxed V8 runtime per plugin (deno_core 0.230)
 - 9 bridge ops: filesystem (3), network (1), commands (1), UI (2), editor (2)
 - Capability-based security with TOML manifests
