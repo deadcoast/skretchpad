@@ -19,7 +19,8 @@ Tauri 2.0 &middot; Svelte 4 &middot; CodeMirror 6 &middot; Rust &middot; deno_co
 
 Skretchpad is a desktop text editor that prioritizes three things: **speed**, **extensibility**, and **visual integrity**. The frontend renders through a native WebView with glass morphism and full theme control. The backend is Rust. Plugins execute in isolated V8 sandboxes on dedicated worker threads with capability-based security. Every pixel is intentional.
 
-[!]
+![desktop-preview](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/editor-desktop.png)
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  [pin] [eye]    File  Edit  View         [─] [□] [×]    │  Chrome
@@ -36,14 +37,9 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 
 ## Features
 
-### Editor
-- CodeMirror 6 with compartment-based hot-swapping
-- 12 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
-- Custom syntax highlighting from theme palette (40+ Lezer tag mappings)
-- Format document via Prettier (JS, TS, JSON, HTML, CSS, Markdown, YAML)
-- Undo, redo, toggle comment, duplicate/delete/move lines, find & replace
+![plugin-boot](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/plugin-boot.png)
 
-#### Plugin System
+### Plugin System
 - Sandboxed V8 runtime per plugin (deno_core 0.230)
 - 9 bridge ops: filesystem (3), network (1), commands (1), UI (2), editor (2)
 - Capability-based security with TOML manifests
@@ -51,7 +47,16 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 - Auto-discovery from `plugins/` directory
 - First-party plugins activate on startup
 
-#### Interface
+![desktop-preview-python](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/editor-python-desktop.png)
+
+### Editor
+- CodeMirror 6 with compartment-based hot-swapping
+- 12 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
+- Custom syntax highlighting from theme palette (40+ Lezer tag mappings)
+- Format document via Prettier (JS, TS, JSON, HTML, CSS, Markdown, YAML)
+- Undo, redo, toggle comment, duplicate/delete/move lines, find & replace
+
+### Interface
 - Glass morphism with backdrop blur and transparency
 - Minimal mode -- eye icon strips chrome and status bar to transparent, leaving only text
 - Native window controls (minimize, maximize, close) with drag region
@@ -62,7 +67,7 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 - Notification toast system with action buttons
 - Retro boot sequence on launch with plugin status confirmation
 
-#### Theme Engine
+### Theme Engine
 - 16-color ANSI palette + semantic colors + UI hierarchy
 - 70+ CSS variables injected at runtime
 - TOML-based theme definitions
