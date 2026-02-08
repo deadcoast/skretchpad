@@ -1,12 +1,13 @@
-<div align="center">
+# README
 
 ```
 ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄
 ███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██
 ▄▄██▀ ██ ██ ██ ██ ██▄▄▄   ██  ▀████ ██ ██ ██    ██▀██ ████▀
 ```
+[v0.1.0]
 
-**v0.1.0**
+<div align="center">
 
 Fast, Minimal, Feature Rich Text Editor inspired by 80's Compute Aesthetics.
 
