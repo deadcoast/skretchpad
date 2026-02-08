@@ -32,7 +32,15 @@
       "Bash(test:*)",
       "mcp__plugin_serena_serena__list_dir",
       "Bash(wc:*)",
-      "mcp__plugin_serena_serena__list_memories"
+      "mcp__plugin_serena_serena__list_memories",
+      "Bash(npx vitest:*)",
+      "Bash(dir:*)",
+      "Bash(npx husky:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(git reset:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add comprehensive test suite achieving 90%+ frontend coverage\n\nAdd 318 frontend tests across 11 test files and expand Rust tests to\n142, establishing a professional testing baseline with CI/CD pipeline.\n\nFrontend coverage: 98.8% statements, 87.87% branches, 98.62% functions,\n99.48% lines. Includes Vitest config with V8 coverage, Tauri API mocks,\nGitHub Actions CI workflow, and Husky pre-commit hooks.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(cargo fmt:*)"
     ],
     "deny": [],
     "ask": []
