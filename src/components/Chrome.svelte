@@ -15,26 +15,43 @@
   let isMaximized = false;
   let openMenu: string | null = null;
 
-  getCurrentWindow().isMaximized().then(v => isMaximized = v).catch(() => {});
+  getCurrentWindow()
+    .isMaximized()
+    .then((v) => (isMaximized = v))
+    .catch(() => {});
 
   // Window control handlers
   async function handleMinimize() {
-    await getCurrentWindow().minimize().catch(e => console.error('minimize:', e));
+    await getCurrentWindow()
+      .minimize()
+      .catch((e) => console.error('minimize:', e));
   }
 
   async function handleMaximize() {
-    await getCurrentWindow().toggleMaximize().catch(e => console.error('maximize:', e));
-    isMaximized = await getCurrentWindow().isMaximized().catch(() => false);
+    await getCurrentWindow()
+      .toggleMaximize()
+      .catch((e) => console.error('maximize:', e));
+    isMaximized = await getCurrentWindow()
+      .isMaximized()
+      .catch(() => false);
   }
 
   async function handleClose() {
-    await getCurrentWindow().close().catch(e => console.error('close:', e));
+    await getCurrentWindow()
+      .close()
+      .catch((e) => console.error('close:', e));
   }
 
   // Drag the window when mousedown on the title area
   function handleTitleMouseDown(e: MouseEvent) {
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('.menu-item')) return;
-    getCurrentWindow().startDragging().catch(() => {});
+    if (
+      (e.target as HTMLElement).closest('button') ||
+      (e.target as HTMLElement).closest('.menu-item')
+    )
+      return;
+    getCurrentWindow()
+      .startDragging()
+      .catch(() => {});
   }
 
   // Double-click title to maximize/restore
@@ -43,7 +60,10 @@
   }
 
   // Menu definitions
-  const menus: Record<string, { label: string; id: string; shortcut?: string; separator?: boolean }[]> = {
+  const menus: Record<
+    string,
+    { label: string; id: string; shortcut?: string; separator?: boolean }[]
+  > = {
     File: [
       { label: 'New File', id: 'file.new', shortcut: 'Ctrl+N' },
       { label: 'Open File...', id: 'file.open', shortcut: 'Ctrl+O' },
@@ -137,7 +157,7 @@
 
     <!-- Menu bar (hidden in minimal mode) -->
     {#if menuVisible}
-      <div class="menu-bar">
+      <div class="menu-bar" role="menubar">
         {#each Object.entries(menus) as [name, items]}
           <div class="menu-item-wrapper">
             <button
@@ -145,6 +165,8 @@
               class:menu-trigger--active={openMenu === name}
               on:click|stopPropagation={() => toggleMenu(name)}
               on:mouseenter={() => handleMenuEnter(name)}
+              aria-haspopup="true"
+              aria-expanded={openMenu === name}
             >
               {name}
             </button>
@@ -180,13 +202,28 @@
     <!-- Window controls (right side, hidden in minimal mode) -->
     {#if menuVisible}
       <div class="window-controls">
-        <button class="control-button minimize" on:click={handleMinimize} title="Minimize">
+        <button
+          class="control-button minimize"
+          on:click={handleMinimize}
+          title="Minimize"
+          aria-label="Minimize window"
+        >
           {@html icons.minimize}
         </button>
-        <button class="control-button maximize" on:click={handleMaximize} title={isMaximized ? 'Restore' : 'Maximize'}>
+        <button
+          class="control-button maximize"
+          on:click={handleMaximize}
+          title={isMaximized ? 'Restore' : 'Maximize'}
+          aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
+        >
           {@html isMaximized ? icons.restore : icons.maximize}
         </button>
-        <button class="control-button close" on:click={handleClose} title="Close">
+        <button
+          class="control-button close"
+          on:click={handleClose}
+          title="Close"
+          aria-label="Close window"
+        >
           {@html icons.close}
         </button>
       </div>
@@ -206,7 +243,9 @@
     flex-shrink: 0;
     position: relative;
     z-index: 100;
-    transition: background 200ms ease, border-color 200ms ease;
+    transition:
+      background 200ms ease,
+      border-color 200ms ease;
   }
 
   .chrome--minimal {
@@ -253,9 +292,15 @@
     color: rgba(0, 0, 0, 0.8);
   }
 
-  .minimize { background: #ffbd2e; }
-  .maximize { background: #27ca3f; }
-  .close { background: #ff5f56; }
+  .minimize {
+    background: #ffbd2e;
+  }
+  .maximize {
+    background: #27ca3f;
+  }
+  .close {
+    background: #ff5f56;
+  }
 
   /* Menu bar */
   .menu-bar {

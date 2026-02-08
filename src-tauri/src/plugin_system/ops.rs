@@ -10,7 +10,19 @@ use deno_core::OpState;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter};
+
+/// Shared editor state accessible from both frontend (via Tauri commands) and plugin ops.
+/// Frontend pushes updates; plugin ops read from it synchronously.
+#[derive(Debug, Clone, Default)]
+pub struct SharedEditorState {
+    pub content: String,
+    pub active_file: Option<String>,
+}
+
+/// Thread-safe wrapper for SharedEditorState
+pub type EditorStateHandle = Arc<Mutex<SharedEditorState>>;
 
 /// State injected into deno_core OpState for each plugin worker.
 pub struct PluginOpState {
@@ -18,6 +30,7 @@ pub struct PluginOpState {
     pub capabilities: PluginCapabilities,
     pub workspace_root: PathBuf,
     pub app_handle: AppHandle,
+    pub editor_state: EditorStateHandle,
 }
 
 // ============================================================================
@@ -404,12 +417,15 @@ pub fn op_plugin_get_editor_content(
 ) -> Result<serde_json::Value, deno_core::error::AnyError> {
     let plugin_state = state.borrow::<PluginOpState>();
 
-    // Emit request to frontend; result cannot be returned synchronously
-    let _ = plugin_state
-        .app_handle
-        .emit("plugin:editor:get_content", ());
+    // Read from shared state -- no event round-trip needed
+    let editor_state = plugin_state.editor_state.lock().map_err(|e| {
+        deno_core::error::generic_error(format!("Failed to lock editor state: {}", e))
+    })?;
 
-    Ok(serde_json::Value::Null)
+    Ok(serde_json::json!({
+        "content": editor_state.content,
+        "file": editor_state.active_file,
+    }))
 }
 
 #[op2]
@@ -419,12 +435,15 @@ pub fn op_plugin_get_active_file(
 ) -> Result<serde_json::Value, deno_core::error::AnyError> {
     let plugin_state = state.borrow::<PluginOpState>();
 
-    // Emit request to frontend; result cannot be returned synchronously
-    let _ = plugin_state
-        .app_handle
-        .emit("plugin:editor:get_active_file", ());
+    // Read from shared state -- no event round-trip needed
+    let editor_state = plugin_state.editor_state.lock().map_err(|e| {
+        deno_core::error::generic_error(format!("Failed to lock editor state: {}", e))
+    })?;
 
-    Ok(serde_json::Value::Null)
+    match &editor_state.active_file {
+        Some(path) => Ok(serde_json::json!({ "path": path })),
+        None => Ok(serde_json::Value::Null),
+    }
 }
 
 // ============================================================================

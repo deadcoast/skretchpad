@@ -2,6 +2,7 @@
 
 use crate::plugin_system::capabilities::PluginCapabilities;
 use crate::plugin_system::loader::PluginManifest;
+use crate::plugin_system::ops::EditorStateHandle;
 use crate::plugin_system::worker::PluginWorker;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -30,6 +31,7 @@ impl PluginSandbox {
         manifest: PluginManifest,
         workspace_root: PathBuf,
         app_handle: AppHandle,
+        editor_state: EditorStateHandle,
     ) -> Result<Self, PluginError> {
         // Create worker for thread-safe JavaScript execution
         let worker = PluginWorker::new(
@@ -37,6 +39,7 @@ impl PluginSandbox {
             manifest.capabilities.clone(),
             workspace_root,
             app_handle,
+            editor_state,
         );
 
         Ok(Self {

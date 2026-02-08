@@ -3,6 +3,7 @@
 use crate::plugin_system::{
     capabilities::PluginCapabilities,
     loader::{LoaderError, PluginLoader},
+    ops::EditorStateHandle,
     sandbox::{PluginSandbox, SandboxRegistry},
 };
 use serde::{Deserialize, Serialize};
@@ -109,6 +110,9 @@ pub struct PluginManager {
 
     /// Tauri AppHandle for UI ops in plugin sandboxes
     app_handle: AppHandle,
+
+    /// Shared editor state for plugin ops
+    editor_state: EditorStateHandle,
 }
 
 impl PluginManager {
@@ -118,6 +122,7 @@ impl PluginManager {
         sandbox_registry: Arc<SandboxRegistry>,
         workspace_root: PathBuf,
         app_handle: AppHandle,
+        editor_state: EditorStateHandle,
     ) -> Self {
         PluginManager {
             loader: PluginLoader::new(plugins_dir),
@@ -127,6 +132,7 @@ impl PluginManager {
             errors: HashMap::new(),
             workspace_root,
             app_handle,
+            editor_state,
         }
     }
 
@@ -175,6 +181,7 @@ impl PluginManager {
             plugin_info.manifest.clone(),
             self.workspace_root.clone(),
             self.app_handle.clone(),
+            self.editor_state.clone(),
         )
         .map_err(|e| ManagerError::Sandbox(e.to_string()))?;
 

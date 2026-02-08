@@ -17,6 +17,7 @@ use plugin_system::{
         plugin_write_file, AuditLogger, FileWatcherRegistry,
     },
     manager::PluginManager,
+    ops::EditorStateHandle,
     sandbox::SandboxRegistry,
 };
 use std::sync::Arc;
@@ -153,6 +154,24 @@ async fn emit_editor_event(
         .map_err(|e| format!("Failed to emit event '{}': {}", event, e))
 }
 
+// ============================================================================
+// EDITOR STATE SYNC (frontend pushes state for plugin ops)
+// ============================================================================
+
+#[tauri::command]
+async fn update_editor_state(
+    content: String,
+    active_file: Option<String>,
+    state: State<'_, EditorStateHandle>,
+) -> Result<(), String> {
+    let mut editor_state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock editor state: {}", e))?;
+    editor_state.content = content;
+    editor_state.active_file = active_file;
+    Ok(())
+}
+
 #[derive(serde::Serialize)]
 struct FileMetadata {
     modified: u64,
@@ -217,6 +236,10 @@ fn main() {
                     .expect("Failed to get app data directory")
             };
 
+            // Initialize shared editor state
+            let editor_state: EditorStateHandle =
+                Arc::new(std::sync::Mutex::new(Default::default()));
+
             // Initialize plugin system
             let sandbox_registry = Arc::new(SandboxRegistry::new());
             let plugin_manager = Arc::new(RwLock::new(PluginManager::new(
@@ -224,6 +247,7 @@ fn main() {
                 sandbox_registry.clone(),
                 workspace_root,
                 app.handle().clone(),
+                editor_state.clone(),
             )));
             let audit_logger = Arc::new(AuditLogger::new(10000));
             let watcher_registry = Arc::new(FileWatcherRegistry::new());
@@ -233,6 +257,7 @@ fn main() {
             app.manage(sandbox_registry.clone());
             app.manage(audit_logger.clone());
             app.manage(watcher_registry.clone());
+            app.manage(editor_state.clone());
 
             // Auto-discover and load plugins
             tauri::async_runtime::spawn(async move {
@@ -307,6 +332,7 @@ fn main() {
             plugin_get_editor_content,
             plugin_set_editor_content,
             plugin_get_active_file,
+            update_editor_state,
             // Event system
             plugin_register_event,
             plugin_emit_event,

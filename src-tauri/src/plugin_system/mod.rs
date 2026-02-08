@@ -21,6 +21,8 @@ pub use loader::{PluginInfo, PluginLoader, PluginManifest};
 #[allow(unused_imports)]
 pub use manager::{PluginManager, PluginState, PluginStatus};
 #[allow(unused_imports)]
+pub use ops::{EditorStateHandle, SharedEditorState};
+#[allow(unused_imports)]
 pub use sandbox::{PluginSandbox, ResourceLimits, ResourceStats, SandboxRegistry};
 #[allow(unused_imports)]
 pub use trust::{PluginSignature, TrustLevel};

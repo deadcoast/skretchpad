@@ -1,7 +1,7 @@
 // src-tauri/src/plugin_system/worker.rs
 
 use crate::plugin_system::capabilities::PluginCapabilities;
-use crate::plugin_system::ops::PluginOpState;
+use crate::plugin_system::ops::{EditorStateHandle, PluginOpState};
 use crate::plugin_system::sandbox::{PluginError, ResourceLimits};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -52,6 +52,7 @@ impl PluginWorker {
         capabilities: PluginCapabilities,
         workspace_root: PathBuf,
         app_handle: AppHandle,
+        editor_state: EditorStateHandle,
     ) -> Self {
         let (tx, rx) = mpsc::channel();
 
@@ -82,6 +83,7 @@ impl PluginWorker {
                     capabilities: worker_capabilities,
                     workspace_root,
                     app_handle,
+                    editor_state,
                 });
             }
 
@@ -186,6 +188,25 @@ impl PluginWorker {
         }
     }
 
+    /// Pump the deno_core event loop to resolve pending promises/microtasks.
+    /// Runs with a timeout to prevent runaway async operations.
+    fn pump_event_loop(runtime: &mut deno_core::JsRuntime, timeout: Duration) {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build();
+
+        if let Ok(rt) = rt {
+            let _ = rt.block_on(async {
+                tokio::time::timeout(
+                    timeout,
+                    // deno_core 0.230: run_event_loop takes a bool (false = don't wait for inspector)
+                    runtime.run_event_loop(false),
+                )
+                .await
+            });
+        }
+    }
+
     /// Execute JavaScript code in the worker thread (internal)
     fn execute_code_sync(
         runtime: &mut deno_core::JsRuntime,
@@ -199,6 +220,9 @@ impl PluginWorker {
             deno_core::FastString::Owned(code.to_string().into()),
         ) {
             Ok(_result) => {
+                // Pump event loop to resolve any pending promises/microtasks
+                Self::pump_event_loop(runtime, Duration::from_secs(5));
+
                 // Check elapsed time after execution
                 if start.elapsed() > _limits.max_cpu_time {
                     return WorkerResponse::Error("CPU time limit exceeded".to_string());
@@ -252,6 +276,9 @@ impl PluginWorker {
         let hook_name = Self::cached_hook_name(hook);
         match runtime.execute_script(hook_name, deno_core::FastString::Owned(script.into())) {
             Ok(_result) => {
+                // Pump event loop to resolve any pending promises/microtasks
+                Self::pump_event_loop(runtime, Duration::from_secs(5));
+
                 if start.elapsed() > _limits.max_cpu_time {
                     return WorkerResponse::Error("CPU time limit exceeded".to_string());
                 }
@@ -288,12 +315,19 @@ impl WorkerRegistry {
         capabilities: PluginCapabilities,
         workspace_root: PathBuf,
         app_handle: AppHandle,
+        editor_state: EditorStateHandle,
     ) -> Result<(), PluginError> {
         if self.workers.contains_key(&id) {
             return Err(PluginError::WorkerAlreadyExists);
         }
 
-        let worker = PluginWorker::new(id.clone(), capabilities, workspace_root, app_handle);
+        let worker = PluginWorker::new(
+            id.clone(),
+            capabilities,
+            workspace_root,
+            app_handle,
+            editor_state,
+        );
         self.workers.insert(id, worker);
         Ok(())
     }

@@ -1,6 +1,13 @@
 // src/lib/editor-loader.ts
 
-import { EditorView, ViewUpdate, keymap, highlightActiveLine, drawSelection, lineNumbers } from '@codemirror/view';
+import {
+  EditorView,
+  ViewUpdate,
+  keymap,
+  highlightActiveLine,
+  drawSelection,
+  lineNumbers,
+} from '@codemirror/view';
 import { MergeView } from '@codemirror/merge';
 import { EditorState, Compartment, type Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
@@ -13,11 +20,16 @@ import {
   syntaxHighlighting,
   defaultHighlightStyle,
   HighlightStyle,
-  LanguageSupport
+  LanguageSupport,
 } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import {
+  autocompletion,
+  completionKeymap,
+  closeBrackets,
+  closeBracketsKeymap,
+} from '@codemirror/autocomplete';
 import { lintKeymap } from '@codemirror/lint';
 import { StreamLanguage } from '@codemirror/language';
 import type { Theme } from './stores/theme';
@@ -80,19 +92,23 @@ class LanguageRegistry {
       name: string;
       extensions: string[];
     }> = [
-        { name: 'javascript', extensions: ['js', 'jsx', 'mjs', 'cjs'] },
-        { name: 'typescript', extensions: ['ts', 'tsx', 'mts', 'cts'] },
-        { name: 'python', extensions: ['py', 'pyw', 'pyi'] },
-        { name: 'rust', extensions: ['rs'] },
-        { name: 'json', extensions: ['json', 'jsonc'] },
-        { name: 'markdown', extensions: ['md', 'markdown'] },
-        { name: 'html', extensions: ['html', 'htm'] },
-        { name: 'css', extensions: ['css'] },
-        { name: 'yaml', extensions: ['yaml', 'yml'] },
-        { name: 'xml', extensions: ['xml', 'svg'] },
-        { name: 'sql', extensions: ['sql'] },
-        { name: 'toml', extensions: ['toml'] },
-      ];
+      { name: 'javascript', extensions: ['js', 'jsx', 'mjs', 'cjs'] },
+      { name: 'typescript', extensions: ['ts', 'tsx', 'mts', 'cts'] },
+      { name: 'python', extensions: ['py', 'pyw', 'pyi'] },
+      { name: 'rust', extensions: ['rs'] },
+      { name: 'json', extensions: ['json', 'jsonc'] },
+      { name: 'markdown', extensions: ['md', 'markdown'] },
+      { name: 'html', extensions: ['html', 'htm'] },
+      { name: 'css', extensions: ['css'] },
+      { name: 'yaml', extensions: ['yaml', 'yml'] },
+      { name: 'xml', extensions: ['xml', 'svg'] },
+      { name: 'sql', extensions: ['sql'] },
+      { name: 'toml', extensions: ['toml'] },
+      { name: 'go', extensions: ['go'] },
+      { name: 'java', extensions: ['java'] },
+      { name: 'cpp', extensions: ['c', 'h', 'cpp', 'hpp', 'cc', 'cxx'] },
+      { name: 'php', extensions: ['php'] },
+    ];
 
     for (const def of languageDefinitions) {
       this.languages.set(def.name, {
@@ -128,65 +144,101 @@ class LanguageRegistry {
       let support: LanguageSupport;
 
       switch (languageName) {
-        case 'javascript':
+        case 'javascript': {
           const { javascript } = await import('@codemirror/lang-javascript');
           support = javascript({ jsx: true });
           break;
+        }
 
-        case 'typescript':
+        case 'typescript': {
           const { javascript: ts } = await import('@codemirror/lang-javascript');
           support = ts({ typescript: true, jsx: true });
           break;
+        }
 
-        case 'python':
+        case 'python': {
           const { python } = await import('@codemirror/lang-python');
           support = python();
           break;
+        }
 
-        case 'rust':
+        case 'rust': {
           const { rust } = await import('@codemirror/lang-rust');
           support = rust();
           break;
+        }
 
-        case 'json':
+        case 'json': {
           const { json } = await import('@codemirror/lang-json');
           support = json();
           break;
+        }
 
-        case 'markdown':
+        case 'markdown': {
           const { markdown } = await import('@codemirror/lang-markdown');
           support = markdown();
           break;
+        }
 
-        case 'html':
+        case 'html': {
           const { html } = await import('@codemirror/lang-html');
           support = html();
           break;
+        }
 
-        case 'css':
+        case 'css': {
           const { css } = await import('@codemirror/lang-css');
           support = css();
           break;
+        }
 
-        case 'yaml':
+        case 'yaml': {
           const { yaml } = await import('@codemirror/lang-yaml');
           support = yaml();
           break;
+        }
 
-        case 'xml':
+        case 'xml': {
           const { xml } = await import('@codemirror/lang-xml');
           support = xml();
           break;
+        }
 
-        case 'sql':
+        case 'sql': {
           const { sql } = await import('@codemirror/lang-sql');
           support = sql();
           break;
+        }
 
-        case 'toml':
+        case 'toml': {
           const { toml } = await import('@codemirror/legacy-modes/mode/toml');
           support = new LanguageSupport(StreamLanguage.define(toml));
           break;
+        }
+
+        case 'go': {
+          const { go } = await import('@codemirror/lang-go');
+          support = go();
+          break;
+        }
+
+        case 'java': {
+          const { java } = await import('@codemirror/lang-java');
+          support = java();
+          break;
+        }
+
+        case 'cpp': {
+          const { cpp } = await import('@codemirror/lang-cpp');
+          support = cpp();
+          break;
+        }
+
+        case 'php': {
+          const { php } = await import('@codemirror/lang-php');
+          support = php();
+          break;
+        }
 
         default:
           return null;
@@ -402,12 +454,14 @@ function createSyntaxHighlighting(theme?: Theme): Extension {
 
 interface PluginHook {
   name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (view: EditorView, data: any) => void;
 }
 
 class PluginHooksManager {
   private hooks: Map<string, PluginHook[]> = new Map();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register(hookName: string, handler: (view: EditorView, data: any) => void): () => void {
     if (!this.hooks.has(hookName)) {
       this.hooks.set(hookName, []);
@@ -432,6 +486,7 @@ class PluginHooksManager {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   trigger(hookName: string, view: EditorView, data: any): void {
     const hooks = this.hooks.get(hookName);
     if (!hooks) return;
@@ -486,7 +541,7 @@ export async function createEditor(
 ): Promise<EditorView> {
   const {
     theme,
-    keybindings: _keybindings, // TODO: Implement keybinding integration
+    keybindings: _keybindings, // eslint-disable-line @typescript-eslint/no-unused-vars
     readOnly = false,
     onChange,
     onCursorMove,
@@ -609,10 +664,7 @@ export async function createDiffEditor(
 // LANGUAGE MANAGEMENT
 // ============================================================================
 
-export async function setLanguage(
-  view: EditorView,
-  languageName: string
-): Promise<boolean> {
+export async function setLanguage(view: EditorView, languageName: string): Promise<boolean> {
   const support = await languageRegistry.loadLanguage(languageName);
 
   if (!support) {
@@ -650,10 +702,7 @@ export function updateTheme(view: EditorView, theme: Theme): void {
 // KEYBINDING MANAGEMENT
 // ============================================================================
 
-export function registerKeybindings(
-  view: EditorView,
-  keybindings: Keybindings
-): void {
+export function registerKeybindings(view: EditorView, keybindings: Keybindings): void {
   // Convert keybindings to CodeMirror keymap format
   const keymapArray = Object.entries(keybindings).map(([key, command]) => ({
     key,
@@ -686,6 +735,7 @@ export function setReadOnly(view: EditorView, readOnly: boolean): void {
 
 export function registerPluginHook(
   hookName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (view: EditorView, data: any) => void
 ): () => void {
   return pluginHooksManager.register(hookName, handler);
@@ -695,9 +745,7 @@ export function setupPluginHooks(view: EditorView): void {
   // Plugin hooks are automatically set up via the compartment
   // This function is for manual setup if needed
   view.dispatch({
-    effects: pluginHooksCompartment.reconfigure(
-      pluginHooksManager.createExtension()
-    ),
+    effects: pluginHooksCompartment.reconfigure(pluginHooksManager.createExtension()),
   });
 }
 
@@ -727,10 +775,7 @@ export function saveEditorState(view: EditorView): EditorStateSnapshot {
   };
 }
 
-export function restoreEditorState(
-  view: EditorView,
-  snapshot: EditorStateSnapshot
-): void {
+export function restoreEditorState(view: EditorView, snapshot: EditorStateSnapshot): void {
   // Restore document
   view.dispatch({
     changes: {
@@ -880,7 +925,7 @@ export function lineLengthIndicator(maxLength: number = 80): Extension {
     const decorations = [];
     const { from, to } = view.viewport;
 
-    for (let pos = from; pos <= to;) {
+    for (let pos = from; pos <= to; ) {
       const line = view.state.doc.lineAt(pos);
 
       if (line.length > maxLength) {
@@ -909,7 +954,7 @@ export function highlightTrailingWhitespace(): Extension {
     const decorations = [];
     const { from, to } = view.viewport;
 
-    for (let pos = from; pos <= to;) {
+    for (let pos = from; pos <= to; ) {
       const line = view.state.doc.lineAt(pos);
       const text = line.text;
       const match = text.match(/\s+$/);

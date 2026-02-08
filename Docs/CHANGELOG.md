@@ -5,6 +5,66 @@ All notable changes to skretchpad will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2026-02-08
+
+### Added
+
+- **4 new language grammars**: Go (`@codemirror/lang-go`), Java (`@codemirror/lang-java`), C/C++ (`@codemirror/lang-cpp`), PHP (`@codemirror/lang-php`) -- 16 total
+- **Auto-save**: Timer-based save on document change, respects `settingsStore.files.autoSave` and `autoSaveDelay` settings; timer cleared on manual save and component destroy
+- **Editor settings wiring**: Reactive statements connect `settingsStore` to CodeMirror compartments (`setWordWrap`, `setLineNumbers`, `setTabSize`, `setFontSize`)
+- **Shared editor state**: `SharedEditorState` (Arc<Mutex>) in Rust allows plugin ops to read editor content and active file synchronously
+- **`update_editor_state` Tauri command**: Frontend pushes editor content and file path to backend on every change (debounced 500ms)
+- **Async hook support**: `pump_event_loop()` in `worker.rs` creates a tokio runtime and calls `runtime.run_event_loop(false)` with 5-second timeout after script/hook execution
+- **Accessibility attributes**: `aria-label` on window controls, `aria-haspopup`/`aria-expanded` on menu triggers, `role="menubar"` on menu bar, `role="tablist"`/`"tab"`/`"tabpanel"` and `aria-selected` on SideBar
+
+### Changed
+
+- **`op_plugin_get_editor_content`**: Now reads from `SharedEditorState` instead of emitting fire-and-forget events; returns `{content, file}` JSON
+- **`op_plugin_get_active_file`**: Now reads from `SharedEditorState`; returns `{path}` or null
+- **`PluginWorker::new`**: Accepts `EditorStateHandle` parameter, injects into `PluginOpState`
+- **`PluginSandbox::new`**: Accepts and passes `EditorStateHandle` to worker
+- **`PluginManager::new`**: Accepts and stores `EditorStateHandle`, passes to sandbox on activation
+- **`Editor.svelte`**: Imports `settingsStore` and editor reconfigure functions; auto-save timer in `handleEditorChange`; syncs state to backend
+
+### Removed
+
+- **`src/lib/plugin-api.ts`**: Deleted 1,194 lines of dead code (zero imports anywhere in codebase); real plugin API lives in `src-tauri/js/plugin_api.js`
+
+## [0.0.7] - 2026-02-08
+
+### Added
+
+- **Unified theme system**: TOML files are now the single source of truth for all themes
+- **`load_theme_data` Tauri command**: Returns full theme as camelCase JSON from snake_case TOML
+- **`list_themes` Tauri command**: Returns available theme metadata for frontend selectors
+- **Expanded Rust theme structs**: `PaletteTheme` (20 fields), `UiTheme` (27 fields), `EditorLineTheme`, `EditorGutterTheme`, `WindowShadow`, expanded `ChromeTheme` and `SyntaxTheme`
+- **`to_frontend_json()` method**: Builds camelCase JSON matching TypeScript `Theme` interface with smart defaults for optional fields
+- **`to_css_vars()` expansion**: Now generates 85+ CSS variables covering palette, window, chrome, editor, syntax, UI, and transitions
+- **Async theme loading**: Frontend `themeStore.init()` loads themes from backend with caching and localStorage persistence
+- **100+ new Rust theme tests**: Parsing, CSS generation, JSON output, round-trip validation for all 3 themes
+- **Serde dual-rename strategy**: `#[serde(rename_all(deserialize = "snake_case", serialize = "camelCase"))]` on all theme structs
+
+### Changed
+
+- **Frontend `theme.ts` refactored**: Removed ~220 lines of hardcoded theme constants (`MILKYTEXT`, `LIQUID_GLASS_DARK`); store now initializes asynchronously from backend
+- **`createThemeStore()` rewritten**: Added `init()` method, `switchTheme()` calls backend, theme cache keyed by file stem
+- **`SettingsPanel.svelte`**: Theme selector now uses `ThemeInfo.name` from `$themeStore.available` instead of hardcoded options
+- **TOML theme files fully populated**: All 3 themes (`milkytext.toml`, `glass-dark.toml`, `glass-light.toml`) now include complete `[palette]`, `[chrome]`, `[editor.line]`, `[editor.gutter]`, `[syntax]`, `[ui]`, and `[transitions]` sections
+- **ESLint config**: Disabled `svelte/no-at-html-tags` rule (all `@html` usage is for trusted internal SVG icons)
+- **`theme.test.ts` rewritten**: 16 tests for async store API with mocked `invoke` handlers and `localStorage.clear()` in `beforeEach`
+
+### Removed
+
+- **`src/lib/theme-engine.ts`**: Dead 69-line `ThemeEngine` class (never instantiated)
+- **`src/lib/theme-engine.test.ts`**: Tests for deleted module
+- **Hardcoded theme constants**: `MILKYTEXT` and `LIQUID_GLASS_DARK` objects removed from `theme.ts`
+
+### Fixed
+
+- **Theme store defensive guards**: Added `?? []` for `listThemesFromBackend()`, optional chaining in `switchTheme()` and `resetToDefault()`
+- **TOML theme conflicts**: Fixed `[chrome]` section structure (`background.color` + `background.blur` instead of conflicting `background` as both string and table)
+- **`milkytext.toml` corrections**: `base = "dark"` (was wrong), proper `selection.background`, correct `border.color`
+
 ## [0.0.6] - 2026-02-07
 
 ### Added
@@ -316,6 +376,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.0.8** - Dead code removal, 4 new languages, editor settings wiring, auto-save, accessibility, editor ops round-trip, async hooks
+- **0.0.7** - Theme unification: TOML as single source of truth, expanded Rust structs, async frontend loading
 - **0.0.6** - E2E runtime testing, plugin loading fixes, 40 automated tests, trust serde fix
 - **0.0.5** - deno_core ops bridge (9 ops), plugin API calls execute real Rust operations
 - **0.0.4** - Native file I/O, file dialogs, DiffView, settings UI, permission dialog, file watcher cleanup

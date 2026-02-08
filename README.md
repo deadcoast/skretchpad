@@ -74,6 +74,22 @@ npm run build
 npx tauri build
 ```
 
+#### Test
+
+```bash
+# Frontend tests (310 tests, Vitest + jsdom)
+npm test
+
+# Frontend with coverage
+npm run test:coverage
+
+# Rust tests (148 tests)
+cd src-tauri && cargo test
+
+# All tests
+npm run test:all
+```
+
 #### Verify
 
 ```bash
@@ -99,7 +115,7 @@ cd src-tauri && cargo check
 ![milkytext-rust](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-rust.png)
 
 - CodeMirror 6 with compartment-based hot-swapping
-- 12 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
+- 16 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML, Go, Java, C/C++, PHP
 - Custom syntax highlighting from theme palette (40+ Lezer tag mappings)
 - Format document via Prettier (JS, TS, JSON, HTML, CSS, Markdown, YAML)
 - Undo, redo, toggle comment, duplicate/delete/move lines, find & replace
@@ -116,10 +132,13 @@ cd src-tauri && cargo check
 - Retro boot sequence on launch with plugin status confirmation
 
 ### Theme Engine
+- TOML files as single source of truth -- Rust parses, frontend renders
 - 16-color ANSI palette + semantic colors + UI hierarchy
-- 70+ CSS variables injected at runtime
-- TOML-based theme definitions
-- MilkyText default theme (dark, high-contrast, warm accents)
+- 85+ CSS variables injected at runtime via `applyThemeToDocument()`
+- `load_theme_data` Tauri command returns camelCase JSON from snake_case TOML
+- 3 built-in themes: MilkyText (dark), Liquid Glass Dark, Liquid Glass Light
+- Async theme loading with caching and localStorage persistence
+- Settings panel theme switcher with live preview
 
 ## Plugin Manifest
 
@@ -207,7 +226,10 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 | Backend    | Rust (2021 ed.)     | Performance-critical operations     |
 | Plugins    | deno_core 0.230     | V8 isolate sandbox per plugin       |
 | Build      | Vite 5              | Frontend bundling, HMR              |
-| Styling    | CSS Variables       | Theme-driven, 70+ properties        |
+| Styling    | CSS Variables       | Theme-driven, 85+ properties        |
+| Testing    | Vitest + Cargo Test | 458 tests (310 frontend, 148 Rust)  |
+| CI/CD      | GitHub Actions      | Lint, test, build (cross-platform)  |
+| Pre-commit | Husky + lint-staged | ESLint, Prettier, cargo fmt         |
 | Dialogs    | tauri-plugin-dialog | Native OS file/save dialogs         |
 | Formatting | Prettier 3          | Code formatting (7 languages)       |
 | File Watch | notify 6.0          | Filesystem event monitoring         |
