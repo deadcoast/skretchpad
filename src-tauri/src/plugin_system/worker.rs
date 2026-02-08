@@ -1,5 +1,8 @@
 // src-tauri/src/plugin_system/worker.rs
 
+use crate::plugin_system::capabilities::PluginCapabilities;
+use crate::plugin_system::ops::PluginOpState;
+use crate::plugin_system::sandbox::{PluginError, ResourceLimits};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -8,9 +11,6 @@ use std::thread;
 use std::time::Duration;
 use tauri::AppHandle;
 use tokio::sync::oneshot;
-use crate::plugin_system::capabilities::PluginCapabilities;
-use crate::plugin_system::ops::PluginOpState;
-use crate::plugin_system::sandbox::{PluginError, ResourceLimits};
 
 /// Message sent to plugin worker
 #[derive(Debug)]
@@ -87,14 +87,18 @@ impl PluginWorker {
 
             // Inject plugin API
             let api_script = include_str!("../../js/plugin_api.js");
-            if let Err(e) = runtime.execute_script("plugin_api.js", deno_core::FastString::Static(api_script)) {
+            if let Err(e) =
+                runtime.execute_script("plugin_api.js", deno_core::FastString::Static(api_script))
+            {
                 eprintln!("Failed to inject plugin API: {}", e);
                 return;
             }
 
             // Set plugin ID in global scope
             let set_id_script = format!("globalThis.__PLUGIN_ID__ = '{}';", worker_id);
-            if let Err(e) = runtime.execute_script("set_id", deno_core::FastString::Owned(set_id_script.into())) {
+            if let Err(e) =
+                runtime.execute_script("set_id", deno_core::FastString::Owned(set_id_script.into()))
+            {
                 eprintln!("Failed to set plugin ID: {}", e);
                 return;
             }
@@ -106,8 +110,13 @@ impl PluginWorker {
                         let result = Self::execute_code_sync(&mut runtime, &code, &worker_limits);
                         let _ = response_tx.send(result);
                     }
-                    WorkerMessage::CallHook { hook, args, response_tx } => {
-                        let result = Self::call_hook_sync(&mut runtime, &hook, &args, &worker_limits);
+                    WorkerMessage::CallHook {
+                        hook,
+                        args,
+                        response_tx,
+                    } => {
+                        let result =
+                            Self::call_hook_sync(&mut runtime, &hook, &args, &worker_limits);
                         let _ = response_tx.send(result);
                     }
                     WorkerMessage::Shutdown => {
@@ -139,7 +148,9 @@ impl PluginWorker {
             response_tx: tx,
         };
 
-        self.sender.send(msg).map_err(|_| PluginError::WorkerDisconnected)?;
+        self.sender
+            .send(msg)
+            .map_err(|_| PluginError::WorkerDisconnected)?;
 
         let response = rx.await.map_err(|_| PluginError::WorkerDisconnected)?;
 
@@ -150,7 +161,11 @@ impl PluginWorker {
     }
 
     /// Call a plugin hook in the worker thread
-    pub async fn call_hook(&self, hook: String, args: serde_json::Value) -> Result<serde_json::Value, PluginError> {
+    pub async fn call_hook(
+        &self,
+        hook: String,
+        args: serde_json::Value,
+    ) -> Result<serde_json::Value, PluginError> {
         let (tx, rx) = oneshot::channel();
 
         let msg = WorkerMessage::CallHook {
@@ -159,7 +174,9 @@ impl PluginWorker {
             response_tx: tx,
         };
 
-        self.sender.send(msg).map_err(|_| PluginError::WorkerDisconnected)?;
+        self.sender
+            .send(msg)
+            .map_err(|_| PluginError::WorkerDisconnected)?;
 
         let response = rx.await.map_err(|_| PluginError::WorkerDisconnected)?;
 
@@ -177,7 +194,10 @@ impl PluginWorker {
     ) -> WorkerResponse {
         let start = std::time::Instant::now();
 
-        match runtime.execute_script("<plugin>", deno_core::FastString::Owned(code.to_string().into())) {
+        match runtime.execute_script(
+            "<plugin>",
+            deno_core::FastString::Owned(code.to_string().into()),
+        ) {
             Ok(_result) => {
                 // Check elapsed time after execution
                 if start.elapsed() > _limits.max_cpu_time {
@@ -191,9 +211,9 @@ impl PluginWorker {
 
     /// Get or create a cached static hook script name
     fn cached_hook_name(hook: &str) -> &'static str {
-        use std::sync::Mutex;
         use std::collections::HashMap as StdHashMap;
         use std::sync::LazyLock;
+        use std::sync::Mutex;
 
         static HOOK_NAMES: LazyLock<Mutex<StdHashMap<String, &'static str>>> =
             LazyLock::new(|| Mutex::new(StdHashMap::new()));
@@ -305,5 +325,77 @@ impl WorkerRegistry {
 impl Drop for WorkerRegistry {
     fn drop(&mut self) {
         self.shutdown_all();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_worker_response_success_serialization() {
+        let response = WorkerResponse::Success(serde_json::json!({"result": 42}));
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("Success"));
+        assert!(json.contains("42"));
+    }
+
+    #[test]
+    fn test_worker_response_error_serialization() {
+        let response = WorkerResponse::Error("something went wrong".to_string());
+        let json = serde_json::to_string(&response).unwrap();
+        assert!(json.contains("Error"));
+        assert!(json.contains("something went wrong"));
+    }
+
+    #[test]
+    fn test_worker_response_success_null() {
+        let response = WorkerResponse::Success(serde_json::Value::Null);
+        let json = serde_json::to_string(&response).unwrap();
+        let deserialized: WorkerResponse = serde_json::from_str(&json).unwrap();
+        match deserialized {
+            WorkerResponse::Success(v) => assert!(v.is_null()),
+            _ => panic!("Expected Success"),
+        }
+    }
+
+    #[test]
+    fn test_worker_response_roundtrip() {
+        let original = WorkerResponse::Success(serde_json::json!({"key": "value"}));
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: WorkerResponse = serde_json::from_str(&json).unwrap();
+        match deserialized {
+            WorkerResponse::Success(v) => assert_eq!(v["key"], "value"),
+            _ => panic!("Expected Success"),
+        }
+    }
+
+    #[test]
+    fn test_cached_hook_name_returns_static_str() {
+        let name = PluginWorker::cached_hook_name("activate");
+        assert_eq!(name, "hook_activate");
+    }
+
+    #[test]
+    fn test_cached_hook_name_different_hooks() {
+        let name1 = PluginWorker::cached_hook_name("activate");
+        let name2 = PluginWorker::cached_hook_name("deactivate");
+        assert_ne!(name1, name2);
+        assert_eq!(name1, "hook_activate");
+        assert_eq!(name2, "hook_deactivate");
+    }
+
+    #[test]
+    fn test_cached_hook_name_same_hook_returns_same_pointer() {
+        let name1 = PluginWorker::cached_hook_name("on_save");
+        let name2 = PluginWorker::cached_hook_name("on_save");
+        // Same &'static str pointer
+        assert!(std::ptr::eq(name1, name2));
+    }
+
+    #[test]
+    fn test_worker_registry_new() {
+        let registry = WorkerRegistry::new();
+        assert!(registry.workers.is_empty());
     }
 }

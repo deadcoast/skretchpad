@@ -12,8 +12,12 @@ export const invoke = vi.fn(async (cmd: string, args?: Record<string, unknown>) 
   return undefined;
 });
 
-export function mockInvokeHandler(cmd: string, handler: InvokeHandler): void {
-  handlers.set(cmd, handler);
+export function mockInvokeHandler(cmd: string, handlerOrValue: InvokeHandler | unknown): void {
+  if (typeof handlerOrValue === 'function') {
+    handlers.set(cmd, handlerOrValue as InvokeHandler);
+  } else {
+    handlers.set(cmd, () => handlerOrValue);
+  }
 }
 
 export function clearInvokeHandlers(): void {

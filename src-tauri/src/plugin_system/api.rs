@@ -1,9 +1,7 @@
 // src-tauri/src/plugin_system/api.rs
 
 use crate::plugin_system::{
-    capabilities::{
-        FilesystemCapability, NetworkCapability, PluginCapabilities,
-    },
+    capabilities::{FilesystemCapability, NetworkCapability, PluginCapabilities},
     manager::PluginManager,
     sandbox::SandboxRegistry,
 };
@@ -46,14 +44,14 @@ impl AuditLogger {
 
     pub async fn log(&self, event: AuditEvent) {
         let mut events = self.events.write().await;
-        
+
         // Rotate logs if exceeding max
         if events.len() >= self.max_events {
             events.remove(0);
         }
-        
+
         events.push(event.clone());
-        
+
         // Also log to console in debug mode
         #[cfg(debug_assertions)]
         println!(
@@ -252,17 +250,15 @@ fn validate_fs_write(
 }
 
 /// Validate network permission
-fn validate_network(
-    capabilities: &PluginCapabilities,
-    url: &str,
-) -> Result<(), ApiError> {
+fn validate_network(capabilities: &PluginCapabilities, url: &str) -> Result<(), ApiError> {
     match &capabilities.network {
         NetworkCapability::None => Err(ApiError::PermissionDenied {
             operation: "network request".to_string(),
             capability: "network access".to_string(),
         }),
         NetworkCapability::DomainAllowlist(domains) => {
-            let url_parsed = url::Url::parse(url).map_err(|e| ApiError::NetworkError(e.to_string()))?;
+            let url_parsed =
+                url::Url::parse(url).map_err(|e| ApiError::NetworkError(e.to_string()))?;
             let domain = url_parsed
                 .host_str()
                 .ok_or_else(|| ApiError::NetworkError("Invalid URL".to_string()))?;
@@ -280,10 +276,7 @@ fn validate_network(
 }
 
 /// Validate command execution permission
-fn validate_command(
-    capabilities: &PluginCapabilities,
-    command: &str,
-) -> Result<(), ApiError> {
+fn validate_command(capabilities: &PluginCapabilities, command: &str) -> Result<(), ApiError> {
     if capabilities.commands.allowlist.contains(command) {
         Ok(())
     } else {
@@ -558,11 +551,8 @@ pub async fn plugin_watch_path(
     use std::sync::mpsc::channel;
 
     let (tx, rx) = channel();
-    let mut watcher: RecommendedWatcher = Watcher::new(
-        tx,
-        notify::Config::default(),
-    )
-    .map_err(|e| ApiError::FileError(e.to_string()))?;
+    let mut watcher: RecommendedWatcher = Watcher::new(tx, notify::Config::default())
+        .map_err(|e| ApiError::FileError(e.to_string()))?;
 
     watcher
         .watch(&path, RecursiveMode::Recursive)
@@ -573,9 +563,7 @@ pub async fn plugin_watch_path(
     let window_clone = window.clone();
 
     // Store watcher in registry so it persists and can be cleaned up
-    watcher_registry
-        .register(watch_id.clone(), watcher)
-        .await;
+    watcher_registry.register(watch_id.clone(), watcher).await;
 
     // Spawn event relay task
     tokio::spawn(async move {
@@ -585,10 +573,8 @@ pub async fn plugin_watch_path(
                     "kind": format!("{:?}", event.kind),
                     "paths": event.paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
                 });
-                let _ = window_clone.emit(
-                    &format!("plugin:{}:file_change", plugin_id_clone),
-                    payload,
-                );
+                let _ =
+                    window_clone.emit(&format!("plugin:{}:file_change", plugin_id_clone), payload);
             }
         }
     });
@@ -942,7 +928,7 @@ pub struct ShowPanelParams {
     plugin_id: String,
     id: String,
     title: String,
-    content: String, // HTML content
+    content: String,          // HTML content
     position: Option<String>, // "sidebar", "bottom", "modal"
 }
 
@@ -1261,46 +1247,232 @@ pub async fn clear_audit_logs(audit: State<'_, Arc<AuditLogger>>) -> Result<(), 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::plugin_system::capabilities::CommandCapability;
+    use crate::plugin_system::capabilities::{CommandCapability, UiCapability};
+    use std::collections::HashSet;
+
+    // ============================================================================
+    // validate_fs_read tests
+    // ============================================================================
 
     #[test]
-    fn test_validate_fs_read() {
+    fn test_validate_fs_read_workspace_read_allows_in_workspace() {
         let workspace = PathBuf::from("/workspace");
         let capabilities = PluginCapabilities {
             filesystem: FilesystemCapability::WorkspaceRead,
             ..Default::default()
         };
-
-        // Should allow reading from workspace
-        assert!(validate_fs_read(
-            &capabilities,
-            &workspace.join("file.txt"),
-            &workspace
-        )
-        .is_ok());
-
-        // Should deny reading from outside workspace
-        assert!(validate_fs_read(&capabilities, &PathBuf::from("/etc/passwd"), &workspace).is_err());
+        assert!(validate_fs_read(&capabilities, &workspace.join("file.txt"), &workspace).is_ok());
     }
 
     #[test]
-    fn test_validate_network() {
+    fn test_validate_fs_read_workspace_read_denies_outside() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::WorkspaceRead,
+            ..Default::default()
+        };
+        assert!(
+            validate_fs_read(&capabilities, &PathBuf::from("/etc/passwd"), &workspace).is_err()
+        );
+    }
+
+    #[test]
+    fn test_validate_fs_read_none_denies_all() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::None,
+            ..Default::default()
+        };
+        assert!(validate_fs_read(&capabilities, &workspace.join("file.txt"), &workspace).is_err());
+    }
+
+    #[test]
+    fn test_validate_fs_read_scoped_allows_in_scope() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::Scoped {
+                read: vec!["/workspace/src".to_string()].into_iter().collect(),
+                write: HashSet::new(),
+            },
+            ..Default::default()
+        };
+        assert!(validate_fs_read(
+            &capabilities,
+            &PathBuf::from("/workspace/src/main.rs"),
+            &workspace
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn test_validate_fs_read_scoped_denies_out_of_scope() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::Scoped {
+                read: vec!["/workspace/src".to_string()].into_iter().collect(),
+                write: HashSet::new(),
+            },
+            ..Default::default()
+        };
+        assert!(validate_fs_read(
+            &capabilities,
+            &PathBuf::from("/workspace/secrets/key.pem"),
+            &workspace
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn test_validate_fs_read_readwrite_allows() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::WorkspaceReadWrite,
+            ..Default::default()
+        };
+        assert!(validate_fs_read(&capabilities, &workspace.join("file.txt"), &workspace).is_ok());
+    }
+
+    // ============================================================================
+    // validate_fs_write tests
+    // ============================================================================
+
+    #[test]
+    fn test_validate_fs_write_none_denies() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::None,
+            ..Default::default()
+        };
+        assert!(validate_fs_write(&capabilities, &workspace.join("file.txt"), &workspace).is_err());
+    }
+
+    #[test]
+    fn test_validate_fs_write_workspace_read_denies() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::WorkspaceRead,
+            ..Default::default()
+        };
+        assert!(validate_fs_write(&capabilities, &workspace.join("file.txt"), &workspace).is_err());
+    }
+
+    #[test]
+    fn test_validate_fs_write_readwrite_allows_in_workspace() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::WorkspaceReadWrite,
+            ..Default::default()
+        };
+        assert!(validate_fs_write(&capabilities, &workspace.join("file.txt"), &workspace).is_ok());
+    }
+
+    #[test]
+    fn test_validate_fs_write_readwrite_denies_outside() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::WorkspaceReadWrite,
+            ..Default::default()
+        };
+        assert!(
+            validate_fs_write(&capabilities, &PathBuf::from("/etc/passwd"), &workspace).is_err()
+        );
+    }
+
+    #[test]
+    fn test_validate_fs_write_scoped_allows_in_scope() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::Scoped {
+                read: HashSet::new(),
+                write: vec!["/workspace/out".to_string()].into_iter().collect(),
+            },
+            ..Default::default()
+        };
+        assert!(validate_fs_write(
+            &capabilities,
+            &PathBuf::from("/workspace/out/result.txt"),
+            &workspace
+        )
+        .is_ok());
+    }
+
+    #[test]
+    fn test_validate_fs_write_scoped_denies_out_of_scope() {
+        let workspace = PathBuf::from("/workspace");
+        let capabilities = PluginCapabilities {
+            filesystem: FilesystemCapability::Scoped {
+                read: HashSet::new(),
+                write: vec!["/workspace/out".to_string()].into_iter().collect(),
+            },
+            ..Default::default()
+        };
+        assert!(validate_fs_write(
+            &capabilities,
+            &PathBuf::from("/workspace/src/main.rs"),
+            &workspace
+        )
+        .is_err());
+    }
+
+    // ============================================================================
+    // validate_network tests
+    // ============================================================================
+
+    #[test]
+    fn test_validate_network_none_denies() {
+        let capabilities = PluginCapabilities {
+            network: NetworkCapability::None,
+            ..Default::default()
+        };
+        assert!(validate_network(&capabilities, "https://example.com").is_err());
+    }
+
+    #[test]
+    fn test_validate_network_unrestricted_allows() {
+        let capabilities = PluginCapabilities {
+            network: NetworkCapability::Unrestricted,
+            ..Default::default()
+        };
+        assert!(validate_network(&capabilities, "https://anything.com/data").is_ok());
+    }
+
+    #[test]
+    fn test_validate_network_allowlist_allows() {
         let capabilities = PluginCapabilities {
             network: NetworkCapability::DomainAllowlist(
-                vec!["api.example.com".to_string()].into_iter().collect()
+                vec!["api.example.com".to_string()].into_iter().collect(),
             ),
             ..Default::default()
         };
-
-        // Should allow allowlisted domain
         assert!(validate_network(&capabilities, "https://api.example.com/data").is_ok());
+    }
 
-        // Should deny other domains
+    #[test]
+    fn test_validate_network_allowlist_denies() {
+        let capabilities = PluginCapabilities {
+            network: NetworkCapability::DomainAllowlist(
+                vec!["api.example.com".to_string()].into_iter().collect(),
+            ),
+            ..Default::default()
+        };
         assert!(validate_network(&capabilities, "https://evil.com/data").is_err());
     }
 
     #[test]
-    fn test_validate_command() {
+    fn test_validate_network_invalid_url_errors() {
+        let capabilities = PluginCapabilities {
+            network: NetworkCapability::DomainAllowlist(HashSet::new()),
+            ..Default::default()
+        };
+        assert!(validate_network(&capabilities, "not-a-url").is_err());
+    }
+
+    // ============================================================================
+    // validate_command tests
+    // ============================================================================
+
+    #[test]
+    fn test_validate_command_allows_allowlisted() {
         let capabilities = PluginCapabilities {
             commands: CommandCapability {
                 allowlist: vec!["git".to_string()].into_iter().collect(),
@@ -1308,11 +1480,219 @@ mod tests {
             },
             ..Default::default()
         };
-
-        // Should allow allowlisted command
         assert!(validate_command(&capabilities, "git").is_ok());
+    }
 
-        // Should deny other commands
+    #[test]
+    fn test_validate_command_denies_unlisted() {
+        let capabilities = PluginCapabilities {
+            commands: CommandCapability {
+                allowlist: vec!["git".to_string()].into_iter().collect(),
+                require_confirmation: false,
+            },
+            ..Default::default()
+        };
         assert!(validate_command(&capabilities, "rm").is_err());
+    }
+
+    // ============================================================================
+    // validate_ui tests
+    // ============================================================================
+
+    #[test]
+    fn test_validate_ui_status_bar() {
+        let capabilities = PluginCapabilities {
+            ui: UiCapability {
+                status_bar: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(validate_ui(&capabilities, "status_bar").is_ok());
+    }
+
+    #[test]
+    fn test_validate_ui_sidebar() {
+        let capabilities = PluginCapabilities {
+            ui: UiCapability {
+                sidebar: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(validate_ui(&capabilities, "sidebar").is_ok());
+    }
+
+    #[test]
+    fn test_validate_ui_notification() {
+        let capabilities = PluginCapabilities {
+            ui: UiCapability {
+                notifications: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(validate_ui(&capabilities, "notification").is_ok());
+    }
+
+    #[test]
+    fn test_validate_ui_webview() {
+        let capabilities = PluginCapabilities {
+            ui: UiCapability {
+                webview: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert!(validate_ui(&capabilities, "webview").is_ok());
+    }
+
+    #[test]
+    fn test_validate_ui_denied_when_false() {
+        let capabilities = PluginCapabilities::default();
+        assert!(validate_ui(&capabilities, "status_bar").is_err());
+        assert!(validate_ui(&capabilities, "sidebar").is_err());
+        assert!(validate_ui(&capabilities, "notification").is_err());
+        assert!(validate_ui(&capabilities, "webview").is_err());
+    }
+
+    #[test]
+    fn test_validate_ui_unknown_operation() {
+        let capabilities = PluginCapabilities {
+            ui: UiCapability::all(),
+            ..Default::default()
+        };
+        assert!(validate_ui(&capabilities, "unknown_op").is_err());
+    }
+
+    // ============================================================================
+    // AuditLogger tests
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_audit_logger_creation() {
+        let logger = AuditLogger::new(100);
+        let events = logger.get_events().await;
+        assert!(events.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_audit_logger_log_and_retrieve() {
+        let logger = AuditLogger::new(100);
+        logger
+            .log(AuditEvent {
+                plugin_id: "test".to_string(),
+                operation: "fs.read".to_string(),
+                resource: "/file.txt".to_string(),
+                timestamp: SystemTime::now(),
+                success: true,
+                error: None,
+            })
+            .await;
+
+        let events = logger.get_events().await;
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].plugin_id, "test");
+    }
+
+    #[tokio::test]
+    async fn test_audit_logger_rotation() {
+        let logger = AuditLogger::new(3);
+        for i in 0..5 {
+            logger
+                .log(AuditEvent {
+                    plugin_id: format!("plugin_{}", i),
+                    operation: "op".to_string(),
+                    resource: "r".to_string(),
+                    timestamp: SystemTime::now(),
+                    success: true,
+                    error: None,
+                })
+                .await;
+        }
+
+        let events = logger.get_events().await;
+        assert_eq!(events.len(), 3);
+        // Should have the last 3 events
+        assert_eq!(events[0].plugin_id, "plugin_2");
+        assert_eq!(events[2].plugin_id, "plugin_4");
+    }
+
+    #[tokio::test]
+    async fn test_audit_logger_filter_by_plugin() {
+        let logger = AuditLogger::new(100);
+        logger
+            .log(AuditEvent {
+                plugin_id: "git".to_string(),
+                operation: "op1".to_string(),
+                resource: "r".to_string(),
+                timestamp: SystemTime::now(),
+                success: true,
+                error: None,
+            })
+            .await;
+        logger
+            .log(AuditEvent {
+                plugin_id: "other".to_string(),
+                operation: "op2".to_string(),
+                resource: "r".to_string(),
+                timestamp: SystemTime::now(),
+                success: true,
+                error: None,
+            })
+            .await;
+
+        let git_events = logger.get_events_for_plugin("git").await;
+        assert_eq!(git_events.len(), 1);
+        assert_eq!(git_events[0].operation, "op1");
+    }
+
+    #[tokio::test]
+    async fn test_audit_logger_clear() {
+        let logger = AuditLogger::new(100);
+        logger
+            .log(AuditEvent {
+                plugin_id: "test".to_string(),
+                operation: "op".to_string(),
+                resource: "r".to_string(),
+                timestamp: SystemTime::now(),
+                success: true,
+                error: None,
+            })
+            .await;
+        logger.clear().await;
+        assert!(logger.get_events().await.is_empty());
+    }
+
+    // ============================================================================
+    // ApiError tests
+    // ============================================================================
+
+    #[test]
+    fn test_api_error_display() {
+        let err = ApiError::PermissionDenied {
+            operation: "read".to_string(),
+            capability: "filesystem".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "Permission denied: read requires filesystem"
+        );
+    }
+
+    #[test]
+    fn test_api_error_from_io_error() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "not found");
+        let api_err: ApiError = io_err.into();
+        assert!(matches!(api_err, ApiError::FileError(_)));
+    }
+
+    #[test]
+    fn test_api_error_serializable() {
+        let err = ApiError::PluginNotFound {
+            plugin_id: "test".to_string(),
+        };
+        let json = serde_json::to_string(&err).unwrap();
+        assert!(json.contains("test"));
     }
 }

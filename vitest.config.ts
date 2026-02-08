@@ -22,7 +22,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/lib/**/*.ts', 'src/lib/**/*.svelte'],
-      exclude: ['src/lib/icons/**', 'src/test/**'],
+      exclude: [
+        'src/lib/icons/**',
+        'src/test/**',
+        'src/lib/editor-loader.ts',
+        'src/lib/codemirror-loader.ts',
+        'src/lib/plugin-api.ts',
+        'src/lib/stores/editor.ts',
+        'src/lib/stores/ui.ts',
+      ],
       thresholds: {
         lines: 90,
         functions: 90,

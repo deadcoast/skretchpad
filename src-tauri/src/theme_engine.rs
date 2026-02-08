@@ -108,14 +108,14 @@ impl<'de> Deserialize<'de> for TokenStyle {
         #[serde(untagged)]
         enum TokenStyleRaw {
             Plain(String),
-            Full { color: String, style: Option<String> },
+            Full {
+                color: String,
+                style: Option<String>,
+            },
         }
 
         match TokenStyleRaw::deserialize(deserializer)? {
-            TokenStyleRaw::Plain(color) => Ok(TokenStyle {
-                color,
-                style: None,
-            }),
+            TokenStyleRaw::Plain(color) => Ok(TokenStyle { color, style: None }),
             TokenStyleRaw::Full { color, style } => Ok(TokenStyle { color, style }),
         }
     }
@@ -171,14 +171,8 @@ impl Theme {
         let mut css = String::from(":root {\n");
 
         // Theme metadata as CSS custom properties
-        css.push_str(&format!(
-            "  --theme-name: \"{}\";\n",
-            self.metadata.name
-        ));
-        css.push_str(&format!(
-            "  --theme-base: \"{}\";\n",
-            self.metadata.base
-        ));
+        css.push_str(&format!("  --theme-name: \"{}\";\n", self.metadata.name));
+        css.push_str(&format!("  --theme-base: \"{}\";\n", self.metadata.base));
 
         // Window variables
         css.push_str(&format!(
@@ -211,14 +205,8 @@ impl Theme {
             "  --chrome-blur: {}px;\n",
             self.chrome.background.blur
         ));
-        css.push_str(&format!(
-            "  --chrome-fg: {};\n",
-            self.chrome.foreground
-        ));
-        css.push_str(&format!(
-            "  --chrome-height: {}px;\n",
-            self.chrome.height
-        ));
+        css.push_str(&format!("  --chrome-fg: {};\n", self.chrome.foreground));
+        css.push_str(&format!("  --chrome-height: {}px;\n", self.chrome.height));
 
         // Editor variables
         css.push_str(&format!("  --editor-bg: {};\n", self.editor.background));
@@ -265,10 +253,7 @@ impl Theme {
             "  --syntax-variable: {};\n",
             self.syntax.variable.color
         ));
-        css.push_str(&format!(
-            "  --syntax-type: {};\n",
-            self.syntax.r#type.color
-        ));
+        css.push_str(&format!("  --syntax-type: {};\n", self.syntax.r#type.color));
         css.push_str(&format!(
             "  --syntax-constant: {};\n",
             self.syntax.constant.color
@@ -287,29 +272,17 @@ impl Theme {
             ("constant", &self.syntax.constant),
         ] {
             if let Some(ref style) = token.style {
-                css.push_str(&format!(
-                    "  --syntax-{}-style: {};\n",
-                    name, style
-                ));
+                css.push_str(&format!("  --syntax-{}-style: {};\n", name, style));
             }
         }
 
         // UI variables (if present)
         if let Some(ref ui) = self.ui {
             if let Some(ref sb) = ui.status_bar {
-                css.push_str(&format!(
-                    "  --status-bar-bg: {};\n",
-                    sb.background
-                ));
-                css.push_str(&format!(
-                    "  --status-bar-fg: {};\n",
-                    sb.foreground
-                ));
+                css.push_str(&format!("  --status-bar-bg: {};\n", sb.background));
+                css.push_str(&format!("  --status-bar-fg: {};\n", sb.foreground));
                 if let Some(height) = sb.height {
-                    css.push_str(&format!(
-                        "  --status-bar-height: {}px;\n",
-                        height
-                    ));
+                    css.push_str(&format!("  --status-bar-height: {}px;\n", height));
                 }
             }
         }
@@ -317,28 +290,16 @@ impl Theme {
         // Transition variables (if present)
         if let Some(ref tr) = self.transitions {
             if let Some(ms) = tr.chrome_toggle {
-                css.push_str(&format!(
-                    "  --transition-chrome-toggle: {}ms;\n",
-                    ms
-                ));
+                css.push_str(&format!("  --transition-chrome-toggle: {}ms;\n", ms));
             }
             if let Some(ms) = tr.theme_switch {
-                css.push_str(&format!(
-                    "  --transition-theme-switch: {}ms;\n",
-                    ms
-                ));
+                css.push_str(&format!("  --transition-theme-switch: {}ms;\n", ms));
             }
             if let Some(ms) = tr.hover {
-                css.push_str(&format!(
-                    "  --transition-hover: {}ms;\n",
-                    ms
-                ));
+                css.push_str(&format!("  --transition-hover: {}ms;\n", ms));
             }
             if let Some(ref easing) = tr.easing {
-                css.push_str(&format!(
-                    "  --transition-easing: {};\n",
-                    easing
-                ));
+                css.push_str(&format!("  --transition-easing: {};\n", easing));
             }
         }
 
@@ -355,13 +316,9 @@ impl Theme {
 /// In dev mode: project_root/themes/
 /// In production: would use app resource dir
 fn themes_dir() -> std::path::PathBuf {
-    if cfg!(debug_assertions) {
-        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        manifest_dir.parent().unwrap().join("themes")
-    } else {
-        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        manifest_dir.parent().unwrap().join("themes")
-    }
+    // TODO: In production, use app resource dir instead of CARGO_MANIFEST_DIR
+    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    manifest_dir.parent().unwrap().join("themes")
 }
 
 /// Load a theme by name and return its CSS variables string.
@@ -374,7 +331,11 @@ pub async fn load_theme(theme_name: String) -> Result<String, String> {
             Ok(theme) => Ok(theme.to_css_vars()),
             Err(e) => Err(format!("Failed to parse theme '{}': {}", theme_name, e)),
         },
-        Err(e) => Err(format!("Failed to read theme file '{}': {}", theme_path.display(), e)),
+        Err(e) => Err(format!(
+            "Failed to read theme file '{}': {}",
+            theme_path.display(),
+            e
+        )),
     }
 }
 
@@ -417,8 +378,8 @@ pub async fn get_theme_metadata(theme_name: String) -> Result<ThemeInfo, String>
 pub async fn list_themes() -> Result<Vec<ThemeInfo>, String> {
     let dir = themes_dir();
 
-    let entries = std::fs::read_dir(&dir)
-        .map_err(|e| format!("Failed to read themes directory: {}", e))?;
+    let entries =
+        std::fs::read_dir(&dir).map_err(|e| format!("Failed to read themes directory: {}", e))?;
 
     let mut themes = Vec::new();
 
@@ -602,7 +563,9 @@ easing = "cubic-bezier(0.4, 0.0, 0.2, 1)"
     #[test]
     fn test_transitions_section_parsed() {
         let theme: Theme = toml::from_str(MILKYTEXT_STYLE).expect("Failed to parse");
-        let tr = theme.transitions.expect("Transitions section should be present");
+        let tr = theme
+            .transitions
+            .expect("Transitions section should be present");
         assert_eq!(tr.chrome_toggle, Some(200));
         assert_eq!(tr.theme_switch, Some(300));
         assert_eq!(tr.hover, Some(100));

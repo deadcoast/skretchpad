@@ -9,13 +9,12 @@ mod theme_engine;
 
 use plugin_system::{
     api::{
-        AuditLogger, FileWatcherRegistry, clear_audit_logs, get_audit_logs,
-        plugin_add_status_bar_item, plugin_emit_event, plugin_execute_command,
-        plugin_execute_hook, plugin_fetch, plugin_get_active_file,
-        plugin_get_editor_content, plugin_hide_panel, plugin_list_directory,
-        plugin_read_file, plugin_register_event, plugin_remove_status_bar_item,
-        plugin_set_editor_content, plugin_show_notification, plugin_show_panel,
-        plugin_unwatch_path, plugin_watch_path, plugin_write_file,
+        clear_audit_logs, get_audit_logs, plugin_add_status_bar_item, plugin_emit_event,
+        plugin_execute_command, plugin_execute_hook, plugin_fetch, plugin_get_active_file,
+        plugin_get_editor_content, plugin_hide_panel, plugin_list_directory, plugin_read_file,
+        plugin_register_event, plugin_remove_status_bar_item, plugin_set_editor_content,
+        plugin_show_notification, plugin_show_panel, plugin_unwatch_path, plugin_watch_path,
+        plugin_write_file, AuditLogger, FileWatcherRegistry,
     },
     manager::PluginManager,
     sandbox::SandboxRegistry,
@@ -64,7 +63,10 @@ async fn activate_plugin(
     state: State<'_, Arc<RwLock<PluginManager>>>,
 ) -> Result<(), String> {
     let mut manager = state.write().await;
-    manager.activate(&plugin_id).await.map_err(|e| e.to_string())
+    manager
+        .activate(&plugin_id)
+        .await
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -203,8 +205,7 @@ fn main() {
                     .expect("Failed to get app data directory");
                 app_dir.join("plugins")
             };
-            std::fs::create_dir_all(&plugins_dir)
-                .expect("Failed to create plugins directory");
+            std::fs::create_dir_all(&plugins_dir).expect("Failed to create plugins directory");
 
             // Determine workspace root (project root in dev, app data in release)
             let workspace_root = if cfg!(debug_assertions) {
@@ -236,10 +237,10 @@ fn main() {
             // Auto-discover and load plugins
             tauri::async_runtime::spawn(async move {
                 let mut manager = plugin_manager.write().await;
-                
+
                 if let Ok(plugins) = manager.discover() {
                     println!("Discovered {} plugins", plugins.len());
-                    
+
                     for plugin_id in plugins {
                         // Load plugin
                         if let Err(e) = manager.load(&plugin_id) {
@@ -255,8 +256,13 @@ fn main() {
                                 plugin_system::trust::TrustLevel::FirstParty
                             ) {
                                 match manager.activate(&plugin_id).await {
-                                    Ok(()) => println!("  Activated plugin: {} (first-party)", plugin_id),
-                                    Err(e) => eprintln!("  Failed to activate plugin {}: {}", plugin_id, e),
+                                    Ok(()) => {
+                                        println!("  Activated plugin: {} (first-party)", plugin_id)
+                                    }
+                                    Err(e) => eprintln!(
+                                        "  Failed to activate plugin {}: {}",
+                                        plugin_id, e
+                                    ),
                                 }
                             }
                         }

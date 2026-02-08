@@ -2,7 +2,7 @@
 
 use crate::plugin_system::{
     capabilities::PluginCapabilities,
-    loader::{PluginLoader, LoaderError},
+    loader::{LoaderError, PluginLoader},
     sandbox::{PluginSandbox, SandboxRegistry},
 };
 use serde::{Deserialize, Serialize};
@@ -137,7 +137,9 @@ impl PluginManager {
 
     /// Load a plugin
     pub fn load(&mut self, plugin_id: &str) -> Result<()> {
-        self.loader.load(plugin_id).map_err(|e| ManagerError::Internal(e.to_string()))?;
+        self.loader
+            .load(plugin_id)
+            .map_err(|e| ManagerError::Internal(e.to_string()))?;
 
         // Set initial state
         self.active_plugins
@@ -186,8 +188,7 @@ impl PluginManager {
             let sandbox = sandbox.read().await;
 
             if let Err(e) = sandbox.initialize().await {
-                self.errors
-                    .insert(plugin_id.to_string(), e.to_string());
+                self.errors.insert(plugin_id.to_string(), e.to_string());
                 self.active_plugins
                     .insert(plugin_id.to_string(), PluginState::Error);
                 return Err(ManagerError::Sandbox(e.to_string()));
@@ -206,8 +207,7 @@ impl PluginManager {
             })?;
 
             if let Err(e) = sandbox.execute(script).await {
-                self.errors
-                    .insert(plugin_id.to_string(), e.to_string());
+                self.errors.insert(plugin_id.to_string(), e.to_string());
                 self.active_plugins
                     .insert(plugin_id.to_string(), PluginState::Error);
                 return Err(ManagerError::Sandbox(format!(
@@ -221,8 +221,7 @@ impl PluginManager {
                 .call_hook("activate", vec![serde_json::json!({})])
                 .await
             {
-                self.errors
-                    .insert(plugin_id.to_string(), e.to_string());
+                self.errors.insert(plugin_id.to_string(), e.to_string());
                 self.active_plugins
                     .insert(plugin_id.to_string(), PluginState::Error);
                 return Err(ManagerError::Sandbox(e.to_string()));
@@ -264,7 +263,8 @@ impl PluginManager {
         self.sandbox_registry.remove_sandbox(plugin_id).await;
 
         // Set state back to Loaded (keep in map so plugin remains visible in UI)
-        self.active_plugins.insert(plugin_id.to_string(), PluginState::Loaded);
+        self.active_plugins
+            .insert(plugin_id.to_string(), PluginState::Loaded);
         self.errors.remove(plugin_id);
 
         Ok(())
@@ -320,14 +320,16 @@ impl PluginManager {
 
     /// Get plugin capabilities
     pub fn get_plugin_capabilities(&self, plugin_id: &str) -> Option<PluginCapabilities> {
-        self.loader.get(plugin_id).map(|info| info.manifest.capabilities.clone())
+        self.loader
+            .get(plugin_id)
+            .map(|info| info.manifest.capabilities.clone())
     }
 
     /// Register event listener for a plugin
     pub fn register_event_listener(&mut self, plugin_id: &str, event_name: &str) {
         self.event_listeners
             .entry(event_name.to_string())
-            .or_insert_with(HashSet::new)
+            .or_default()
             .insert(plugin_id.to_string());
     }
 
@@ -352,9 +354,7 @@ impl PluginManager {
             for plugin_id in listeners {
                 if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id).await {
                     let sandbox = sandbox.read().await;
-                    let _ = sandbox
-                        .call_hook(event_name, vec![data.clone()])
-                        .await;
+                    let _ = sandbox.call_hook(event_name, vec![data.clone()]).await;
                 }
             }
         }
@@ -439,7 +439,7 @@ mod tests {
         // Simulate register
         listeners
             .entry("on_file_save".to_string())
-            .or_insert_with(HashSet::new)
+            .or_default()
             .insert("git".to_string());
 
         assert_eq!(listeners.get("on_file_save").unwrap().len(), 1);
@@ -469,5 +469,157 @@ mod tests {
             serde_json::to_string(&PluginState::Error).unwrap(),
             r#""error""#
         );
+    }
+
+    #[test]
+    fn test_plugin_state_deserialize() {
+        let loaded: PluginState = serde_json::from_str(r#""loaded""#).unwrap();
+        assert_eq!(loaded, PluginState::Loaded);
+        let active: PluginState = serde_json::from_str(r#""active""#).unwrap();
+        assert_eq!(active, PluginState::Active);
+        let error: PluginState = serde_json::from_str(r#""error""#).unwrap();
+        assert_eq!(error, PluginState::Error);
+    }
+
+    #[test]
+    fn test_plugin_state_equality() {
+        assert_eq!(PluginState::Loaded, PluginState::Loaded);
+        assert_ne!(PluginState::Loaded, PluginState::Active);
+        assert_ne!(PluginState::Activating, PluginState::Deactivating);
+    }
+
+    #[test]
+    fn test_manager_error_loader_display() {
+        let err = ManagerError::PluginNotLoaded("test-plugin".to_string());
+        assert_eq!(err.to_string(), "Plugin not loaded: test-plugin");
+    }
+
+    #[test]
+    fn test_manager_error_already_active_display() {
+        let err = ManagerError::PluginAlreadyActive("git".to_string());
+        assert_eq!(err.to_string(), "Plugin already active: git");
+    }
+
+    #[test]
+    fn test_manager_error_not_active_display() {
+        let err = ManagerError::PluginNotActive("git".to_string());
+        assert_eq!(err.to_string(), "Plugin not active: git");
+    }
+
+    #[test]
+    fn test_manager_error_dependency_display() {
+        let err = ManagerError::DependencyNotSatisfied("core-lib".to_string());
+        assert_eq!(err.to_string(), "Dependency not satisfied: core-lib");
+    }
+
+    #[test]
+    fn test_manager_error_circular_dependency_display() {
+        let err = ManagerError::CircularDependency("a -> b -> a".to_string());
+        assert_eq!(err.to_string(), "Circular dependency detected: a -> b -> a");
+    }
+
+    #[test]
+    fn test_manager_error_sandbox_display() {
+        let err = ManagerError::Sandbox("timeout".to_string());
+        assert_eq!(err.to_string(), "Sandbox error: timeout");
+    }
+
+    #[test]
+    fn test_manager_error_internal_display() {
+        let err = ManagerError::Internal("unknown".to_string());
+        assert_eq!(err.to_string(), "Internal error: unknown");
+    }
+
+    #[test]
+    fn test_event_listeners_register_multiple() {
+        let mut listeners: HashMap<String, HashSet<String>> = HashMap::new();
+
+        // Register two plugins to same event
+        listeners
+            .entry("on_file_save".to_string())
+            .or_default()
+            .insert("git".to_string());
+        listeners
+            .entry("on_file_save".to_string())
+            .or_default()
+            .insert("git-status".to_string());
+
+        assert_eq!(listeners.get("on_file_save").unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_event_listeners_unregister() {
+        let mut listeners: HashMap<String, HashSet<String>> = HashMap::new();
+
+        listeners
+            .entry("on_file_save".to_string())
+            .or_default()
+            .insert("git".to_string());
+        listeners
+            .entry("on_file_save".to_string())
+            .or_default()
+            .insert("git-status".to_string());
+
+        // Unregister one
+        if let Some(set) = listeners.get_mut("on_file_save") {
+            set.remove("git");
+        }
+
+        assert_eq!(listeners.get("on_file_save").unwrap().len(), 1);
+        assert!(listeners
+            .get("on_file_save")
+            .unwrap()
+            .contains("git-status"));
+        assert!(!listeners.get("on_file_save").unwrap().contains("git"));
+    }
+
+    #[test]
+    fn test_event_listeners_different_events() {
+        let mut listeners: HashMap<String, HashSet<String>> = HashMap::new();
+
+        listeners
+            .entry("on_file_save".to_string())
+            .or_default()
+            .insert("git".to_string());
+        listeners
+            .entry("on_file_open".to_string())
+            .or_default()
+            .insert("git-status".to_string());
+
+        assert_eq!(listeners.get("on_file_save").unwrap().len(), 1);
+        assert_eq!(listeners.get("on_file_open").unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_plugin_status_serialization() {
+        use crate::plugin_system::capabilities::*;
+        let status = PluginStatus {
+            id: "test".to_string(),
+            name: "Test Plugin".to_string(),
+            version: "1.0.0".to_string(),
+            state: PluginState::Active,
+            capabilities: PluginCapabilities::default(),
+            error: None,
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"id\":\"test\""));
+        assert!(json.contains("\"state\":\"active\""));
+        assert!(json.contains("\"version\":\"1.0.0\""));
+    }
+
+    #[test]
+    fn test_plugin_status_with_error() {
+        use crate::plugin_system::capabilities::*;
+        let status = PluginStatus {
+            id: "test".to_string(),
+            name: "Test Plugin".to_string(),
+            version: "1.0.0".to_string(),
+            state: PluginState::Error,
+            capabilities: PluginCapabilities::default(),
+            error: Some("sandbox timeout".to_string()),
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"state\":\"error\""));
+        assert!(json.contains("sandbox timeout"));
     }
 }

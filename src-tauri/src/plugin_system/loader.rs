@@ -10,19 +10,19 @@ use std::time::SystemTime;
 pub enum LoaderError {
     #[error("Plugin manifest not found: {0}")]
     ManifestNotFound(String),
-    
+
     #[error("Invalid plugin manifest: {0}")]
     InvalidManifest(String),
-    
+
     #[error("Plugin already loaded: {0}")]
     AlreadyLoaded(String),
-    
+
     #[error("Plugin not found: {0}")]
     PluginNotFound(String),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("TOML parsing error: {0}")]
     Toml(#[from] toml::de::Error),
 }
@@ -112,7 +112,7 @@ impl PluginLoader {
         let mut first_party_plugins = std::collections::HashSet::new();
         first_party_plugins.insert("git".to_string());
         first_party_plugins.insert("git-status".to_string());
-        
+
         Self {
             plugins_dir,
             plugins: HashMap::new(),
@@ -122,7 +122,7 @@ impl PluginLoader {
 
     pub fn discover(&self) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         let mut plugin_ids = Vec::new();
-        
+
         if !self.plugins_dir.exists() {
             return Ok(plugin_ids);
         }
@@ -130,7 +130,7 @@ impl PluginLoader {
         for entry in std::fs::read_dir(&self.plugins_dir)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_dir() {
                 let plugin_toml = path.join("plugin.toml");
                 if plugin_toml.exists() {
@@ -140,11 +140,14 @@ impl PluginLoader {
                 }
             }
         }
-        
+
         Ok(plugin_ids)
     }
 
-    pub fn load_manifest(&self, plugin_id: &str) -> Result<PluginManifest, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn load_manifest(
+        &self,
+        plugin_id: &str,
+    ) -> Result<PluginManifest, Box<dyn std::error::Error + Send + Sync>> {
         use crate::plugin_system::capabilities::*;
 
         let plugin_path = self.plugins_dir.join(plugin_id);
@@ -181,7 +184,10 @@ impl PluginLoader {
                     },
                     toml::Value::Array(arr) => {
                         // Handle ["read"] or ["read", "write"] style
-                        let strs: Vec<String> = arr.iter().filter_map(|v| v.as_str().map(String::from)).collect();
+                        let strs: Vec<String> = arr
+                            .iter()
+                            .filter_map(|v| v.as_str().map(String::from))
+                            .collect();
                         if strs.iter().any(|s| s == "write") {
                             FilesystemCapability::WorkspaceReadWrite
                         } else if strs.iter().any(|s| s == "read") {
@@ -206,8 +212,10 @@ impl PluginLoader {
                         if let Some(toml::Value::String(ntype)) = t.get("type") {
                             if ntype == "DomainAllowlist" {
                                 if let Some(toml::Value::Array(domains)) = t.get("domains") {
-                                    let domain_set: std::collections::HashSet<String> =
-                                        domains.iter().filter_map(|v| v.as_str().map(String::from)).collect();
+                                    let domain_set: std::collections::HashSet<String> = domains
+                                        .iter()
+                                        .filter_map(|v| v.as_str().map(String::from))
+                                        .collect();
                                     NetworkCapability::DomainAllowlist(domain_set)
                                 } else {
                                     NetworkCapability::None
@@ -230,19 +238,31 @@ impl PluginLoader {
                         let allowlist: std::collections::HashSet<String> = t
                             .get("allowlist")
                             .and_then(|v| v.as_array())
-                            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                            .map(|arr| {
+                                arr.iter()
+                                    .filter_map(|v| v.as_str().map(String::from))
+                                    .collect()
+                            })
                             .unwrap_or_default();
                         let require_confirmation = t
                             .get("require_confirmation")
                             .and_then(|v| v.as_bool())
                             .unwrap_or(true);
-                        CommandCapability { allowlist, require_confirmation }
+                        CommandCapability {
+                            allowlist,
+                            require_confirmation,
+                        }
                     }
                     toml::Value::Array(arr) => {
                         // Handle ["git"] style
-                        let allowlist: std::collections::HashSet<String> =
-                            arr.iter().filter_map(|v| v.as_str().map(String::from)).collect();
-                        CommandCapability { allowlist, require_confirmation: true }
+                        let allowlist: std::collections::HashSet<String> = arr
+                            .iter()
+                            .filter_map(|v| v.as_str().map(String::from))
+                            .collect();
+                        CommandCapability {
+                            allowlist,
+                            require_confirmation: true,
+                        }
                     }
                     _ => CommandCapability::default(),
                 };
@@ -264,16 +284,19 @@ impl PluginLoader {
         Ok(manifest)
     }
 
-    pub fn load(&mut self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub fn load(
+        &mut self,
+        plugin_id: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let manifest = self.load_manifest(plugin_id)?;
         let plugin_path = self.plugins_dir.join(plugin_id);
-        
+
         let plugin_info = PluginInfo {
             manifest,
             path: plugin_path,
             loaded_at: SystemTime::now(),
         };
-        
+
         self.plugins.insert(plugin_id.to_string(), plugin_info);
         Ok(())
     }
@@ -290,7 +313,10 @@ impl PluginLoader {
         self.plugins.remove(plugin_id).is_some()
     }
 
-    pub fn verify_dependencies(&self, plugin_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub fn verify_dependencies(
+        &self,
+        plugin_id: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Some(plugin_info) = self.plugins.get(plugin_id) {
             for dependency in &plugin_info.manifest.dependencies {
                 if !self.plugins.contains_key(dependency) {
@@ -326,16 +352,24 @@ mod tests {
     #[test]
     fn test_discover_plugins() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "my-plugin", r#"
+        write_plugin(
+            tmp.path(),
+            "my-plugin",
+            r#"
 name = "my-plugin"
 version = "1.0.0"
 author = "test"
-"#);
-        write_plugin(tmp.path(), "another", r#"
+"#,
+        );
+        write_plugin(
+            tmp.path(),
+            "another",
+            r#"
 name = "another"
 version = "0.1.0"
 author = "test"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let mut found = loader.discover().unwrap();
@@ -351,11 +385,15 @@ author = "test"
         // File (not a directory)
         std::fs::write(tmp.path().join("random.txt"), "hi").unwrap();
         // Valid plugin
-        write_plugin(tmp.path(), "valid", r#"
+        write_plugin(
+            tmp.path(),
+            "valid",
+            r#"
 name = "valid"
 version = "1.0.0"
 author = "test"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let found = loader.discover().unwrap();
@@ -365,12 +403,16 @@ author = "test"
     #[test]
     fn test_load_and_get_plugin() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "test-plugin", r#"
+        write_plugin(
+            tmp.path(),
+            "test-plugin",
+            r#"
 name = "test-plugin"
 version = "2.0.0"
 author = "tester"
 description = "A test plugin"
-"#);
+"#,
+        );
 
         let mut loader = PluginLoader::new(tmp.path().to_path_buf());
         loader.load("test-plugin").unwrap();
@@ -386,11 +428,15 @@ description = "A test plugin"
     #[test]
     fn test_manifest_default_main_is_js() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -400,12 +446,16 @@ author = "test"
     #[test]
     fn test_manifest_custom_main() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
 main = "index.js"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -415,48 +465,66 @@ main = "index.js"
     #[test]
     fn test_capabilities_from_workspace_read() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
 
 [permissions]
 filesystem = "WorkspaceRead"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
-        assert_eq!(manifest.capabilities.filesystem, FilesystemCapability::WorkspaceRead);
+        assert_eq!(
+            manifest.capabilities.filesystem,
+            FilesystemCapability::WorkspaceRead
+        );
     }
 
     #[test]
     fn test_capabilities_from_workspace_read_write() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
 
 [permissions]
 filesystem = "WorkspaceReadWrite"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
-        assert_eq!(manifest.capabilities.filesystem, FilesystemCapability::WorkspaceReadWrite);
+        assert_eq!(
+            manifest.capabilities.filesystem,
+            FilesystemCapability::WorkspaceReadWrite
+        );
     }
 
     #[test]
     fn test_capabilities_from_command_allowlist() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
 
 [permissions]
 commands = { allowlist = ["git", "npm"], require_confirmation = false }
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -469,7 +537,10 @@ commands = { allowlist = ["git", "npm"], require_confirmation = false }
     #[test]
     fn test_capabilities_from_network_domain_allowlist() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
@@ -477,19 +548,26 @@ author = "test"
 [permissions.network]
 type = "DomainAllowlist"
 domains = ["api.github.com", "registry.npmjs.org"]
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
         assert!(manifest.capabilities.network.can_access("api.github.com"));
-        assert!(manifest.capabilities.network.can_access("registry.npmjs.org"));
+        assert!(manifest
+            .capabilities
+            .network
+            .can_access("registry.npmjs.org"));
         assert!(!manifest.capabilities.network.can_access("evil.com"));
     }
 
     #[test]
     fn test_capabilities_from_ui_section() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
@@ -498,7 +576,8 @@ author = "test"
 status_bar = true
 sidebar = false
 notifications = true
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -511,11 +590,15 @@ notifications = true
     #[test]
     fn test_capabilities_default_when_no_permissions() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -528,12 +611,16 @@ author = "test"
     #[test]
     fn test_trust_level_first_party() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "git", r#"
+        write_plugin(
+            tmp.path(),
+            "git",
+            r#"
 name = "git"
 version = "1.0.0"
 author = "skretchpad"
 trust = "first-party"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("git").unwrap();
@@ -544,11 +631,15 @@ trust = "first-party"
     #[test]
     fn test_trust_level_community_default() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "third-party", r#"
+        write_plugin(
+            tmp.path(),
+            "third-party",
+            r#"
 name = "third-party"
 version = "1.0.0"
 author = "someone"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("third-party").unwrap();
@@ -558,11 +649,15 @@ author = "someone"
     #[test]
     fn test_dependencies_empty() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -572,12 +667,16 @@ author = "test"
     #[test]
     fn test_dependencies_listed() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
 dependencies = ["git", "git-status"]
-"#);
+"#,
+        );
 
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("p").unwrap();
@@ -587,11 +686,15 @@ dependencies = ["git", "git-status"]
     #[test]
     fn test_unload_plugin() {
         let tmp = TempDir::new().unwrap();
-        write_plugin(tmp.path(), "p", r#"
+        write_plugin(
+            tmp.path(),
+            "p",
+            r#"
 name = "p"
 version = "1.0.0"
 author = "test"
-"#);
+"#,
+        );
 
         let mut loader = PluginLoader::new(tmp.path().to_path_buf());
         loader.load("p").unwrap();
@@ -628,7 +731,10 @@ author = "test"
         assert!(manifest.capabilities.commands.can_execute("git"));
         assert!(manifest.capabilities.ui.status_bar);
         assert!(manifest.capabilities.ui.notifications);
-        assert_eq!(manifest.capabilities.filesystem, FilesystemCapability::WorkspaceReadWrite);
+        assert_eq!(
+            manifest.capabilities.filesystem,
+            FilesystemCapability::WorkspaceReadWrite
+        );
     }
 
     #[test]
@@ -650,6 +756,9 @@ author = "test"
         assert!(manifest.capabilities.commands.can_execute("git"));
         assert!(manifest.capabilities.ui.status_bar);
         assert!(!manifest.capabilities.ui.notifications);
-        assert_eq!(manifest.capabilities.filesystem, FilesystemCapability::WorkspaceRead);
+        assert_eq!(
+            manifest.capabilities.filesystem,
+            FilesystemCapability::WorkspaceRead
+        );
     }
 }

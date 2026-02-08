@@ -1,15 +1,15 @@
 // src-tauri/src/plugin_system/sandbox.rs
 
+use crate::plugin_system::capabilities::PluginCapabilities;
+use crate::plugin_system::loader::PluginManifest;
+use crate::plugin_system::worker::PluginWorker;
 use serde::Serialize;
-use std::path::PathBuf;
-use std::time::{Duration, SystemTime};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::{Duration, SystemTime};
 use tauri::AppHandle;
 use tokio::sync::RwLock;
-use crate::plugin_system::worker::PluginWorker;
-use crate::plugin_system::loader::PluginManifest;
-use crate::plugin_system::capabilities::PluginCapabilities;
 
 pub struct PluginSandbox {
     id: String,
@@ -58,7 +58,11 @@ impl PluginSandbox {
         Ok(())
     }
 
-    pub async fn call_hook(&self, hook: &str, args: Vec<serde_json::Value>) -> Result<serde_json::Value, PluginError> {
+    pub async fn call_hook(
+        &self,
+        hook: &str,
+        args: Vec<serde_json::Value>,
+    ) -> Result<serde_json::Value, PluginError> {
         // Use worker for thread-safe execution
         let args_json = serde_json::Value::Array(args);
         self.worker.call_hook(hook.to_string(), args_json).await
@@ -166,4 +170,104 @@ pub enum PluginError {
 
     #[error("Worker already exists")]
     WorkerAlreadyExists,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_plugin_error_execution_display() {
+        let err = PluginError::ExecutionError("bad code".to_string());
+        assert_eq!(err.to_string(), "Execution error: bad code");
+    }
+
+    #[test]
+    fn test_plugin_error_serialization_display() {
+        let err = PluginError::SerializationError("invalid json".to_string());
+        assert_eq!(err.to_string(), "Serialization error: invalid json");
+    }
+
+    #[test]
+    fn test_plugin_error_timeout_display() {
+        let err = PluginError::Timeout {
+            duration: Duration::from_secs(5),
+        };
+        assert!(err.to_string().contains("5s"));
+    }
+
+    #[test]
+    fn test_plugin_error_memory_limit_display() {
+        let err = PluginError::MemoryLimitExceeded {
+            used: 100,
+            limit: 50,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("100"));
+        assert!(msg.contains("50"));
+    }
+
+    #[test]
+    fn test_plugin_error_rate_limit_display() {
+        let err = PluginError::RateLimitExceeded {
+            current: 200,
+            limit: 100,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("200"));
+        assert!(msg.contains("100"));
+    }
+
+    #[test]
+    fn test_plugin_error_worker_disconnected() {
+        let err = PluginError::WorkerDisconnected;
+        assert_eq!(err.to_string(), "Worker disconnected");
+    }
+
+    #[test]
+    fn test_plugin_error_worker_already_exists() {
+        let err = PluginError::WorkerAlreadyExists;
+        assert_eq!(err.to_string(), "Worker already exists");
+    }
+
+    #[test]
+    fn test_resource_limits_default() {
+        let limits = ResourceLimits {
+            max_memory: 50 * 1024 * 1024,
+            max_cpu_time: Duration::from_secs(5),
+            max_operations: 100,
+        };
+        assert_eq!(limits.max_memory, 52_428_800);
+        assert_eq!(limits.max_cpu_time, Duration::from_secs(5));
+        assert_eq!(limits.max_operations, 100);
+    }
+
+    #[test]
+    fn test_resource_stats_construction() {
+        let stats = ResourceStats {
+            memory_used: 1024,
+            operations_count: 42,
+            last_operation: SystemTime::now(),
+        };
+        assert_eq!(stats.memory_used, 1024);
+        assert_eq!(stats.operations_count, 42);
+    }
+
+    #[test]
+    fn test_resource_stats_serializable() {
+        let stats = ResourceStats {
+            memory_used: 0,
+            operations_count: 0,
+            last_operation: SystemTime::UNIX_EPOCH,
+        };
+        let json = serde_json::to_string(&stats).unwrap();
+        assert!(json.contains("memory_used"));
+    }
+
+    #[tokio::test]
+    async fn test_sandbox_registry_new_empty() {
+        let registry = SandboxRegistry::new();
+        let list = registry.list_sandboxes().await;
+        assert!(list.is_empty());
+    }
 }

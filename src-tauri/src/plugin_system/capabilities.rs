@@ -8,17 +8,18 @@ use std::collections::HashSet;
 // ============================================================================
 
 /// Filesystem access capabilities for plugins
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FilesystemCapability {
     /// No filesystem access
+    #[default]
     None,
-    
+
     /// Read-only access to workspace files
     WorkspaceRead,
-    
+
     /// Read and write access to workspace files
     WorkspaceReadWrite,
-    
+
     /// Scoped access to specific paths
     Scoped {
         /// Paths that can be read
@@ -26,12 +27,6 @@ pub enum FilesystemCapability {
         /// Paths that can be written
         write: HashSet<String>,
     },
-}
-
-impl Default for FilesystemCapability {
-    fn default() -> Self {
-        FilesystemCapability::None
-    }
 }
 
 impl FilesystemCapability {
@@ -65,22 +60,17 @@ impl FilesystemCapability {
 // ============================================================================
 
 /// Network access capabilities for plugins
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NetworkCapability {
     /// No network access
+    #[default]
     None,
-    
+
     /// Access to specific domains only
     DomainAllowlist(HashSet<String>),
-    
+
     /// Unrestricted network access (use with caution)
     Unrestricted,
-}
-
-impl Default for NetworkCapability {
-    fn default() -> Self {
-        NetworkCapability::None
-    }
 }
 
 impl NetworkCapability {
@@ -100,9 +90,7 @@ impl NetworkCapability {
                 domains.insert(domain);
             }
             NetworkCapability::None => {
-                *self = NetworkCapability::DomainAllowlist(
-                    vec![domain].into_iter().collect(),
-                );
+                *self = NetworkCapability::DomainAllowlist(vec![domain].into_iter().collect());
             }
             NetworkCapability::Unrestricted => {}
         }
@@ -118,7 +106,7 @@ impl NetworkCapability {
 pub struct CommandCapability {
     /// List of allowed commands
     pub allowlist: HashSet<String>,
-    
+
     /// Whether to require user confirmation before execution
     pub require_confirmation: bool,
 }
@@ -162,30 +150,19 @@ impl CommandCapability {
 // ============================================================================
 
 /// UI modification capabilities for plugins
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct UiCapability {
     /// Can modify status bar
     pub status_bar: bool,
-    
+
     /// Can create sidebar panels
     pub sidebar: bool,
-    
+
     /// Can show notifications
     pub notifications: bool,
-    
+
     /// Can create webview panels
     pub webview: bool,
-}
-
-impl Default for UiCapability {
-    fn default() -> Self {
-        UiCapability {
-            status_bar: false,
-            sidebar: false,
-            notifications: false,
-            webview: false,
-        }
-    }
 }
 
 impl UiCapability {
@@ -224,13 +201,13 @@ impl UiCapability {
 pub struct PluginCapabilities {
     /// Filesystem access capabilities
     pub filesystem: FilesystemCapability,
-    
+
     /// Network access capabilities
     pub network: NetworkCapability,
-    
+
     /// Command execution capabilities
     pub commands: CommandCapability,
-    
+
     /// UI modification capabilities
     pub ui: UiCapability,
 }
@@ -299,22 +276,25 @@ impl PluginCapabilities {
                 (FilesystemCapability::None, other) | (other, FilesystemCapability::None) => {
                     other.clone()
                 }
+                (FilesystemCapability::WorkspaceReadWrite, _)
+                | (_, FilesystemCapability::WorkspaceReadWrite) => {
+                    FilesystemCapability::WorkspaceReadWrite
+                }
+                (FilesystemCapability::WorkspaceRead, _)
+                | (_, FilesystemCapability::WorkspaceRead) => FilesystemCapability::WorkspaceRead,
                 (
-                    FilesystemCapability::WorkspaceReadWrite,
-                    _,
-                ) | (
-                    _,
-                    FilesystemCapability::WorkspaceReadWrite,
-                ) => FilesystemCapability::WorkspaceReadWrite,
-                (FilesystemCapability::WorkspaceRead, _) | (_, FilesystemCapability::WorkspaceRead) => {
-                    FilesystemCapability::WorkspaceRead
-                }
-                (FilesystemCapability::Scoped { read: r1, write: w1 }, FilesystemCapability::Scoped { read: r2, write: w2 }) => {
                     FilesystemCapability::Scoped {
-                        read: r1.union(r2).cloned().collect(),
-                        write: w1.union(w2).cloned().collect(),
-                    }
-                }
+                        read: r1,
+                        write: w1,
+                    },
+                    FilesystemCapability::Scoped {
+                        read: r2,
+                        write: w2,
+                    },
+                ) => FilesystemCapability::Scoped {
+                    read: r1.union(r2).cloned().collect(),
+                    write: w1.union(w2).cloned().collect(),
+                },
             },
             network: match (&self.network, &other.network) {
                 (NetworkCapability::Unrestricted, _) | (_, NetworkCapability::Unrestricted) => {
@@ -323,9 +303,10 @@ impl PluginCapabilities {
                 (NetworkCapability::None, other) | (other, NetworkCapability::None) => {
                     other.clone()
                 }
-                (NetworkCapability::DomainAllowlist(d1), NetworkCapability::DomainAllowlist(d2)) => {
-                    NetworkCapability::DomainAllowlist(d1.union(d2).cloned().collect())
-                }
+                (
+                    NetworkCapability::DomainAllowlist(d1),
+                    NetworkCapability::DomainAllowlist(d2),
+                ) => NetworkCapability::DomainAllowlist(d1.union(d2).cloned().collect()),
             },
             commands: CommandCapability {
                 allowlist: self
@@ -354,12 +335,20 @@ impl PluginCapabilities {
             (_, FilesystemCapability::None) => false,
             (FilesystemCapability::WorkspaceRead, FilesystemCapability::WorkspaceReadWrite) => true,
             (FilesystemCapability::WorkspaceRead, FilesystemCapability::WorkspaceRead) => true,
-            (FilesystemCapability::WorkspaceReadWrite, FilesystemCapability::WorkspaceReadWrite) => {
-                true
-            }
-            (FilesystemCapability::Scoped { read: r1, write: w1 }, FilesystemCapability::Scoped { read: r2, write: w2 }) => {
-                r1.is_subset(r2) && w1.is_subset(w2)
-            }
+            (
+                FilesystemCapability::WorkspaceReadWrite,
+                FilesystemCapability::WorkspaceReadWrite,
+            ) => true,
+            (
+                FilesystemCapability::Scoped {
+                    read: r1,
+                    write: w1,
+                },
+                FilesystemCapability::Scoped {
+                    read: r2,
+                    write: w2,
+                },
+            ) => r1.is_subset(r2) && w1.is_subset(w2),
             _ => false,
         };
 
@@ -414,9 +403,7 @@ mod tests {
     fn test_filesystem_scoped() {
         let cap = FilesystemCapability::Scoped {
             read: vec!["/workspace/read".to_string()].into_iter().collect(),
-            write: vec!["/workspace/write".to_string()]
-                .into_iter()
-                .collect(),
+            write: vec!["/workspace/write".to_string()].into_iter().collect(),
         };
 
         assert!(cap.can_read("/workspace/read/file.txt", "/workspace"));
@@ -437,7 +424,7 @@ mod tests {
     #[test]
     fn test_command_allowlist() {
         let mut cap = CommandCapability::new(vec!["git".to_string()]);
-        
+
         assert!(cap.can_execute("git"));
         assert!(!cap.can_execute("rm"));
 
@@ -519,5 +506,129 @@ mod tests {
         assert!(cap.ui.sidebar);
         assert!(cap.ui.notifications);
         assert!(cap.ui.webview);
+    }
+
+    // ---- Additional tests ----
+
+    #[test]
+    fn test_filesystem_none_denies_both() {
+        let cap = FilesystemCapability::None;
+        assert!(!cap.can_read("/workspace/file.txt", "/workspace"));
+        assert!(!cap.can_write("/workspace/file.txt", "/workspace"));
+    }
+
+    #[test]
+    fn test_network_none_denies_all() {
+        let cap = NetworkCapability::None;
+        assert!(!cap.can_access("example.com"));
+        assert!(!cap.can_access("localhost"));
+    }
+
+    #[test]
+    fn test_network_unrestricted_allows_any() {
+        let cap = NetworkCapability::Unrestricted;
+        assert!(cap.can_access("anything.com"));
+        assert!(cap.can_access("localhost"));
+    }
+
+    #[test]
+    fn test_network_add_domain_on_none_creates_allowlist() {
+        let mut cap = NetworkCapability::None;
+        cap.add_domain("example.com".to_string());
+        assert!(cap.can_access("example.com"));
+        assert!(!cap.can_access("other.com"));
+    }
+
+    #[test]
+    fn test_command_disallow_removes() {
+        let mut cap = CommandCapability::new(vec!["git".to_string(), "cargo".to_string()]);
+        cap.disallow_command("cargo");
+        assert!(cap.can_execute("git"));
+        assert!(!cap.can_execute("cargo"));
+    }
+
+    #[test]
+    fn test_ui_all_has_all_true() {
+        let cap = UiCapability::all();
+        assert!(cap.status_bar);
+        assert!(cap.sidebar);
+        assert!(cap.notifications);
+        assert!(cap.webview);
+    }
+
+    #[test]
+    fn test_ui_none_has_all_false() {
+        let cap = UiCapability::none();
+        assert!(!cap.status_bar);
+        assert!(!cap.sidebar);
+        assert!(!cap.notifications);
+        assert!(!cap.webview);
+    }
+
+    #[test]
+    fn test_ui_basic() {
+        let cap = UiCapability::basic();
+        assert!(cap.status_bar);
+        assert!(!cap.sidebar);
+        assert!(cap.notifications);
+        assert!(!cap.webview);
+    }
+
+    #[test]
+    fn test_scoped_merge_unions_paths() {
+        let cap1 = PluginCapabilities {
+            filesystem: FilesystemCapability::Scoped {
+                read: vec!["/a".to_string()].into_iter().collect(),
+                write: vec!["/b".to_string()].into_iter().collect(),
+            },
+            ..Default::default()
+        };
+        let cap2 = PluginCapabilities {
+            filesystem: FilesystemCapability::Scoped {
+                read: vec!["/c".to_string()].into_iter().collect(),
+                write: vec!["/d".to_string()].into_iter().collect(),
+            },
+            ..Default::default()
+        };
+        let merged = cap1.merge(&cap2);
+        if let FilesystemCapability::Scoped { read, write } = &merged.filesystem {
+            assert!(read.contains("/a"));
+            assert!(read.contains("/c"));
+            assert!(write.contains("/b"));
+            assert!(write.contains("/d"));
+        } else {
+            panic!("Expected Scoped filesystem capability");
+        }
+    }
+
+    #[test]
+    fn test_network_domain_allowlist_merge_unions() {
+        let cap1 = PluginCapabilities {
+            network: NetworkCapability::DomainAllowlist(
+                vec!["a.com".to_string()].into_iter().collect(),
+            ),
+            ..Default::default()
+        };
+        let cap2 = PluginCapabilities {
+            network: NetworkCapability::DomainAllowlist(
+                vec!["b.com".to_string()].into_iter().collect(),
+            ),
+            ..Default::default()
+        };
+        let merged = cap1.merge(&cap2);
+        if let NetworkCapability::DomainAllowlist(domains) = &merged.network {
+            assert!(domains.contains("a.com"));
+            assert!(domains.contains("b.com"));
+        } else {
+            panic!("Expected DomainAllowlist");
+        }
+    }
+
+    #[test]
+    fn test_none_is_subset_of_everything() {
+        let none = PluginCapabilities::none();
+        assert!(none.is_subset_of(&PluginCapabilities::workspace_read()));
+        assert!(none.is_subset_of(&PluginCapabilities::workspace_read_write()));
+        assert!(none.is_subset_of(&PluginCapabilities::first_party()));
     }
 }
