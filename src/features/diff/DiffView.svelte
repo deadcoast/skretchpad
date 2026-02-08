@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { createDiffEditor } from '../../lib/editor-loader';
+  import { icons } from '../../lib/icons/index';
 
   export let original: string;
   export let modified: string;
@@ -38,8 +39,8 @@
       <span class="diff-label diff-label--original">{originalLabel}</span>
       <span class="diff-label diff-label--modified">{modifiedLabel}</span>
     </div>
-    <button class="diff-close" on:click={() => dispatch('close')} title="Close diff view">
-      &times;
+    <button class="diff-close" on:click={() => dispatch('close')} title="Close diff view" aria-label="Close diff view">
+      {@html icons.close}
     </button>
   </div>
   <div class="diff-container" bind:this={container}></div>
@@ -91,12 +92,18 @@
     background: transparent;
     border: none;
     color: var(--text-secondary, rgba(228, 228, 228, 0.6));
-    font-size: 20px;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 4px;
     border-radius: 4px;
     transition: all 150ms ease;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .diff-close :global(svg) {
+    width: 16px;
+    height: 16px;
   }
 
   .diff-close:hover {

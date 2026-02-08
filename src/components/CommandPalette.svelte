@@ -83,6 +83,7 @@
   </script>
   
   {#if visible}
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <div
       class="command-palette-backdrop"
       role="dialog"
@@ -91,7 +92,8 @@
       on:click={handleBackdropClick}
       on:keydown={handleKeyDown}
     >
-      <div class="command-palette" role="dialog" on:click|stopPropagation>
+      <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
+      <div class="command-palette" role="document" on:click|stopPropagation>
         <input
           bind:this={inputElement}
           bind:value={searchQuery}
@@ -100,19 +102,21 @@
           on:keydown={handleKeyDown}
         />
   
-        <div class="command-palette__results">
+        <div class="command-palette__results" role="listbox" aria-label="Commands">
           {#if filteredCommands.length === 0}
             <div class="command-palette__empty">No commands found</div>
           {:else}
             {#each Object.entries(groupedCommands) as [category, commands] (category)}
-              <div class="command-category">
+              <div class="command-category" role="group" aria-label={category}>
                 <div class="command-category__title">{category}</div>
-  
+
                 {#each commands as command (command.id)}
                   {@const globalIndex = filteredCommands.indexOf(command)}
                   <button
                     class="command-item"
                     class:command-item--selected={globalIndex === selectedIndex}
+                    role="option"
+                    aria-selected={globalIndex === selectedIndex}
                     on:click={() => executeCommand(command.id)}
                   >
                     <div class="command-item__content">

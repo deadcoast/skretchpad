@@ -3,6 +3,7 @@
 <script lang="ts">
   import { pluginsStore, sortedStatusBarItems } from '$lib/stores/plugins';
   import { editorStore, activeFile } from '$lib/stores/editor';
+  import { icons } from '../lib/icons/index';
 
   // Local component state
   let showPluginMenu = false;
@@ -33,13 +34,13 @@
   }
 </script>
 
-<div class="status-bar">
+<div class="status-bar" role="status">
   <!-- Left section -->
   <div class="status-bar__left">
     <!-- File info -->
     {#if fileInfo}
       <div class="status-item">
-        <span class="status-item__icon">📄</span>
+        <span class="status-item__icon">{@html icons.file}</span>
         <span class="status-item__text">{fileInfo.name}</span>
         {#if fileInfo.isDirty}
           <span class="status-item__indicator">●</span>
@@ -99,16 +100,18 @@
     <!-- Plugin indicator -->
     <button
       class="status-item status-item--clickable"
+      aria-label="Plugins"
       title="Plugins"
       on:click={togglePluginMenu}
     >
-      <span class="status-item__icon">🔌</span>
+      <span class="status-item__icon">{@html icons.plugin}</span>
       <span class="status-item__text">{$pluginsStore.plugins.size}</span>
     </button>
   </div>
 </div>
 
 {#if showPluginMenu}
+  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <div
     class="plugin-menu"
     role="dialog"
@@ -117,7 +120,8 @@
     on:click={() => (showPluginMenu = false)}
     on:keydown={handlePluginMenuKeydown}
   >
-    <div class="plugin-menu__content" on:click|stopPropagation>
+    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
+    <div class="plugin-menu__content" role="document" on:click|stopPropagation>
       <h3 class="plugin-menu__title">Plugins</h3>
       
       <div class="plugin-list">
@@ -211,7 +215,13 @@
   }
 
   .status-item__icon {
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+  }
+
+  .status-item__icon :global(svg) {
+    width: 14px;
+    height: 14px;
   }
 
   .status-item__text {

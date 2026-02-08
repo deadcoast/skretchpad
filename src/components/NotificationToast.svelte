@@ -1,27 +1,29 @@
 <script lang="ts">
   import { fly, fade } from 'svelte/transition';
   import { notifications } from '../lib/stores/notifications';
+  import { icons } from '../lib/icons/index';
 
   $: items = $notifications;
 </script>
 
 {#if items.length > 0}
-  <div class="notification-container">
+  <div class="notification-container" role="status" aria-live="polite">
     {#each items as notification (notification.id)}
       <div
         class="notification notification-{notification.type}"
+        role="alert"
         in:fly={{ y: 20, duration: 200 }}
         out:fade={{ duration: 150 }}
       >
         <span class="notification-icon">
           {#if notification.type === 'success'}
-            &#10003;
+            {@html icons.checkmark}
           {:else if notification.type === 'error'}
-            &#10007;
+            {@html icons.xmark}
           {:else if notification.type === 'warning'}
-            &#9888;
+            {@html icons.warning}
           {:else}
-            &#8505;
+            {@html icons.info}
           {/if}
         </span>
         <span class="notification-message">{notification.message}</span>
@@ -39,9 +41,9 @@
         <button
           class="notification-dismiss"
           on:click={() => notifications.dismiss(notification.id)}
-          aria-label="Dismiss"
+          aria-label="Dismiss notification"
         >
-          &#10005;
+          {@html icons.close}
         </button>
       </div>
     {/each}
@@ -97,7 +99,13 @@
 
   .notification-icon {
     flex-shrink: 0;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+  }
+
+  .notification-icon :global(svg) {
+    width: 14px;
+    height: 14px;
   }
 
   .notification-message {
@@ -126,9 +134,14 @@
     border: none;
     color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
-    padding: 2px 4px;
-    font-size: 12px;
-    line-height: 1;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+  }
+
+  .notification-dismiss :global(svg) {
+    width: 12px;
+    height: 12px;
   }
 
   .notification-dismiss:hover {

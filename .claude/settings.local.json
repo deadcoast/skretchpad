@@ -18,7 +18,10 @@
       "Bash(cargo test:*)",
       "Bash(powershell -Command \"\\(Get-Content setup.ps1 -Raw\\) -replace ''Project: Skretchpad v0\\\\.0\\\\.3'', ''Project: Skretchpad v0.0.6'' | Set-Content setup.ps1 -NoNewline\")",
       "Bash(powershell:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(if not exist \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\src\\\\lib\\\\icons\" mkdir \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\src\\\\lib\\\\icons\")",
+      "Bash(ls \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\plugins\\\\git\\\\components\"\" 2>/dev/null || echo \"Directory empty or gone \")",
+      "Bash(cargo tauri dev:*)"
     ],
     "deny": [],
     "ask": []

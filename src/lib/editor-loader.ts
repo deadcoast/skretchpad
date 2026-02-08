@@ -407,7 +407,9 @@ export async function createEditor(
 
     // UI elements
     foldGutter(),
-    EditorView.lineWrapping,
+    wordWrapCompartment.of(EditorView.lineWrapping),
+    lineNumbersCompartment.of(lineNumbers()),
+    tabSizeCompartment.of(indentUnit.of('  ')),
 
     // Syntax highlighting
     syntaxHighlighting(defaultHighlightStyle),
@@ -726,6 +728,36 @@ export function focus(view: EditorView): void {
 
 export function blur(view: EditorView): void {
   (view.contentDOM as HTMLElement).blur();
+}
+
+// ============================================================================
+// SETTINGS INTEGRATION (word wrap, line numbers, tab size, font size)
+// ============================================================================
+
+const wordWrapCompartment = new Compartment();
+const lineNumbersCompartment = new Compartment();
+const tabSizeCompartment = new Compartment();
+
+export function setWordWrap(view: EditorView, enabled: boolean): void {
+  view.dispatch({
+    effects: wordWrapCompartment.reconfigure(enabled ? EditorView.lineWrapping : []),
+  });
+}
+
+export function setLineNumbers(view: EditorView, enabled: boolean): void {
+  view.dispatch({
+    effects: lineNumbersCompartment.reconfigure(enabled ? lineNumbers() : []),
+  });
+}
+
+export function setTabSize(view: EditorView, size: number): void {
+  view.dispatch({
+    effects: tabSizeCompartment.reconfigure(indentUnit.of(' '.repeat(size))),
+  });
+}
+
+export function setFontSize(size: number): void {
+  document.documentElement.style.setProperty('--editor-font-size', `${size}px`);
 }
 
 // ============================================================================

@@ -3,20 +3,22 @@
   import { createEventDispatcher } from 'svelte';
   import { themeStore } from '../lib/stores/theme';
   import { keybindingStore } from '../lib/stores/keybindings';
+  import { settingsStore } from '../lib/stores/settings';
+  import { icons } from '../lib/icons/index';
 
   export let visible: boolean = false;
 
   const dispatch = createEventDispatcher<{ close: void }>();
 
-  // Editor settings with defaults
-  let fontSize: number = 14;
-  let fontFamily: string = "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace";
-  let tabSize: number = 2;
-  let wordWrap: boolean = false;
-  let lineNumbers: boolean = true;
-  let minimap: boolean = false;
-  let autoSave: boolean = true;
-  let autoSaveDelay: number = 1000;
+  // Bind to settings store
+  $: fontSize = $settingsStore.appearance.fontSize;
+  $: fontFamily = $settingsStore.appearance.fontFamily;
+  $: tabSize = $settingsStore.editor.tabSize;
+  $: wordWrap = $settingsStore.editor.wordWrap;
+  $: lineNumbers = $settingsStore.editor.lineNumbers;
+  $: minimap = $settingsStore.editor.minimap;
+  $: autoSave = $settingsStore.files.autoSave;
+  $: autoSaveDelay = $settingsStore.files.autoSaveDelay;
 
   // Apply editor CSS settings reactively
   $: if (visible) {
@@ -30,9 +32,46 @@
     root.style.setProperty('--editor-tab-size', `${tabSize}`);
   }
 
+  function handleFontSizeChange(e: Event) {
+    const val = Number((e.target as HTMLSelectElement).value);
+    settingsStore.update('appearance', { fontSize: val });
+  }
+
+  function handleFontFamilyChange(e: Event) {
+    const val = (e.target as HTMLSelectElement).value;
+    settingsStore.update('appearance', { fontFamily: val });
+  }
+
+  function handleTabSizeChange(e: Event) {
+    const val = Number((e.target as HTMLSelectElement).value);
+    settingsStore.update('editor', { tabSize: val });
+  }
+
+  function handleWordWrapChange() {
+    settingsStore.update('editor', { wordWrap: !wordWrap });
+  }
+
+  function handleLineNumbersChange() {
+    settingsStore.update('editor', { lineNumbers: !lineNumbers });
+  }
+
+  function handleMinimapChange() {
+    settingsStore.update('editor', { minimap: !minimap });
+  }
+
+  function handleAutoSaveChange() {
+    settingsStore.update('files', { autoSave: !autoSave });
+  }
+
+  function handleAutoSaveDelayChange(e: Event) {
+    const val = Number((e.target as HTMLSelectElement).value);
+    settingsStore.update('files', { autoSaveDelay: val });
+  }
+
   function handleThemeChange(e: Event) {
     const select = e.target as HTMLSelectElement;
     const name = select.value;
+    settingsStore.update('appearance', { theme: name });
     if (name === 'glass-dark') {
       themeStore.resetToDefault();
     } else {
@@ -43,6 +82,7 @@
   function handleKeybindingChange(e: Event) {
     const select = e.target as HTMLSelectElement;
     const name = select.value;
+    settingsStore.update('keybindings', { scheme: name });
     const scheme = $keybindingStore.available.find(s => s.name === name);
     if (scheme) {
       keybindingStore.setScheme(scheme);
@@ -75,13 +115,13 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if visible}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="settings-backdrop" on:click={handleClose} role="dialog" aria-label="Settings">
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="settings-panel" on:click|stopPropagation role="document">
+  <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+  <div class="settings-backdrop" on:click={handleClose} on:keydown={handleKeydown} role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
+    <div class="settings-panel" on:click|stopPropagation on:keydown|stopPropagation role="document">
       <div class="settings-header">
-        <h2>Settings</h2>
-        <button class="settings-close" on:click={handleClose} title="Close">&times;</button>
+        <h2 id="settings-title">Settings</h2>
+        <button class="settings-close" on:click={handleClose} title="Close" aria-label="Close settings">{@html icons.close}</button>
       </div>
 
       <div class="settings-body">
@@ -108,7 +148,7 @@
 
           <div class="setting-row">
             <label for="font-size">Font Size</label>
-            <select id="font-size" bind:value={fontSize} on:change={applyEditorSettings}>
+            <select id="font-size" value={fontSize} on:change={handleFontSizeChange}>
               {#each fontSizes as size}
                 <option value={size}>{size}px</option>
               {/each}
@@ -117,7 +157,7 @@
 
           <div class="setting-row">
             <label for="font-family">Font Family</label>
-            <select id="font-family" bind:value={fontFamily} on:change={applyEditorSettings}>
+            <select id="font-family" value={fontFamily} on:change={handleFontFamilyChange}>
               {#each fontFamilies as font}
                 <option value={font.value}>{font.label}</option>
               {/each}
@@ -131,7 +171,7 @@
 
           <div class="setting-row">
             <label for="tab-size">Tab Size</label>
-            <select id="tab-size" bind:value={tabSize} on:change={applyEditorSettings}>
+            <select id="tab-size" value={tabSize} on:change={handleTabSizeChange}>
               {#each tabSizes as size}
                 <option value={size}>{size} spaces</option>
               {/each}
@@ -139,25 +179,25 @@
           </div>
 
           <div class="setting-row">
-            <label for="word-wrap">Word Wrap</label>
+            <label for="word-wrap-toggle">Word Wrap</label>
             <label class="toggle">
-              <input type="checkbox" bind:checked={wordWrap} />
+              <input type="checkbox" checked={wordWrap} on:change={handleWordWrapChange} />
               <span class="toggle-slider"></span>
             </label>
           </div>
 
           <div class="setting-row">
-            <label for="line-numbers">Line Numbers</label>
+            <label for="line-numbers-toggle">Line Numbers</label>
             <label class="toggle">
-              <input type="checkbox" bind:checked={lineNumbers} />
+              <input type="checkbox" checked={lineNumbers} on:change={handleLineNumbersChange} />
               <span class="toggle-slider"></span>
             </label>
           </div>
 
           <div class="setting-row">
-            <label for="minimap">Minimap</label>
+            <label for="minimap-toggle">Minimap</label>
             <label class="toggle">
-              <input type="checkbox" bind:checked={minimap} />
+              <input type="checkbox" checked={minimap} on:change={handleMinimapChange} />
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -186,9 +226,9 @@
           <h3 class="section-title">Files</h3>
 
           <div class="setting-row">
-            <label for="auto-save">Auto Save</label>
+            <label for="auto-save-toggle">Auto Save</label>
             <label class="toggle">
-              <input type="checkbox" bind:checked={autoSave} />
+              <input type="checkbox" checked={autoSave} on:change={handleAutoSaveChange} />
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -196,7 +236,7 @@
           {#if autoSave}
             <div class="setting-row">
               <label for="auto-save-delay">Auto Save Delay</label>
-              <select id="auto-save-delay" bind:value={autoSaveDelay}>
+              <select id="auto-save-delay" value={autoSaveDelay} on:change={handleAutoSaveDelayChange}>
                 <option value={500}>500ms</option>
                 <option value={1000}>1 second</option>
                 <option value={2000}>2 seconds</option>
@@ -270,12 +310,18 @@
     background: transparent;
     border: none;
     color: var(--text-secondary, rgba(228, 228, 228, 0.6));
-    font-size: 22px;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 4px;
     border-radius: 4px;
     transition: all 150ms ease;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .settings-close :global(svg) {
+    width: 16px;
+    height: 16px;
   }
 
   .settings-close:hover {

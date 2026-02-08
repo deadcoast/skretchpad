@@ -3,6 +3,7 @@
 <script lang="ts">
     import { pluginsStore, visiblePanels } from '$lib/stores/plugins';
     import { onMount } from 'svelte';
+    import { icons } from '../lib/icons/index';
   
     export let visible = true;
   
@@ -64,7 +65,7 @@
                 on:click={() => closePanel(panel.id)}
                 aria-label="Close panel"
               >
-                ×
+                {@html icons.close}
               </button>
             </div>
   
@@ -162,10 +163,8 @@
       background: transparent;
       border: none;
       color: inherit;
-      font-size: 24px;
-      line-height: 1;
       cursor: pointer;
-      padding: 0;
+      padding: 4px;
       width: 24px;
       height: 24px;
       display: flex;
@@ -173,6 +172,11 @@
       justify-content: center;
       border-radius: 4px;
       transition: background var(--transition-hover, 100ms);
+    }
+
+    .sidebar__panel-close :global(svg) {
+      width: 14px;
+      height: 14px;
     }
   
     .sidebar__panel-close:hover {

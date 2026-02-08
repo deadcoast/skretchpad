@@ -2,22 +2,34 @@
   import Editor from './components/Editor.svelte';
   import Chrome from './components/Chrome.svelte';
   import StatusBar from './components/StatusBar.svelte';
+  import SideBar from './components/SideBar.svelte';
   import NotificationToast from './components/NotificationToast.svelte';
   import CommandPalette from './components/CommandPalette.svelte';
   import SettingsPanel from './components/SettingsPanel.svelte';
   import PluginPermissionDialog from './components/PluginPermissionDialog.svelte';
+  import DiffView from './features/diff/DiffView.svelte';
   import { onMount } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
   import { pluginsStore } from './lib/stores/plugins';
   import { keybindingStore } from './lib/stores/keybindings';
   import { editorStore, activeFile } from './lib/stores/editor';
+  import { settingsStore, type AppSettings } from './lib/stores/settings';
   import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
+
   let chromeVisible = true;
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
   let settingsVisible = false;
+  let sidebarVisible = false;
   let editorRef: Editor;
+
+  // Diff view state
+  let diffViewVisible = false;
+  let diffOriginal = '';
+  let diffModified = '';
+  let diffOriginalLabel = 'Original';
+  let diffModifiedLabel = 'Modified';
 
   // Reactive current file from editor store (used for window title updates)
   $: currentFile = $activeFile?.path || '';
@@ -29,6 +41,9 @@
 
   onMount(async () => {
     try {
+      // Load persisted settings
+      await settingsStore.load();
+
       // Initialize stores
       await initializeApp();
     } catch (error) {
@@ -72,8 +87,10 @@
       { id: 'file.saveAs', label: 'Save As...', keybinding: 'Ctrl+Shift+S', category: 'File' },
       { id: 'file.close', label: 'Close File', keybinding: 'Ctrl+W', category: 'File' },
       { id: 'view.commandPalette', label: 'Command Palette', keybinding: 'Ctrl+Shift+P', category: 'View' },
-      { id: 'view.toggleChrome', label: 'Toggle Title Bar', category: 'View' },
+      { id: 'view.toggleChrome', label: 'Toggle Title Bar', keybinding: 'Ctrl+Shift+H', category: 'View' },
       { id: 'view.toggleAlwaysOnTop', label: 'Toggle Always on Top', category: 'View' },
+      { id: 'view.toggleSidebar', label: 'Toggle Sidebar', keybinding: 'Ctrl+B', category: 'View' },
+      { id: 'view.openDiffView', label: 'Open Diff View', category: 'View' },
       { id: 'view.openSettings', label: 'Open Settings', keybinding: 'Ctrl+,', category: 'View' },
     ];
 
@@ -103,7 +120,6 @@
       case 'file.close': {
         const state = editorStore.getActiveFile();
         if (state) {
-          // Close via editor component
           editorRef?.close();
         }
         break;
@@ -111,6 +127,8 @@
       case 'view.commandPalette': commandPaletteVisible = true; break;
       case 'view.toggleChrome': toggleChrome(); break;
       case 'view.toggleAlwaysOnTop': toggleAlwaysOnTop(); break;
+      case 'view.toggleSidebar': sidebarVisible = !sidebarVisible; break;
+      case 'view.openDiffView': openDiffView(); break;
       case 'view.openSettings': settingsVisible = true; break;
       default:
         console.log('Unhandled command:', commandId);
@@ -132,6 +150,33 @@
     }
   }
 
+  async function openDiffView() {
+    try {
+      const file1 = await showOpenDialog({
+        title: 'Select Original File',
+        multiple: false,
+        filters: [{ name: 'All Files', extensions: ['*'] }],
+      });
+      if (!file1) return;
+
+      const file2 = await showOpenDialog({
+        title: 'Select Modified File',
+        multiple: false,
+        filters: [{ name: 'All Files', extensions: ['*'] }],
+      });
+      if (!file2) return;
+
+      const { invoke } = await import('@tauri-apps/api/core');
+      diffOriginal = await invoke<string>('read_file', { path: file1 as string });
+      diffModified = await invoke<string>('read_file', { path: file2 as string });
+      diffOriginalLabel = (file1 as string).split(/[/\\]/).pop() || 'Original';
+      diffModifiedLabel = (file2 as string).split(/[/\\]/).pop() || 'Modified';
+      diffViewVisible = true;
+    } catch (err) {
+      console.error('Failed to open diff view:', err);
+    }
+  }
+
   // Global keyboard shortcuts
   function handleKeydown(e: KeyboardEvent) {
     const mod = e.ctrlKey || e.metaKey;
@@ -139,6 +184,16 @@
     if (mod && e.shiftKey && e.key === 'P') {
       e.preventDefault();
       commandPaletteVisible = !commandPaletteVisible;
+      return;
+    }
+    if (mod && e.shiftKey && (e.key === 'H' || e.key === 'h')) {
+      e.preventDefault();
+      toggleChrome();
+      return;
+    }
+    if (mod && e.key === 'b') {
+      e.preventDefault();
+      sidebarVisible = !sidebarVisible;
       return;
     }
     if (mod && e.key === 'o') {
@@ -191,16 +246,29 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="app glass-window">
-  {#if chromeVisible}
-    <Chrome
-      {alwaysOnTop}
-      onToggleChrome={toggleChrome}
-      onTogglePin={toggleAlwaysOnTop}
-    />
-  {/if}
+  <Chrome
+    {alwaysOnTop}
+    visible={chromeVisible}
+    onToggleChrome={toggleChrome}
+    onTogglePin={toggleAlwaysOnTop}
+  />
 
-  <div class="editor-container">
-    <Editor bind:this={editorRef} />
+  <div class="main-content">
+    <SideBar visible={sidebarVisible} />
+
+    <div class="editor-container">
+      {#if diffViewVisible}
+        <DiffView
+          original={diffOriginal}
+          modified={diffModified}
+          originalLabel={diffOriginalLabel}
+          modifiedLabel={diffModifiedLabel}
+          on:close={() => diffViewVisible = false}
+        />
+      {:else}
+        <Editor bind:this={editorRef} />
+      {/if}
+    </div>
   </div>
 
   <StatusBar />
@@ -234,26 +302,33 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
   }
-  
+
   .glass-window {
     background: var(--window-bg);
     backdrop-filter: blur(var(--window-blur));
   }
-  
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
   .editor-container {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0;
   }
-  
+
   :global(body) {
     margin: 0;
     padding: 0;
     background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  
+
   :global(html) {
     background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
   }

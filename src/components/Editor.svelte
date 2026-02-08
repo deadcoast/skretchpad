@@ -28,6 +28,7 @@
     } from '@codemirror/search';
     import { debounce } from '../lib/utils/debounce';
     import { createEditor, destroyEditor, setLanguage, updateTheme } from '../lib/editor-loader';
+    import { icons } from '../lib/icons/index';
     import { themeStore, type Theme } from '../lib/stores/theme';
     import { pluginsStore } from '../lib/stores/plugins';
     import { keybindingStore } from '../lib/stores/keybindings';
@@ -830,9 +831,9 @@
   <div class="editor-wrapper" class:loading={isLoading}>
     {#if error}
       <div class="error-banner">
-        <span class="error-icon">⚠️</span>
+        <span class="error-icon">{@html icons.warning}</span>
         <span class="error-message">{error}</span>
-        <button class="error-dismiss" on:click={() => error = null}>×</button>
+        <button class="error-dismiss" on:click={() => error = null} aria-label="Dismiss error">{@html icons.close}</button>
       </div>
     {/if}
   
@@ -912,7 +913,13 @@
     }
   
     .error-icon {
-      font-size: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .error-icon :global(svg) {
+      width: 18px;
+      height: 18px;
     }
   
     .error-message {
@@ -924,16 +931,18 @@
       background: transparent;
       border: none;
       color: white;
-      font-size: 24px;
       cursor: pointer;
-      padding: 0;
-      width: 24px;
-      height: 24px;
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 4px;
       transition: background 150ms ease;
+    }
+
+    .error-dismiss :global(svg) {
+      width: 16px;
+      height: 16px;
     }
   
     .error-dismiss:hover {

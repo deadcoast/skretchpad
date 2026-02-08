@@ -2,7 +2,7 @@
 
 use crate::plugin_system::{
     capabilities::{
-        CommandCapability, FilesystemCapability, NetworkCapability, PluginCapabilities,
+        FilesystemCapability, NetworkCapability, PluginCapabilities,
     },
     manager::PluginManager,
     sandbox::SandboxRegistry,
@@ -1261,6 +1261,7 @@ pub async fn clear_audit_logs(audit: State<'_, Arc<AuditLogger>>) -> Result<(), 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::plugin_system::capabilities::CommandCapability;
 
     #[test]
     fn test_validate_fs_read() {

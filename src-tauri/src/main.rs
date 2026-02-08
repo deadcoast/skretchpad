@@ -5,6 +5,7 @@
 
 #[allow(dead_code)]
 mod plugin_system;
+mod theme_engine;
 
 use plugin_system::{
     api::{
@@ -308,6 +309,9 @@ fn main() {
             // Audit logs
             get_audit_logs,
             clear_audit_logs,
+            // Theme engine
+            theme_engine::load_theme,
+            theme_engine::apply_theme,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

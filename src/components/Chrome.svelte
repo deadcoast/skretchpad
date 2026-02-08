@@ -1,7 +1,41 @@
 <script lang="ts">
+  import { icons } from '../lib/icons/index';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
+
   export let alwaysOnTop = false;
+  export let visible = true;
   export let onToggleChrome: () => void;
   export let onTogglePin: () => void;
+
+  let isMaximized = false;
+
+  // Check initial maximized state
+  getCurrentWindow().isMaximized().then(v => isMaximized = v).catch(() => {});
+
+  async function handleMinimize() {
+    try {
+      await getCurrentWindow().minimize();
+    } catch (e) {
+      console.error('Failed to minimize:', e);
+    }
+  }
+
+  async function handleMaximize() {
+    try {
+      await getCurrentWindow().toggleMaximize();
+      isMaximized = await getCurrentWindow().isMaximized();
+    } catch (e) {
+      console.error('Failed to toggle maximize:', e);
+    }
+  }
+
+  async function handleClose() {
+    try {
+      await getCurrentWindow().close();
+    } catch (e) {
+      console.error('Failed to close:', e);
+    }
+  }
 
   function handleToggleChrome() {
     onToggleChrome();
@@ -12,31 +46,54 @@
   }
 </script>
 
-<div class="chrome">
-  <div class="title-bar">
+<div class="chrome" class:chrome--hidden={!visible}>
+  <div class="title-bar" data-tauri-drag-region>
     <div class="window-controls">
-      <button class="control-button minimize">−</button>
-      <button class="control-button maximize">□</button>
-      <button class="control-button close">×</button>
+      <button
+        class="control-button close"
+        on:click={handleClose}
+        aria-label="Close window"
+        title="Close"
+      >
+        {@html icons.close}
+      </button>
+      <button
+        class="control-button minimize"
+        on:click={handleMinimize}
+        aria-label="Minimize window"
+        title="Minimize"
+      >
+        {@html icons.minimize}
+      </button>
+      <button
+        class="control-button maximize"
+        on:click={handleMaximize}
+        aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
+        title={isMaximized ? 'Restore' : 'Maximize'}
+      >
+        {@html isMaximized ? icons.restore : icons.maximize}
+      </button>
     </div>
-    
+
     <div class="title">skretchpad</div>
-    
+
     <div class="chrome-actions">
-      <button 
-        class="action-button" 
+      <button
+        class="action-button"
         class:pinned={alwaysOnTop}
         on:click={handleTogglePin}
+        aria-label={alwaysOnTop ? 'Unpin from top' : 'Pin to top'}
         title="Toggle Always on Top"
       >
-        📌
+        {@html icons.pin}
       </button>
-      <button 
-        class="action-button" 
+      <button
+        class="action-button"
         on:click={handleToggleChrome}
+        aria-label="Toggle title bar (Ctrl+Shift+H)"
         title="Toggle Chrome (Ctrl+Shift+H)"
       >
-        👁
+        {@html icons.eye}
       </button>
     </div>
   </div>
@@ -51,6 +108,15 @@
     display: flex;
     align-items: center;
     user-select: none;
+    transition: height 200ms ease-out, opacity 200ms ease-out;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .chrome--hidden {
+    height: 0;
+    opacity: 0;
+    border-bottom: none;
   }
 
   .title-bar {
@@ -72,10 +138,21 @@
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    font-size: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
+    color: transparent;
+    transition: color 150ms ease;
+  }
+
+  .control-button :global(svg) {
+    width: 8px;
+    height: 8px;
+  }
+
+  .window-controls:hover .control-button {
+    color: rgba(0, 0, 0, 0.6);
   }
 
   .minimize {
@@ -96,6 +173,7 @@
     font-weight: 500;
     flex: 1;
     text-align: center;
+    pointer-events: none;
   }
 
   .chrome-actions {
@@ -111,6 +189,14 @@
     padding: 4px;
     border-radius: 4px;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-button :global(svg) {
+    width: 14px;
+    height: 14px;
   }
 
   .action-button:hover {

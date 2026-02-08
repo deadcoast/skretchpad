@@ -1,6 +1,7 @@
 <!-- src/components/PluginPermissionDialog.svelte -->
 <script lang="ts">
     import type { PluginStatus } from '$lib/stores/plugins';
+    import { icons } from '../lib/icons/index';
 
     export let plugin: PluginStatus;
     export let onApprove: () => void;
@@ -27,11 +28,11 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="dialog-backdrop">
+<div class="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="permission-dialog-title">
   <div class="permission-dialog">
     <div class="dialog-header">
-      <div class="shield-icon">&#x1F6E1;</div>
-      <h2>Permission Request</h2>
+      <div class="shield-icon">{@html icons.shield}</div>
+      <h2 id="permission-dialog-title">Permission Request</h2>
     </div>
 
     <p class="plugin-name">{plugin.name} <span class="plugin-version">v{plugin.version}</span></p>
@@ -147,7 +148,14 @@
   }
 
   .shield-icon {
-    font-size: 24px;
+    display: flex;
+    align-items: center;
+    color: var(--color-primary, #00d9ff);
+  }
+
+  .shield-icon :global(svg) {
+    width: 24px;
+    height: 24px;
   }
 
   .dialog-header h2 {

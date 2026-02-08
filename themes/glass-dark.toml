@@ -12,7 +12,7 @@ border.width = 1
 border.color = "rgba(255, 255, 255, 0.1)"
 
 [chrome]
-background = "rgba(28, 28, 28, 0.95)"
+background.color = "rgba(28, 28, 28, 0.95)"
 background.blur = 10
 height = 32
 foreground = "rgba(228, 228, 228, 0.9)"
