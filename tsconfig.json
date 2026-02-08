@@ -23,6 +23,6 @@
         "$lib/*": ["./src/lib/*"]
       }
     },
-    "include": ["src/**/*.ts", "src/**/*.svelte", "src/lib/plugin-api.tsx"],
+    "include": ["src/**/*.ts", "src/**/*.svelte"],
     "exclude": ["node_modules", "dist", "src-tauri"]
   }

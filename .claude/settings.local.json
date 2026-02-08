@@ -15,7 +15,10 @@
       "WebFetch(domain:docs.rs)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:choubey.gitbook.io)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "Bash(powershell -Command \"\\(Get-Content setup.ps1 -Raw\\) -replace ''Project: Skretchpad v0\\\\.0\\\\.3'', ''Project: Skretchpad v0.0.6'' | Set-Content setup.ps1 -NoNewline\")",
+      "Bash(powershell:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

@@ -23,8 +23,11 @@ A minimal, modern text editor for developers built with Tauri 2.0, Svelte 4, and
 
 ### Working
 
-- Full Tauri 2.0 + Svelte 4 + CodeMirror 6 application
-- Plugin system backend (sandbox, loader, manager, API, worker threads)
+- Full Tauri 2.0 + Svelte 4 + CodeMirror 6 application compiles, builds, and runs
+- Plugin runtime verified: 2 plugins discovered, loaded, activated end-to-end
+- Plugin API bridge: 9 deno_core ops connect JS plugin calls to Rust operations
+- Plugin entry point loading: manager reads main.js and executes in V8 sandbox
+- Capability validation in ops: filesystem path containment, network domain allowlist, command allowlist, UI permissions
 - 30+ Tauri commands for plugin operations + native file I/O
 - 18+ built-in commands wired through command palette
 - Native file open/save dialogs via `tauri-plugin-dialog`
@@ -35,21 +38,21 @@ A minimal, modern text editor for developers built with Tauri 2.0, Svelte 4, and
 - Notification toast system (store + component)
 - Always-on-top window toggle via Tauri API
 - Theme and keybinding stores with default configurations
-- Plugin capability-based security model (filesystem/network/commands/UI permissions)
-- First-party plugin manifests (git, git-status)
+- 40 automated Rust tests passing (capabilities, loader, trust, API, manager)
 - Build: 0 errors, 0 warnings (both Rust and TypeScript)
 
-### In Progress
+### Known Limitations
 
-- End-to-end plugin runtime testing (code paths verified, needs full Tauri app launch)
-- Plugin deno_core ops (request queue needs Rust op wiring for actual API calls)
+- Editor ops (sync return): `getEditorContent` and `getActiveFile` fire events but can't return data synchronously
+- Async plugin hooks: Plugin hooks must be synchronous; async/await requires event loop pumping
+- ~29 frontend plugin-api.ts invoke calls have no backend handler (legacy bridge, superseded by deno_core ops)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
-- Rust 1.70+
+- Rust 1.80+ (stable, for `LazyLock`)
 - Tauri CLI (`cargo install tauri-cli`)
 
 ### Development
@@ -130,6 +133,7 @@ skretchpad/
         loader.rs                   TOML manifest parser and plugin registry
         capabilities.rs             Permission model (filesystem/network/commands/UI)
         trust.rs                    Trust levels (first-party/local/community)
+        ops.rs                      9 deno_core ops (fs/network/command/UI/editor)
       window_manager.rs           Window controls
       theme_engine.rs             Theme loading
       language_loader.rs          Language definition loading
@@ -139,9 +143,10 @@ skretchpad/
   plugins/                      # Plugin directory
     git/                          Git integration plugin
       plugin.toml                   Plugin manifest
-      main.ts                       Plugin entry point
+      main.js                       Plugin entry point (JavaScript)
     git-status/
       plugin.toml                   Git status plugin manifest
+      main.js                       Plugin entry point (JavaScript)
 
   themes/                       # Theme definitions (TOML)
     glass-dark.toml               Default dark glass theme

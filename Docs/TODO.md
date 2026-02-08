@@ -4,38 +4,13 @@
 
 ## Completed
 
-### v0.0.6 -- End-to-End Plugin Runtime Testing
-
-- [x] Full `cargo build` linking verification (not just check)
-- [x] Fix plugin entry point loading (scripts were never executed in sandbox)
-- [x] Fix TrustLevel serde: `#[serde(rename_all = "kebab-case")]` for TOML compatibility
-- [x] Convert plugin scripts from TypeScript to JavaScript (deno_core has no TS transpiler)
-- [x] Fix plugin command result handling (`result.stdout.trim()` instead of raw object)
-- [x] Make plugin hooks synchronous (async hooks can't resolve without event loop pump)
-- [x] Update manifest default entry point: `main.ts` -> `main.js`
-- [x] Runtime verification: app launches, discovers 2 plugins, loads and activates both
-- [x] Add 40 automated Rust tests (loader: 17, trust: 7, capabilities: 10, api: 3, manager: 3)
-- [x] Add `tempfile` dev-dependency for test fixtures
-- [x] Fix pre-existing `CommandCapability` import in api.rs tests
-
-### v0.0.5 -- Plugin deno_core Ops Bridge
-
-- [x] Create `ops.rs` with 9 deno_core ops (read_file, write_file, list_files, fetch, execute_command, show_notification, set_status_bar, get_editor_content, get_active_file)
-- [x] Register `skretchpad_plugin_ops` extension in worker.rs JsRuntime
-- [x] Inject `PluginOpState` (plugin_id, capabilities, workspace_root, app_handle) into OpState
-- [x] Thread `AppHandle` and `workspace_root` through manager.rs -> sandbox.rs -> worker.rs
-- [x] Update main.rs to compute and pass workspace_root and app_handle to PluginManager
-- [x] Rewrite plugin_api.js to use `Deno.core.ops.op_plugin_*()` instead of request queue
-- [x] Add `blocking` feature to reqwest for synchronous HTTP from worker thread
-- [x] Add `pub mod ops;` to mod.rs
-- [x] Capability validation in all ops (filesystem path containment, network domain allowlist, command allowlist, UI permissions)
-- [x] Build verification: cargo check (0 errors/warnings), npm run build (105 modules)
-
 ## Remaining Work
 
 ### HIGH Priority
 
-(none)
+- [ ] **Editor ops (sync return)**: `getEditorContent` and `getActiveFile` fire events but can't return data synchronously (needs async op support or channel-based pattern)
+- [ ] **Async plugin hooks**: Plugin hooks must be synchronous; `async/await` in hooks requires event loop pumping which is not yet implemented
+- [ ] **~29 frontend plugin-api.ts invoke calls** have no backend handler (legacy bridge, superseded by deno_core ops for sandbox plugins)
 
 ### MEDIUM Priority
 

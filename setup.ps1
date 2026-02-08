@@ -8,7 +8,7 @@
     environment for the Skretchpad editor.
 .NOTES
     Version: 1.0.0
-    Project: Skretchpad v0.0.3
+    Project: Skretchpad v0.0.6
     Stack:   Tauri 2.0 + Svelte 4 + CodeMirror 6 + Rust + TypeScript
 #>
 
@@ -71,7 +71,10 @@ $Script:RequiredNpmPackages = @(
     "@codemirror/search",
     "@codemirror/state",
     "@codemirror/view",
+    "@codemirror/legacy-modes",
+    "@codemirror/merge",
     "@tauri-apps/api",
+    "@tauri-apps/plugin-dialog",
     "@tauri-apps/plugin-fs",
     "nanostores"
 )
@@ -79,21 +82,27 @@ $Script:RequiredNpmPackages = @(
 $Script:RequiredDevPackages = @(
     "@sveltejs/vite-plugin-svelte",
     "@tauri-apps/cli",
+    "@tsconfig/svelte",
+    "@types/node",
+    "@typescript-eslint/eslint-plugin",
+    "@typescript-eslint/parser",
+    "autoprefixer",
+    "eslint",
+    "eslint-plugin-svelte",
+    "postcss",
+    "prettier",
+    "prettier-plugin-svelte",
     "svelte",
     "svelte-check",
-    "typescript",
-    "vite",
-    "eslint",
-    "prettier",
     "tailwindcss",
-    "autoprefixer",
-    "postcss"
+    "tslib",
+    "typescript",
+    "vite"
 )
 
 $Script:RequiredFiles = @(
     @{ Path = "package.json";                     Label = "npm manifest" },
     @{ Path = "tsconfig.json";                    Label = "TypeScript config" },
-    @{ Path = "tsconfig.node.json";               Label = "TypeScript Node config" },
     @{ Path = "svelte.config.js";                 Label = "Svelte config" },
     @{ Path = "vite.config.ts";                   Label = "Vite config" },
     @{ Path = ".eslintrc.cjs";                    Label = "ESLint config" },
@@ -102,6 +111,7 @@ $Script:RequiredFiles = @(
     @{ Path = "src-tauri\tauri.conf.json";        Label = "Tauri config" },
     @{ Path = "src-tauri\build.rs";               Label = "Rust build script" },
     @{ Path = "src-tauri\src\main.rs";            Label = "Rust entry point" },
+    @{ Path = "rust-toolchain.toml";                Label = "Rust toolchain config" },
     @{ Path = "src\main.ts";                      Label = "Frontend entry point" },
     @{ Path = "src\App.svelte";                   Label = "Root Svelte component" }
 )
@@ -116,6 +126,7 @@ $Script:RequiredSourceFiles = @(
     @{ Path = "src-tauri\src\plugin_system\manager.rs";      Label = "Plugin manager" },
     @{ Path = "src-tauri\src\plugin_system\api.rs";          Label = "Plugin API (25+ cmds)" },
     @{ Path = "src-tauri\src\plugin_system\trust.rs";        Label = "Trust levels" },
+    @{ Path = "src-tauri\src\plugin_system\ops.rs";          Label = "deno_core ops (9 ops)" },
     @{ Path = "src-tauri\src\window_manager.rs";             Label = "Window manager" },
     @{ Path = "src-tauri\src\theme_engine.rs";               Label = "Theme engine" },
     @{ Path = "src-tauri\src\language_loader.rs";            Label = "Language loader" },
@@ -127,6 +138,8 @@ $Script:RequiredSourceFiles = @(
     @{ Path = "src\components\NotificationToast.svelte";     Label = "Notification toasts" },
     @{ Path = "src\components\SideBar.svelte";               Label = "Sidebar component" },
     @{ Path = "src\components\PluginPermissionDialog.svelte";Label = "Permission dialog" },
+    @{ Path = "src\components\SettingsPanel.svelte";         Label = "Settings panel" },
+    @{ Path = "src\features\diff\DiffView.svelte";           Label = "Diff viewer" },
     # Frontend libraries
     @{ Path = "src\lib\editor-loader.ts";                    Label = "Editor loader" },
     @{ Path = "src\lib\plugin-api.ts";                       Label = "Plugin API bridge" },
@@ -145,8 +158,9 @@ $Script:RequiredSourceFiles = @(
     @{ Path = "languages\markdown.lang.json";                Label = "Markdown language def" },
     # Plugins
     @{ Path = "plugins\git\plugin.toml";                     Label = "Git plugin manifest" },
-    @{ Path = "plugins\git\main.ts";                         Label = "Git plugin entry" },
-    @{ Path = "plugins\git-status\plugin.toml";              Label = "Git-status manifest" }
+    @{ Path = "plugins\git\main.js";                         Label = "Git plugin entry" },
+    @{ Path = "plugins\git-status\plugin.toml";              Label = "Git-status manifest" },
+    @{ Path = "plugins\git-status\main.js";                  Label = "Git-status entry" }
 )
 
 # ============================================================================
@@ -179,12 +193,9 @@ function Write-Banner {
 
     # ASCII art banner (pure ASCII, no unicode)
     $art = @(
-        " ____  _              _       _                     _ ",
-        "/ ___|| | ___ __ ___| |_ ___| |__  _ __   __ _  __| |",
-        "\___ \| |/ / '__/ _ \ __/ __| '_ \| '_ \ / _`` |/ _`` |",
-        " ___) |   <| | |  __/ || (__| | | | |_) | (_| | (_| |",
-        "|____/|_|\_\_|  \___|\__\___|_| |_| .__/ \__,_|\__,_|",
-        "                                  |_|                 "
+        "▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄",  
+       "███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██", 
+       "▄▄██▀ ██ ██ ██ ██ ██▄▄▄   ██  ▀████ ██ ██ ██    ██▀██ ████▀"                                                            
     )
     foreach ($line in $art) {
         Write-Host (Pad $line) -ForegroundColor Cyan
@@ -192,7 +203,7 @@ function Write-Banner {
 
     Write-Host (Pad "") -ForegroundColor DarkCyan
     Write-Host (Pad "Development Environment Setup") -ForegroundColor White
-    Write-Host (Pad "v0.0.3  |  Tauri 2.0 + Svelte 4 + CodeMirror 6") -ForegroundColor DarkGray
+    Write-Host (Pad "v0.0.6  |  Tauri 2.0 + Svelte 4 + CodeMirror 6") -ForegroundColor DarkGray
     Write-Host (Pad "") -ForegroundColor DarkCyan
     Write-Host "  $($Script:CH_DBL)$border$($Script:CH_DBR)" -ForegroundColor DarkCyan
     Write-Host ""
@@ -338,7 +349,7 @@ if ($Help) {
     Write-Host "     3. Project file integrity check" -ForegroundColor Gray
     Write-Host "     4. Source file completeness audit" -ForegroundColor Gray
     Write-Host "     5. npm dependency installation" -ForegroundColor Gray
-    Write-Host "     6. npm package verification (all 29 packages)" -ForegroundColor Gray
+    Write-Host "     6. npm package verification (all packages)" -ForegroundColor Gray
     Write-Host "     7. Rust dependency check (cargo check)" -ForegroundColor Gray
     Write-Host "     8. Frontend build verification (vite build)" -ForegroundColor Gray
     Write-Host "     9. Asset and plugin verification" -ForegroundColor Gray
@@ -969,7 +980,7 @@ if (Test-Path $pluginsDir) {
     $pluginDirs = Get-ChildItem -Path $pluginsDir -Directory -ErrorAction SilentlyContinue
     foreach ($plugDir in $pluginDirs) {
         $manifest = Join-Path $plugDir.FullName "plugin.toml"
-        $entry    = Join-Path $plugDir.FullName "main.ts"
+        $entry    = Join-Path $plugDir.FullName "main.js"
 
         if (Test-Path $manifest) {
             $manifestContent = Get-Content $manifest -Raw -ErrorAction SilentlyContinue

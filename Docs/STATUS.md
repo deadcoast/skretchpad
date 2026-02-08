@@ -67,8 +67,8 @@
 
 | Component           | Status          | Description                                                      |
 |---------------------|-----------------|------------------------------------------------------------------|
-| `plugin_api.js`     | Operational     | JS API injected into sandbox, calls `Deno.core.ops.op_plugin_*` |
-| `ops.rs`            | Operational     | 9 Rust ops: fs(3), network(1), command(1), UI(2), editor(2)     |
+| `plugin_api.js`     | Operational     | JS API injected into sandbox, calls `Deno.core.ops.op_plugin_*`  |
+| `ops.rs`            | Operational     | 9 Rust ops: fs(3), network(1), command(1), UI(2), editor(2)      |
 | Extension           | Operational     | `skretchpad_plugin_ops` deno_core extension registered in worker |
 | State injection     | Operational     | `PluginOpState` with capabilities, workspace_root, app_handle    |
 | Entry point loading | Operational     | manager.activate() reads and executes plugin main.js in sandbox  |
@@ -157,7 +157,7 @@
 | Version | Date       | Summary                                                                             |
 |---------|------------|-------------------------------------------------------------------------------------|
 | 0.0.6   | 2026-02-07 | E2E runtime testing, plugin loading fixes, 40 automated tests, trust serde fix      |
-| 0.0.5   | 2026-02-07 | deno_core ops bridge (9 ops), plugin API calls execute real Rust operations          |
+| 0.0.5   | 2026-02-07 | deno_core ops bridge (9 ops), plugin API calls execute real Rust operations         |
 | 0.0.4   | 2026-02-07 | Native file I/O, dialogs, DiffView, settings UI, permission dialog, watcher cleanup |
 | 0.0.3   | 2026-02-07 | Compilation fixes, editor commands, command palette, notifications                  |
 | 0.0.2   | 2025-10-25 | Plugin system architecture (backend + frontend stores)                              |
