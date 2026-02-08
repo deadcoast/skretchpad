@@ -190,7 +190,18 @@ function Write-Banner {
         if ($space -lt 0) { $space = 0 }
         $left  = [Math]::Floor($space / 2)
         $right = $space - $left
-        return "$($Script:CH_DV) " + (" " * $left) + $text + (" " * $right) + " $($Script:CH_DV)"
+        return "  $($Script:CH_DV) " + (" " * $left) + $text + (" " * $right) + " $($Script:CH_DV)"
+    }
+
+    # Left-align a block of text as a group, centered within the box
+    function PadBlock([string]$text, [int]$blockWidth) {
+        $inner = $w - 4
+        $space = $inner - $blockWidth
+        if ($space -lt 0) { $space = 0 }
+        $left  = [Math]::Floor($space / 2)
+        $trail = $inner - $left - $text.Length
+        if ($trail -lt 0) { $trail = 0 }
+        return "  $($Script:CH_DV) " + (" " * $left) + $text + (" " * $trail) + " $($Script:CH_DV)"
     }
 
     Write-Host ""
@@ -199,13 +210,19 @@ function Write-Banner {
     Write-Host (Pad "") -ForegroundColor DarkCyan
 
     $artLines = @(
-        "▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄",
+        " ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄",
         "███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██",
         "▄▄██▀ ██ ██ ██ ██ ██▄▄▄   ██  ▀████ ██ ██ ██    ██▀██ ████▀"
     )
 
+    # Find longest line to align banner as a group
+    $maxLen = 0
     foreach ($line in $artLines) {
-        Write-Host (Pad $line) -ForegroundColor Cyan
+        if ($line.Length -gt $maxLen) { $maxLen = $line.Length }
+    }
+
+    foreach ($line in $artLines) {
+        Write-Host (PadBlock $line $maxLen) -ForegroundColor Cyan
         Start-Sleep -Milliseconds $Script:PaceTick
     }
 
