@@ -35,44 +35,6 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 └─────────────────────────────────────────────────────────┘
 ```
 
-## Features
-
-### Plugin System
-![plugin-boot](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/plugin-boot.png)
-
-- Sandboxed V8 runtime per plugin (deno_core 0.230)
-- 9 bridge ops: filesystem (3), network (1), commands (1), UI (2), editor (2)
-- Capability-based security with TOML manifests
-- Permission approval dialog with risk assessment
-- Auto-discovery from `plugins/` directory
-- First-party plugins activate on startup
-
-### Editor
-![milkytext-rust](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-rust.png)
-
-- CodeMirror 6 with compartment-based hot-swapping
-- 12 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
-- Custom syntax highlighting from theme palette (40+ Lezer tag mappings)
-- Format document via Prettier (JS, TS, JSON, HTML, CSS, Markdown, YAML)
-- Undo, redo, toggle comment, duplicate/delete/move lines, find & replace
-
-### Interface
-- Glass morphism with backdrop blur and transparency
-- Minimal mode -- eye icon strips chrome and status bar to transparent, leaving only text
-- Native window controls (minimize, maximize, close) with drag region
-- Always-on-top pin toggle
-- Command palette (Ctrl+Shift+P) with 18+ registered commands
-- Settings panel (Ctrl+,) for appearance, editor, keybindings, files
-- Side-by-side diff viewer (CodeMirror MergeView)
-- Notification toast system with action buttons
-- Retro boot sequence on launch with plugin status confirmation
-
-### Theme Engine
-- 16-color ANSI palette + semantic colors + UI hierarchy
-- 70+ CSS variables injected at runtime
-- TOML-based theme definitions
-- MilkyText default theme (dark, high-contrast, warm accents)
-
 ## Quick Start
 
 ### Prerequisites
@@ -120,6 +82,43 @@ npx svelte-check --tsconfig ./tsconfig.json
 # Rust backend
 cd src-tauri && cargo check
 ```
+## Features
+
+### Plugin System
+![plugin-boot](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/plugin-boot.png)
+
+- Sandboxed V8 runtime per plugin (deno_core 0.230)
+- 9 bridge ops: filesystem (3), network (1), commands (1), UI (2), editor (2)
+- Capability-based security with TOML manifests
+- Permission approval dialog with risk assessment
+- Auto-discovery from `plugins/` directory
+- First-party plugins activate on startup
+
+### Editor
+![milkytext-rust](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-rust.png)
+
+- CodeMirror 6 with compartment-based hot-swapping
+- 12 language grammars -- JS, TS, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
+- Custom syntax highlighting from theme palette (40+ Lezer tag mappings)
+- Format document via Prettier (JS, TS, JSON, HTML, CSS, Markdown, YAML)
+- Undo, redo, toggle comment, duplicate/delete/move lines, find & replace
+
+### Interface
+- Glass morphism with backdrop blur and transparency
+- Minimal mode -- eye icon strips chrome and status bar to transparent, leaving only text
+- Native window controls (minimize, maximize, close) with drag region
+- Always-on-top pin toggle
+- Command palette (Ctrl+Shift+P) with 18+ registered commands
+- Settings panel (Ctrl+,) for appearance, editor, keybindings, files
+- Side-by-side diff viewer (CodeMirror MergeView)
+- Notification toast system with action buttons
+- Retro boot sequence on launch with plugin status confirmation
+
+### Theme Engine
+- 16-color ANSI palette + semantic colors + UI hierarchy
+- 70+ CSS variables injected at runtime
+- TOML-based theme definitions
+- MilkyText default theme (dark, high-contrast, warm accents)
 
 ## Architecture
 
