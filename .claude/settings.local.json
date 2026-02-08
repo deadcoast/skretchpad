@@ -28,7 +28,8 @@
       "mcp__plugin_serena_serena__activate_project",
       "Bash(timeout:*)",
       "Bash(tasklist:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []
