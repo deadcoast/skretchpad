@@ -5,6 +5,8 @@
   import { editorStore, activeFile } from '$lib/stores/editor';
   import { icons } from '../lib/icons/index';
 
+  export let menuVisible: boolean = true;
+
   // Local component state
   let showPluginMenu = false;
 
@@ -34,7 +36,7 @@
   }
 </script>
 
-<div class="status-bar" role="status">
+<div class="status-bar" class:status-bar--minimal={!menuVisible} role="status">
   <!-- Left section -->
   <div class="status-bar__left">
     <!-- File info -->
@@ -184,6 +186,18 @@
     padding: 0 8px;
     border-top: 1px solid var(--window-border-color);
     user-select: none;
+    transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+  }
+
+  .status-bar--minimal {
+    background: transparent;
+    color: transparent;
+    border-top-color: transparent;
+  }
+
+  .status-bar--minimal * {
+    color: transparent !important;
+    opacity: 0;
   }
 
   .status-bar__left,

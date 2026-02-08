@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { createDiffEditor } from '../../lib/editor-loader';
+  import { themeStore } from '../../lib/stores/theme';
   import { icons } from '../../lib/icons/index';
 
   export let original: string;
@@ -18,7 +19,8 @@
     if (!container) return;
 
     try {
-      const result = await createDiffEditor(container, { original, modified });
+      const theme = $themeStore.current ?? undefined;
+      const result = await createDiffEditor(container, { original, modified, theme });
       destroyFn = result.destroy;
     } catch (err) {
       console.error('Failed to create diff editor:', err);
@@ -148,6 +150,36 @@
   :global(.cm-mergeViewEditor) {
     height: 100%;
     overflow: auto;
+  }
+
+  /* Ensure diff editor text is visible */
+  :global(.cm-mergeViewEditor .cm-editor) {
+    background: var(--editor-bg, transparent);
+    color: var(--editor-fg, #FFFFFF);
+  }
+
+  :global(.cm-mergeViewEditor .cm-content) {
+    color: var(--editor-fg, #FFFFFF);
+  }
+
+  :global(.cm-mergeViewEditor .cm-gutters) {
+    background: var(--gutter-bg, rgba(0, 0, 0, 0.15));
+    color: var(--line-number, rgba(255, 255, 255, 0.25));
+    border-right: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  }
+
+  :global(.cm-mergeViewEditor .cm-scroller) {
+    overflow-x: hidden !important;
+  }
+
+  :global(.cm-mergeViewEditor .cm-scroller::-webkit-scrollbar) {
+    width: 6px;
+    height: 0;
+  }
+
+  :global(.cm-mergeViewEditor .cm-scroller::-webkit-scrollbar-thumb) {
+    background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.12));
+    border-radius: 3px;
   }
 
   :global(.cm-collapsedLines) {

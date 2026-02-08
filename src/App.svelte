@@ -16,8 +16,9 @@
   import { editorStore, activeFile } from './lib/stores/editor';
   import { settingsStore, type AppSettings } from './lib/stores/settings';
   import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
+  import { invoke } from '@tauri-apps/api/core';
 
-  let chromeVisible = true;
+  let menuVisible = true;
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
   let settingsVisible = false;
@@ -125,7 +126,7 @@
         break;
       }
       case 'view.commandPalette': commandPaletteVisible = true; break;
-      case 'view.toggleChrome': toggleChrome(); break;
+      case 'view.toggleChrome': menuVisible = !menuVisible; break;
       case 'view.toggleAlwaysOnTop': toggleAlwaysOnTop(); break;
       case 'view.toggleSidebar': sidebarVisible = !sidebarVisible; break;
       case 'view.openDiffView': openDiffView(); break;
@@ -166,7 +167,6 @@
       });
       if (!file2) return;
 
-      const { invoke } = await import('@tauri-apps/api/core');
       diffOriginal = await invoke<string>('read_file', { path: file1 as string });
       diffModified = await invoke<string>('read_file', { path: file2 as string });
       diffOriginalLabel = (file1 as string).split(/[/\\]/).pop() || 'Original';
@@ -188,7 +188,7 @@
     }
     if (mod && e.shiftKey && (e.key === 'H' || e.key === 'h')) {
       e.preventDefault();
-      toggleChrome();
+      menuVisible = !menuVisible;
       return;
     }
     if (mod && e.key === 'b') {
@@ -228,10 +228,6 @@
     }
   }
 
-  function toggleChrome() {
-    chromeVisible = !chromeVisible;
-  }
-
   async function toggleAlwaysOnTop() {
     alwaysOnTop = !alwaysOnTop;
     try {
@@ -248,9 +244,10 @@
 <div class="app glass-window">
   <Chrome
     {alwaysOnTop}
-    visible={chromeVisible}
-    onToggleChrome={toggleChrome}
-    onTogglePin={toggleAlwaysOnTop}
+    {menuVisible}
+    on:command={handleCommandExecute}
+    on:togglePin={toggleAlwaysOnTop}
+    on:toggleMenu={() => menuVisible = !menuVisible}
   />
 
   <div class="main-content">
@@ -271,7 +268,7 @@
     </div>
   </div>
 
-  <StatusBar />
+  <StatusBar {menuVisible} />
   <NotificationToast />
   <CommandPalette
     bind:visible={commandPaletteVisible}
@@ -298,8 +295,8 @@
     flex-direction: column;
     background: var(--window-bg);
     backdrop-filter: blur(var(--window-blur));
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--window-border-radius, 12px);
+    border: var(--window-border-width, 1px) solid var(--window-border-color, rgba(255, 255, 255, 0.1));
     overflow: hidden;
   }
 
@@ -325,11 +322,32 @@
   :global(body) {
     margin: 0;
     padding: 0;
+    overflow: hidden;
     background: transparent;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   :global(html) {
-    background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+    overflow: hidden;
+    background: var(--window-bg, #030304);
+  }
+
+  /* Global scrollbar styling -- thin, dark, overlay */
+  :global(*::-webkit-scrollbar) {
+    width: 6px;
+    height: 6px;
+  }
+  :global(*::-webkit-scrollbar-track) {
+    background: transparent;
+  }
+  :global(*::-webkit-scrollbar-thumb) {
+    background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.12));
+    border-radius: 3px;
+  }
+  :global(*::-webkit-scrollbar-thumb:hover) {
+    background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.25));
+  }
+  :global(*::-webkit-scrollbar-corner) {
+    background: transparent;
   }
 </style>

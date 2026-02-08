@@ -1,8 +1,6 @@
 // src/lib/stores/theme.ts
 
 import { writable, derived, get } from 'svelte/store';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -12,24 +10,38 @@ export interface ThemeMetadata {
   name: string;
   author: string;
   version: string;
-  base: 'dark' | 'light' | 'high-contrast';
+  base: 'dark' | 'light';
+}
+
+/** Full 16-color ANSI palette + foreground/background/cursor/selection */
+export interface ThemePalette {
+  background: string;
+  foreground: string;
+  cursorColor: string;
+  selectionBackground: string;
+  selectionForeground?: string;
+  black: string;
+  red: string;
+  green: string;
+  yellow: string;
+  blue: string;
+  purple: string;
+  cyan: string;
+  white: string;
+  brightBlack: string;
+  brightRed: string;
+  brightGreen: string;
+  brightYellow: string;
+  brightBlue: string;
+  brightPurple: string;
+  brightCyan: string;
+  brightWhite: string;
 }
 
 export interface WindowTheme {
-  background: {
-    base: string;
-    blur: number;
-  };
-  border: {
-    radius: number;
-    width: number;
-    color: string;
-  };
-  shadow?: {
-    color: string;
-    blur: number;
-    offset: [number, number];
-  };
+  background: { base: string; blur: number };
+  border: { radius: number; width: number; color: string };
+  shadow?: { color: string; blur: number; offset: [number, number] };
 }
 
 export interface ChromeTheme {
@@ -37,81 +49,68 @@ export interface ChromeTheme {
   foreground: string;
   height: number;
   blur?: number;
-  active?: {
-    background: string;
-    border: string;
-  };
+  border?: string;
+  menuBackground?: string;
+  menuHover?: string;
+  menuForeground?: string;
 }
 
 export interface EditorTheme {
   background: string;
   foreground: string;
-  cursor: {
-    color: string;
-    width: number;
-    blinkInterval?: number;
-  };
-  selection: {
-    background: string;
-    foreground?: string;
-  };
-  line: {
-    active: string;
-    number: string;
-    numberActive: string;
-  };
-  gutter: {
-    background: string;
-    width: number;
-  };
+  cursor: { color: string; width: number };
+  selection: { background: string; foreground?: string };
+  line: { active: string; number: string; numberActive: string };
+  gutter: { background: string; border?: string };
+  fontFamily?: string;
+  fontSize?: number;
+  lineHeight?: number;
 }
 
 export interface SyntaxTheme {
-  comment: TokenStyle;
-  keyword: TokenStyle;
-  string: TokenStyle;
-  number: TokenStyle;
-  operator: TokenStyle;
-  function: TokenStyle;
-  variable: TokenStyle;
-  type: TokenStyle;
-  constant: TokenStyle;
-  // Language-specific overrides
-  python?: Record<string, TokenStyle>;
-  rust?: Record<string, TokenStyle>;
-  markdown?: Record<string, TokenStyle>;
-  [key: string]: TokenStyle | Record<string, TokenStyle> | undefined;
-}
-
-export interface TokenStyle {
-  color: string;
-  background?: string;
-  style?: 'normal' | 'italic' | 'bold';
-  underline?: boolean;
+  comment: string;
+  keyword: string;
+  string: string;
+  number: string;
+  operator: string;
+  function: string;
+  variable: string;
+  type: string;
+  constant: string;
+  tag?: string;
+  attribute?: string;
+  property?: string;
+  punctuation?: string;
+  regexp?: string;
+  heading?: string;
+  link?: string;
+  meta?: string;
 }
 
 export interface UiTheme {
-  statusBar: {
-    background: string;
-    foreground: string;
-    height: number;
-  };
-  button: {
-    background: string;
-    hover: string;
-    active: string;
-  };
-  input: {
-    background: string;
-    border: string;
-    focus: string;
-  };
-  notification?: {
-    info: string;
-    warning: string;
-    error: string;
-    success: string;
-  };
+  statusBar: { background: string; foreground: string; height: number };
+  primary: string;
+  border: string;
+  borderSubtle: string;
+  textPrimary: string;
+  textSecondary: string;
+  textDisabled: string;
+  buttonBackground: string;
+  buttonHover: string;
+  buttonActive: string;
+  inputBackground: string;
+  inputBorder: string;
+  inputFocus: string;
+  tooltipBackground: string;
+  scrollbarThumb: string;
+  scrollbarThumbHover: string;
+  error: string;
+  warning: string;
+  success: string;
+  info: string;
+  searchMatch: string;
+  searchMatchSelected: string;
+  selectionMatch: string;
 }
 
 export interface TransitionTheme {
@@ -123,6 +122,7 @@ export interface TransitionTheme {
 
 export interface Theme {
   metadata: ThemeMetadata;
+  palette: ThemePalette;
   window: WindowTheme;
   chrome: ChromeTheme;
   editor: EditorTheme;
@@ -139,110 +139,111 @@ export interface ThemeState {
 }
 
 // ============================================================================
-// DEFAULT THEMES
+// MILKYTEXT THEME (Default)
 // ============================================================================
 
-const LIQUID_GLASS_DARK: Theme = {
+const MILKYTEXT: Theme = {
   metadata: {
-    name: 'Liquid Glass Dark',
-    author: 'skretchpad',
+    name: 'MilkyText',
+    author: 'heat',
     version: '1.0.0',
     base: 'dark',
   },
+  palette: {
+    background: '#030304',
+    foreground: '#FFFFFF',
+    cursorColor: '#FFCCD5',
+    selectionBackground: 'rgba(255, 255, 255, 0.15)',
+    black: '#363941',
+    red: '#FF758F',
+    green: '#E6FF75',
+    yellow: '#FBD58E',
+    blue: '#8875FF',
+    purple: '#FF75C6',
+    cyan: '#75FFCF',
+    white: '#FFCCD5',
+    brightBlack: '#505664',
+    brightRed: '#FF8FA3',
+    brightGreen: '#F3F3B0',
+    brightYellow: '#FDDEBC',
+    brightBlue: '#C4AEF5',
+    brightPurple: '#FFAED8',
+    brightCyan: '#BAF3DD',
+    brightWhite: '#FFE6EA',
+  },
   window: {
-    background: {
-      base: 'rgba(18, 18, 18, 0.85)',
-      blur: 20,
-    },
-    border: {
-      radius: 12,
-      width: 1,
-      color: 'rgba(255, 255, 255, 0.1)',
-    },
-    shadow: {
-      color: 'rgba(0, 0, 0, 0.5)',
-      blur: 40,
-      offset: [0, 10],
-    },
+    background: { base: '#030304', blur: 20 },
+    border: { radius: 12, width: 1, color: 'rgba(255, 255, 255, 0.08)' },
+    shadow: { color: 'rgba(0, 0, 0, 0.6)', blur: 40, offset: [0, 10] },
   },
   chrome: {
-    background: 'rgba(28, 28, 28, 0.95)',
-    foreground: 'rgba(228, 228, 228, 0.9)',
+    background: '#363941',
+    foreground: '#FFFFFF',
     height: 32,
     blur: 10,
-    active: {
-      background: 'rgba(40, 40, 40, 0.95)',
-      border: 'rgba(0, 217, 255, 0.3)',
-    },
+    border: 'rgba(255, 255, 255, 0.06)',
+    menuBackground: 'rgba(54, 57, 65, 0.98)',
+    menuHover: 'rgba(255, 204, 213, 0.12)',
+    menuForeground: 'rgba(255, 255, 255, 0.85)',
   },
   editor: {
     background: 'transparent',
-    foreground: '#e4e4e4',
-    cursor: {
-      color: '#00d9ff',
-      width: 2,
-      blinkInterval: 530,
-    },
-    selection: {
-      background: 'rgba(0, 217, 255, 0.2)',
-    },
+    foreground: '#FFFFFF',
+    cursor: { color: '#FFCCD5', width: 2 },
+    selection: { background: 'rgba(255, 255, 255, 0.15)' },
     line: {
-      active: 'rgba(255, 255, 255, 0.05)',
-      number: 'rgba(228, 228, 228, 0.4)',
-      numberActive: '#00d9ff',
+      active: 'rgba(255, 255, 255, 0.04)',
+      number: 'rgba(255, 255, 255, 0.25)',
+      numberActive: '#FFCCD5',
     },
-    gutter: {
-      background: 'rgba(0, 0, 0, 0.2)',
-      width: 50,
-    },
+    gutter: { background: 'rgba(0, 0, 0, 0.15)', border: 'rgba(255, 255, 255, 0.06)' },
+    fontFamily: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
+    fontSize: 14,
+    lineHeight: 1.6,
   },
   syntax: {
-    comment: { color: '#6a737d', style: 'italic' },
-    keyword: { color: '#ff79c6', style: 'bold' },
-    string: { color: '#50fa7b' },
-    number: { color: '#bd93f9' },
-    operator: { color: '#ff79c6' },
-    function: { color: '#8be9fd' },
-    variable: { color: '#f8f8f2' },
-    type: { color: '#8be9fd', style: 'italic' },
-    constant: { color: '#bd93f9', style: 'bold' },
-    python: {
-      decorator: { color: '#50fa7b' },
-      magicMethod: { color: '#ff79c6', style: 'italic' },
-    },
-    rust: {
-      lifetime: { color: '#ff79c6', style: 'italic' },
-      macro: { color: '#50fa7b' },
-      attribute: { color: '#f1fa8c' },
-    },
-    markdown: {
-      heading: { color: '#8be9fd', style: 'bold' },
-      link: { color: '#50fa7b', underline: true },
-      code: { color: '#f1fa8c', background: 'rgba(255, 255, 255, 0.05)' },
-    },
+    comment: '#8875FF',
+    keyword: '#FF75C6',
+    string: '#75FFCF',
+    number: '#BAF3DD',
+    operator: '#FF758F',
+    function: '#F3F3B0',
+    variable: '#FFCCD5',
+    type: '#C4AEF5',
+    constant: '#FFAED8',
+    tag: '#FF75C6',
+    attribute: '#F3F3B0',
+    property: '#FFCCD5',
+    punctuation: 'rgba(255, 255, 255, 0.5)',
+    regexp: '#75FFCF',
+    heading: '#FF75C6',
+    link: '#75FFCF',
+    meta: '#505664',
   },
   ui: {
-    statusBar: {
-      background: 'rgba(28, 28, 28, 0.95)',
-      foreground: 'rgba(228, 228, 228, 0.7)',
-      height: 24,
-    },
-    button: {
-      background: 'rgba(255, 255, 255, 0.1)',
-      hover: 'rgba(255, 255, 255, 0.15)',
-      active: 'rgba(0, 217, 255, 0.3)',
-    },
-    input: {
-      background: 'rgba(0, 0, 0, 0.3)',
-      border: 'rgba(255, 255, 255, 0.2)',
-      focus: 'rgba(0, 217, 255, 0.5)',
-    },
-    notification: {
-      info: '#00d9ff',
-      warning: '#f1fa8c',
-      error: '#ff5555',
-      success: '#50fa7b',
-    },
+    statusBar: { background: '#363941', foreground: '#FFFFFF', height: 24 },
+    primary: '#FFCCD5',
+    border: 'rgba(255, 255, 255, 0.1)',
+    borderSubtle: 'rgba(255, 255, 255, 0.06)',
+    textPrimary: '#FFFFFF',
+    textSecondary: 'rgba(255, 255, 255, 0.55)',
+    textDisabled: 'rgba(255, 255, 255, 0.25)',
+    buttonBackground: 'rgba(255, 255, 255, 0.08)',
+    buttonHover: 'rgba(255, 255, 255, 0.12)',
+    buttonActive: 'rgba(255, 204, 213, 0.2)',
+    inputBackground: 'rgba(0, 0, 0, 0.25)',
+    inputBorder: 'rgba(255, 255, 255, 0.12)',
+    inputFocus: 'rgba(255, 204, 213, 0.4)',
+    tooltipBackground: 'rgba(54, 57, 65, 0.97)',
+    scrollbarThumb: 'rgba(255, 255, 255, 0.12)',
+    scrollbarThumbHover: 'rgba(255, 255, 255, 0.25)',
+    error: '#FF758F',
+    warning: '#FBD58E',
+    success: '#75FFCF',
+    info: '#8875FF',
+    searchMatch: 'rgba(251, 213, 142, 0.3)',
+    searchMatchSelected: 'rgba(251, 213, 142, 0.5)',
+    selectionMatch: 'rgba(255, 204, 213, 0.12)',
   },
   transitions: {
     chromeToggle: 200,
@@ -252,78 +253,112 @@ const LIQUID_GLASS_DARK: Theme = {
   },
 };
 
-const LIQUID_GLASS_LIGHT: Theme = {
+// ============================================================================
+// LIQUID GLASS DARK (Legacy)
+// ============================================================================
+
+const LIQUID_GLASS_DARK: Theme = {
   metadata: {
-    name: 'Liquid Glass Light',
+    name: 'Liquid Glass Dark',
     author: 'skretchpad',
     version: '1.0.0',
-    base: 'light',
+    base: 'dark',
+  },
+  palette: {
+    background: 'rgba(18, 18, 18, 0.85)',
+    foreground: '#e4e4e4',
+    cursorColor: '#00d9ff',
+    selectionBackground: 'rgba(0, 217, 255, 0.2)',
+    black: '#1c1c1c',
+    red: '#ff5555',
+    green: '#50fa7b',
+    yellow: '#f1fa8c',
+    blue: '#bd93f9',
+    purple: '#ff79c6',
+    cyan: '#8be9fd',
+    white: '#f8f8f2',
+    brightBlack: '#6272a4',
+    brightRed: '#ff6e6e',
+    brightGreen: '#69ff94',
+    brightYellow: '#ffffa5',
+    brightBlue: '#d6acff',
+    brightPurple: '#ff92df',
+    brightCyan: '#a4ffff',
+    brightWhite: '#ffffff',
   },
   window: {
-    background: {
-      base: 'rgba(248, 248, 248, 0.85)',
-      blur: 20,
-    },
-    border: {
-      radius: 12,
-      width: 1,
-      color: 'rgba(0, 0, 0, 0.1)',
-    },
+    background: { base: 'rgba(18, 18, 18, 0.85)', blur: 20 },
+    border: { radius: 12, width: 1, color: 'rgba(255, 255, 255, 0.1)' },
+    shadow: { color: 'rgba(0, 0, 0, 0.5)', blur: 40, offset: [0, 10] },
   },
   chrome: {
-    background: 'rgba(240, 240, 240, 0.95)',
-    foreground: 'rgba(28, 28, 28, 0.9)',
+    background: 'rgba(28, 28, 28, 0.95)',
+    foreground: 'rgba(228, 228, 228, 0.9)',
     height: 32,
     blur: 10,
+    border: 'rgba(255, 255, 255, 0.1)',
+    menuBackground: 'rgba(36, 36, 36, 0.98)',
+    menuHover: 'rgba(0, 217, 255, 0.15)',
+    menuForeground: 'rgba(228, 228, 228, 0.9)',
   },
   editor: {
     background: 'transparent',
-    foreground: '#1a1a1a',
-    cursor: {
-      color: '#007acc',
-      width: 2,
-      blinkInterval: 530,
-    },
-    selection: {
-      background: 'rgba(0, 122, 204, 0.2)',
-    },
+    foreground: '#e4e4e4',
+    cursor: { color: '#00d9ff', width: 2 },
+    selection: { background: 'rgba(0, 217, 255, 0.2)' },
     line: {
-      active: 'rgba(0, 0, 0, 0.05)',
-      number: 'rgba(28, 28, 28, 0.4)',
-      numberActive: '#007acc',
+      active: 'rgba(255, 255, 255, 0.05)',
+      number: 'rgba(228, 228, 228, 0.4)',
+      numberActive: '#00d9ff',
     },
-    gutter: {
-      background: 'rgba(0, 0, 0, 0.05)',
-      width: 50,
-    },
+    gutter: { background: 'rgba(0, 0, 0, 0.2)', border: 'rgba(255, 255, 255, 0.1)' },
+    fontFamily: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
+    fontSize: 14,
+    lineHeight: 1.6,
   },
   syntax: {
-    comment: { color: '#6a737d', style: 'italic' },
-    keyword: { color: '#d73a49', style: 'bold' },
-    string: { color: '#22863a' },
-    number: { color: '#005cc5' },
-    operator: { color: '#d73a49' },
-    function: { color: '#6f42c1' },
-    variable: { color: '#24292e' },
-    type: { color: '#005cc5', style: 'italic' },
-    constant: { color: '#005cc5', style: 'bold' },
+    comment: '#6a737d',
+    keyword: '#ff79c6',
+    string: '#50fa7b',
+    number: '#bd93f9',
+    operator: '#ff79c6',
+    function: '#8be9fd',
+    variable: '#f8f8f2',
+    type: '#8be9fd',
+    constant: '#bd93f9',
+    tag: '#ff79c6',
+    attribute: '#50fa7b',
+    property: '#f8f8f2',
+    punctuation: '#6272a4',
+    regexp: '#f1fa8c',
+    heading: '#8be9fd',
+    link: '#50fa7b',
+    meta: '#6272a4',
   },
   ui: {
-    statusBar: {
-      background: 'rgba(240, 240, 240, 0.95)',
-      foreground: 'rgba(28, 28, 28, 0.7)',
-      height: 24,
-    },
-    button: {
-      background: 'rgba(0, 0, 0, 0.05)',
-      hover: 'rgba(0, 0, 0, 0.1)',
-      active: 'rgba(0, 122, 204, 0.2)',
-    },
-    input: {
-      background: 'rgba(255, 255, 255, 0.5)',
-      border: 'rgba(0, 0, 0, 0.2)',
-      focus: 'rgba(0, 122, 204, 0.5)',
-    },
+    statusBar: { background: 'rgba(28, 28, 28, 0.95)', foreground: 'rgba(228, 228, 228, 0.7)', height: 24 },
+    primary: '#00d9ff',
+    border: 'rgba(255, 255, 255, 0.1)',
+    borderSubtle: 'rgba(255, 255, 255, 0.06)',
+    textPrimary: '#e4e4e4',
+    textSecondary: 'rgba(228, 228, 228, 0.6)',
+    textDisabled: 'rgba(228, 228, 228, 0.3)',
+    buttonBackground: 'rgba(255, 255, 255, 0.1)',
+    buttonHover: 'rgba(255, 255, 255, 0.15)',
+    buttonActive: 'rgba(0, 217, 255, 0.3)',
+    inputBackground: 'rgba(0, 0, 0, 0.3)',
+    inputBorder: 'rgba(255, 255, 255, 0.2)',
+    inputFocus: 'rgba(0, 217, 255, 0.5)',
+    tooltipBackground: 'rgba(28, 28, 28, 0.95)',
+    scrollbarThumb: 'rgba(255, 255, 255, 0.12)',
+    scrollbarThumbHover: 'rgba(255, 255, 255, 0.25)',
+    error: '#ff5555',
+    warning: '#f1fa8c',
+    success: '#50fa7b',
+    info: '#00d9ff',
+    searchMatch: 'rgba(255, 193, 7, 0.3)',
+    searchMatchSelected: 'rgba(255, 193, 7, 0.5)',
+    selectionMatch: 'rgba(0, 217, 255, 0.1)',
   },
   transitions: {
     chromeToggle: 200,
@@ -339,8 +374,8 @@ const LIQUID_GLASS_LIGHT: Theme = {
 
 function createThemeStore() {
   const { subscribe, update } = writable<ThemeState>({
-    current: LIQUID_GLASS_DARK, // Default theme
-    available: [LIQUID_GLASS_DARK, LIQUID_GLASS_LIGHT],
+    current: MILKYTEXT,
+    available: [MILKYTEXT, LIQUID_GLASS_DARK],
     loading: false,
     error: null,
   });
@@ -348,133 +383,23 @@ function createThemeStore() {
   return {
     subscribe,
 
-    /**
-     * Set the current theme
-     */
     setTheme: (theme: Theme) => {
-      update((state) => ({
-        ...state,
-        current: theme,
-        error: null,
-      }));
-
-      // Apply theme to document
+      update((state) => ({ ...state, current: theme, error: null }));
       applyThemeToDocument(theme);
     },
 
-    /**
-     * Load a theme by name from the backend
-     */
-    loadTheme: async (themeName: string) => {
-      update((state) => ({ ...state, loading: true, error: null }));
-
-      try {
-        const themeData = await invoke<string>('load_theme', {
-          themeName,
-        });
-
-        // Parse theme data (assuming it returns CSS variables)
-        const theme = await parseThemeFromCSS(themeData, themeName);
-
-        update((state) => ({
-          ...state,
-          current: theme,
-          loading: false,
-        }));
-
-        applyThemeToDocument(theme);
-
-        return theme;
-      } catch (error) {
-        console.error('Failed to load theme:', error);
-        update((state) => ({
-          ...state,
-          loading: false,
-          error: `Failed to load theme: ${error}`,
-        }));
-        throw error;
-      }
-    },
-
-    /**
-     * Load all available themes
-     */
-    loadAvailableThemes: async () => {
-      try {
-        const themeNames = await invoke<string[]>('list_themes');
-
-        const themes: Theme[] = [];
-        for (const name of themeNames) {
-          try {
-            const theme = await invoke<string>('load_theme', {
-              themeName: name,
-            });
-            const parsed = await parseThemeFromCSS(theme, name);
-            themes.push(parsed);
-          } catch (error) {
-            console.error(`Failed to load theme ${name}:`, error);
-          }
-        }
-
-        update((state) => ({
-          ...state,
-          available: [...state.available, ...themes],
-        }));
-      } catch (error) {
-        console.error('Failed to load available themes:', error);
-      }
-    },
-
-    /**
-     * Switch theme by name
-     */
-    switchTheme: async (themeName: string) => {
+    switchTheme: (themeName: string) => {
       const state = get({ subscribe });
-      const theme = state.available.find(
-        (t) => t.metadata.name === themeName
-      );
-
+      const theme = state.available.find((t) => t.metadata.name === themeName);
       if (theme) {
         update((s) => ({ ...s, current: theme }));
         applyThemeToDocument(theme);
-      } else {
-        // Try loading from backend
-        await themeStore.loadTheme(themeName);
       }
     },
 
-    /**
-     * Generate theme from base color
-     */
-    generateTheme: async (baseColor: string, name: string) => {
-      try {
-        const theme = await invoke<Theme>('generate_theme_from_color', {
-          baseColor,
-          name,
-        });
-
-        update((state) => ({
-          ...state,
-          available: [...state.available, theme],
-        }));
-
-        return theme;
-      } catch (error) {
-        console.error('Failed to generate theme:', error);
-        throw error;
-      }
-    },
-
-    /**
-     * Reset to default theme
-     */
     resetToDefault: () => {
-      update((state) => ({
-        ...state,
-        current: LIQUID_GLASS_DARK,
-        error: null,
-      }));
-      applyThemeToDocument(LIQUID_GLASS_DARK);
+      update((state) => ({ ...state, current: MILKYTEXT, error: null }));
+      applyThemeToDocument(MILKYTEXT);
     },
   };
 }
@@ -482,263 +407,167 @@ function createThemeStore() {
 export const themeStore = createThemeStore();
 
 // ============================================================================
-// THEME APPLICATION
+// THEME APPLICATION -- Sets ALL CSS variables used by the app
 // ============================================================================
 
 function applyThemeToDocument(theme: Theme): void {
   const root = document.documentElement;
+  const s = (prop: string, val: string) => root.style.setProperty(prop, val);
 
-  // Window
-  root.style.setProperty('--window-bg', theme.window.background.base);
-  root.style.setProperty('--window-blur', `${theme.window.background.blur}px`);
-  root.style.setProperty('--window-border-radius', `${theme.window.border.radius}px`);
-  root.style.setProperty('--window-border-width', `${theme.window.border.width}px`);
-  root.style.setProperty('--window-border-color', theme.window.border.color);
+  // ---- Palette (raw colors for programmatic access) ----
+  s('--palette-bg', theme.palette.background);
+  s('--palette-fg', theme.palette.foreground);
+  s('--palette-cursor', theme.palette.cursorColor);
+  s('--palette-selection', theme.palette.selectionBackground);
+  s('--palette-black', theme.palette.black);
+  s('--palette-red', theme.palette.red);
+  s('--palette-green', theme.palette.green);
+  s('--palette-yellow', theme.palette.yellow);
+  s('--palette-blue', theme.palette.blue);
+  s('--palette-purple', theme.palette.purple);
+  s('--palette-cyan', theme.palette.cyan);
+  s('--palette-white', theme.palette.white);
+  s('--palette-bright-black', theme.palette.brightBlack);
+  s('--palette-bright-red', theme.palette.brightRed);
+  s('--palette-bright-green', theme.palette.brightGreen);
+  s('--palette-bright-yellow', theme.palette.brightYellow);
+  s('--palette-bright-blue', theme.palette.brightBlue);
+  s('--palette-bright-purple', theme.palette.brightPurple);
+  s('--palette-bright-cyan', theme.palette.brightCyan);
+  s('--palette-bright-white', theme.palette.brightWhite);
 
-  if (theme.window.shadow) {
-    root.style.setProperty('--window-shadow-color', theme.window.shadow.color);
-    root.style.setProperty('--window-shadow-blur', `${theme.window.shadow.blur}px`);
-    root.style.setProperty(
-      '--window-shadow-offset',
-      `${theme.window.shadow.offset[0]}px ${theme.window.shadow.offset[1]}px`
-    );
-  }
+  // ---- Window ----
+  s('--window-bg', theme.window.background.base);
+  s('--window-blur', `${theme.window.background.blur}px`);
+  s('--window-border-radius', `${theme.window.border.radius}px`);
+  s('--window-border-width', `${theme.window.border.width}px`);
+  s('--window-border-color', theme.window.border.color);
 
-  // Chrome
-  root.style.setProperty('--chrome-bg', theme.chrome.background);
-  root.style.setProperty('--chrome-fg', theme.chrome.foreground);
-  root.style.setProperty('--chrome-height', `${theme.chrome.height}px`);
-  if (theme.chrome.blur) {
-    root.style.setProperty('--chrome-blur', `${theme.chrome.blur}px`);
-  }
+  // ---- Chrome ----
+  s('--chrome-bg', theme.chrome.background);
+  s('--chrome-fg', theme.chrome.foreground);
+  s('--chrome-height', `${theme.chrome.height}px`);
+  s('--chrome-blur', `${theme.chrome.blur ?? 0}px`);
+  s('--chrome-border', theme.chrome.border ?? theme.ui.border);
+  s('--chrome-menu-bg', theme.chrome.menuBackground ?? theme.chrome.background);
+  s('--chrome-menu-hover', theme.chrome.menuHover ?? theme.ui.buttonHover);
+  s('--chrome-menu-fg', theme.chrome.menuForeground ?? theme.chrome.foreground);
 
-  // Editor
-  root.style.setProperty('--editor-bg', theme.editor.background);
-  root.style.setProperty('--editor-fg', theme.editor.foreground);
-  root.style.setProperty('--cursor-color', theme.editor.cursor.color);
-  root.style.setProperty('--cursor-width', `${theme.editor.cursor.width}px`);
-  root.style.setProperty('--selection-bg', theme.editor.selection.background);
+  // ---- Editor ----
+  s('--editor-bg', theme.editor.background);
+  s('--editor-fg', theme.editor.foreground);
+  s('--cursor-color', theme.editor.cursor.color);
+  s('--cursor-width', `${theme.editor.cursor.width}px`);
+  s('--selection-bg', theme.editor.selection.background);
   if (theme.editor.selection.foreground) {
-    root.style.setProperty('--selection-fg', theme.editor.selection.foreground);
+    s('--selection-fg', theme.editor.selection.foreground);
   }
-  root.style.setProperty('--line-active', theme.editor.line.active);
-  root.style.setProperty('--line-number', theme.editor.line.number);
-  root.style.setProperty('--line-number-active', theme.editor.line.numberActive);
-  root.style.setProperty('--gutter-bg', theme.editor.gutter.background);
-  root.style.setProperty('--gutter-width', `${theme.editor.gutter.width}px`);
+  s('--line-active', theme.editor.line.active);
+  s('--line-number', theme.editor.line.number);
+  s('--line-number-active', theme.editor.line.numberActive);
+  s('--gutter-bg', theme.editor.gutter.background);
+  s('--gutter-border', theme.editor.gutter.border ?? theme.ui.borderSubtle);
+  s('--editor-font-family', theme.editor.fontFamily ?? 'monospace');
+  s('--editor-font-size', `${theme.editor.fontSize ?? 14}px`);
+  s('--editor-line-height', `${theme.editor.lineHeight ?? 1.6}`);
 
-  // Syntax
-  root.style.setProperty('--syntax-comment', theme.syntax.comment.color);
-  root.style.setProperty('--syntax-keyword', theme.syntax.keyword.color);
-  root.style.setProperty('--syntax-string', theme.syntax.string.color);
-  root.style.setProperty('--syntax-number', theme.syntax.number.color);
-  root.style.setProperty('--syntax-operator', theme.syntax.operator.color);
-  root.style.setProperty('--syntax-function', theme.syntax.function.color);
-  root.style.setProperty('--syntax-variable', theme.syntax.variable.color);
-  root.style.setProperty('--syntax-type', theme.syntax.type.color);
-  root.style.setProperty('--syntax-constant', theme.syntax.constant.color);
+  // ---- Syntax (for CodeMirror HighlightStyle) ----
+  s('--syntax-comment', theme.syntax.comment);
+  s('--syntax-keyword', theme.syntax.keyword);
+  s('--syntax-string', theme.syntax.string);
+  s('--syntax-number', theme.syntax.number);
+  s('--syntax-operator', theme.syntax.operator);
+  s('--syntax-function', theme.syntax.function);
+  s('--syntax-variable', theme.syntax.variable);
+  s('--syntax-type', theme.syntax.type);
+  s('--syntax-constant', theme.syntax.constant);
+  s('--syntax-tag', theme.syntax.tag ?? theme.syntax.keyword);
+  s('--syntax-attribute', theme.syntax.attribute ?? theme.syntax.function);
+  s('--syntax-property', theme.syntax.property ?? theme.syntax.variable);
+  s('--syntax-punctuation', theme.syntax.punctuation ?? theme.ui.textSecondary);
+  s('--syntax-regexp', theme.syntax.regexp ?? theme.syntax.string);
+  s('--syntax-heading', theme.syntax.heading ?? theme.syntax.keyword);
+  s('--syntax-link', theme.syntax.link ?? theme.syntax.string);
+  s('--syntax-meta', theme.syntax.meta ?? theme.ui.textSecondary);
 
-  // UI
-  root.style.setProperty('--status-bar-bg', theme.ui.statusBar.background);
-  root.style.setProperty('--status-bar-fg', theme.ui.statusBar.foreground);
-  root.style.setProperty('--status-bar-height', `${theme.ui.statusBar.height}px`);
-  root.style.setProperty('--button-bg', theme.ui.button.background);
-  root.style.setProperty('--button-hover', theme.ui.button.hover);
-  root.style.setProperty('--button-active', theme.ui.button.active);
-  root.style.setProperty('--input-bg', theme.ui.input.background);
-  root.style.setProperty('--input-border', theme.ui.input.border);
-  root.style.setProperty('--input-focus', theme.ui.input.focus);
+  // ---- UI (used by all components) ----
+  s('--color-primary', theme.ui.primary);
+  s('--border-color', theme.ui.border);
+  s('--border-subtle', theme.ui.borderSubtle);
+  s('--text-primary', theme.ui.textPrimary);
+  s('--text-secondary', theme.ui.textSecondary);
+  s('--text-disabled', theme.ui.textDisabled);
+  s('--button-bg', theme.ui.buttonBackground);
+  s('--button-hover', theme.ui.buttonHover);
+  s('--button-active', theme.ui.buttonActive);
+  s('--button-border', theme.ui.inputBorder);
+  s('--input-bg', theme.ui.inputBackground);
+  s('--input-border', theme.ui.inputBorder);
+  s('--input-focus', theme.ui.inputFocus);
+  s('--tooltip-bg', theme.ui.tooltipBackground);
+  s('--scrollbar-thumb', theme.ui.scrollbarThumb);
+  s('--scrollbar-thumb-hover', theme.ui.scrollbarThumbHover);
+  s('--color-error', theme.ui.error);
+  s('--color-warning', theme.ui.warning);
+  s('--color-success', theme.ui.success);
+  s('--color-info', theme.ui.info);
+  s('--search-match', theme.ui.searchMatch);
+  s('--search-match-selected', theme.ui.searchMatchSelected);
+  s('--selection-match', theme.ui.selectionMatch);
+  s('--font-mono', theme.editor.fontFamily ?? 'monospace');
 
-  if (theme.ui.notification) {
-    root.style.setProperty('--color-info', theme.ui.notification.info);
-    root.style.setProperty('--color-warning', theme.ui.notification.warning);
-    root.style.setProperty('--color-error', theme.ui.notification.error);
-    root.style.setProperty('--color-success', theme.ui.notification.success);
-  }
+  // ---- Status Bar ----
+  s('--status-bar-bg', theme.ui.statusBar.background);
+  s('--status-bar-fg', theme.ui.statusBar.foreground);
+  s('--status-bar-height', `${theme.ui.statusBar.height}px`);
 
-  // Transitions
-  root.style.setProperty('--transition-chrome', `${theme.transitions.chromeToggle}ms`);
-  root.style.setProperty('--transition-theme', `${theme.transitions.themeSwitch}ms`);
-  root.style.setProperty('--transition-hover', `${theme.transitions.hover}ms`);
-  root.style.setProperty('--transition-easing', theme.transitions.easing);
+  // ---- Transitions ----
+  s('--transition-chrome', `${theme.transitions.chromeToggle}ms`);
+  s('--transition-theme', `${theme.transitions.themeSwitch}ms`);
+  s('--transition-hover', `${theme.transitions.hover}ms`);
+  s('--transition-fast', '100ms');
+  s('--transition-medium', '200ms');
+  s('--transition-slow', '300ms');
+  s('--transition-easing', theme.transitions.easing);
 
-  // Add theme class to body
+  // ---- Body class for base theme ----
   document.body.className = document.body.className
     .split(' ')
     .filter((c) => !c.startsWith('theme-'))
     .concat(`theme-${theme.metadata.base}`)
-    .join(' ');
-}
-
-// ============================================================================
-// THEME PARSING
-// ============================================================================
-
-async function parseThemeFromCSS(css: string, name: string): Promise<Theme> {
-  // Parse CSS variables back into Theme object
-  // This is a simplified parser - in production, this would be more robust
-
-  const vars = new Map<string, string>();
-
-  // Extract CSS variables from :root { ... }
-  const rootMatch = css.match(/:root\s*{([^}]+)}/);
-  if (rootMatch) {
-    const rules = rootMatch[1].split(';');
-    for (const rule of rules) {
-      const [key, value] = rule.split(':').map((s) => s.trim());
-      if (key && value) {
-        vars.set(key, value);
-      }
-    }
-  }
-
-  // Build theme object from variables
-  // This is a stub - full implementation would parse all variables
-  const theme: Theme = {
-    metadata: {
-      name,
-      author: 'Custom',
-      version: '1.0.0',
-      base: 'dark',
-    },
-    window: {
-      background: {
-        base: vars.get('--window-bg') || 'rgba(18, 18, 18, 0.85)',
-        blur: parseInt(vars.get('--window-blur') || '20'),
-      },
-      border: {
-        radius: parseInt(vars.get('--window-border-radius') || '12'),
-        width: parseInt(vars.get('--window-border-width') || '1'),
-        color: vars.get('--window-border-color') || 'rgba(255, 255, 255, 0.1)',
-      },
-    },
-    chrome: {
-      background: vars.get('--chrome-bg') || 'rgba(28, 28, 28, 0.95)',
-      foreground: vars.get('--chrome-fg') || 'rgba(228, 228, 228, 0.9)',
-      height: parseInt(vars.get('--chrome-height') || '32'),
-    },
-    editor: {
-      background: vars.get('--editor-bg') || 'transparent',
-      foreground: vars.get('--editor-fg') || '#e4e4e4',
-      cursor: {
-        color: vars.get('--cursor-color') || '#00d9ff',
-        width: parseInt(vars.get('--cursor-width') || '2'),
-      },
-      selection: {
-        background: vars.get('--selection-bg') || 'rgba(0, 217, 255, 0.2)',
-      },
-      line: {
-        active: vars.get('--line-active') || 'rgba(255, 255, 255, 0.05)',
-        number: vars.get('--line-number') || 'rgba(228, 228, 228, 0.4)',
-        numberActive: vars.get('--line-number-active') || '#00d9ff',
-      },
-      gutter: {
-        background: vars.get('--gutter-bg') || 'rgba(0, 0, 0, 0.2)',
-        width: parseInt(vars.get('--gutter-width') || '50'),
-      },
-    },
-    syntax: {
-      comment: { color: vars.get('--syntax-comment') || '#6a737d' },
-      keyword: { color: vars.get('--syntax-keyword') || '#ff79c6' },
-      string: { color: vars.get('--syntax-string') || '#50fa7b' },
-      number: { color: vars.get('--syntax-number') || '#bd93f9' },
-      operator: { color: vars.get('--syntax-operator') || '#ff79c6' },
-      function: { color: vars.get('--syntax-function') || '#8be9fd' },
-      variable: { color: vars.get('--syntax-variable') || '#f8f8f2' },
-      type: { color: vars.get('--syntax-type') || '#8be9fd' },
-      constant: { color: vars.get('--syntax-constant') || '#bd93f9' },
-    },
-    ui: {
-      statusBar: {
-        background: vars.get('--status-bar-bg') || 'rgba(28, 28, 28, 0.95)',
-        foreground: vars.get('--status-bar-fg') || 'rgba(228, 228, 228, 0.7)',
-        height: parseInt(vars.get('--status-bar-height') || '24'),
-      },
-      button: {
-        background: vars.get('--button-bg') || 'rgba(255, 255, 255, 0.1)',
-        hover: vars.get('--button-hover') || 'rgba(255, 255, 255, 0.15)',
-        active: vars.get('--button-active') || 'rgba(0, 217, 255, 0.3)',
-      },
-      input: {
-        background: vars.get('--input-bg') || 'rgba(0, 0, 0, 0.3)',
-        border: vars.get('--input-border') || 'rgba(255, 255, 255, 0.2)',
-        focus: vars.get('--input-focus') || 'rgba(0, 217, 255, 0.5)',
-      },
-    },
-    transitions: {
-      chromeToggle: parseInt(vars.get('--transition-chrome') || '200'),
-      themeSwitch: parseInt(vars.get('--transition-theme') || '300'),
-      hover: parseInt(vars.get('--transition-hover') || '100'),
-      easing: vars.get('--transition-easing') || 'cubic-bezier(0.4, 0.0, 0.2, 1)',
-    },
-  };
-
-  return theme;
+    .join(' ')
+    .trim();
 }
 
 // ============================================================================
 // DERIVED STORES
 // ============================================================================
 
-/**
- * Current theme metadata
- */
 export const currentThemeMetadata = derived(
   themeStore,
   ($theme) => $theme.current?.metadata || null
 );
 
-/**
- * Is dark theme
- */
 export const isDarkTheme = derived(
   themeStore,
   ($theme) => $theme.current?.metadata.base === 'dark'
 );
 
-/**
- * Theme colors for quick access
- */
 export const themeColors = derived(themeStore, ($theme) => {
   if (!$theme.current) return null;
-
   return {
-    primary: $theme.current.editor.cursor.color,
+    primary: $theme.current.ui.primary,
     background: $theme.current.editor.background,
     foreground: $theme.current.editor.foreground,
-    border: $theme.current.window.border.color,
+    border: $theme.current.ui.border,
   };
 });
-
-// ============================================================================
-// EVENT LISTENERS
-// ============================================================================
-
-// Listen for theme changes from backend
-if (typeof window !== 'undefined') {
-  listen<Theme>('theme:changed', (event) => {
-    themeStore.setTheme(event.payload);
-  }).catch(console.error);
-
-  // Listen for hot-reload events
-  listen<string>('theme:reload', async (event) => {
-    try {
-      await themeStore.loadTheme(event.payload);
-    } catch (error) {
-      console.error('Failed to reload theme:', error);
-    }
-  }).catch(console.error);
-}
 
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
 
-// Load available themes on startup
 if (typeof window !== 'undefined') {
-  themeStore.loadAvailableThemes().catch(console.error);
-
-  // Apply initial theme
   const state = get(themeStore);
   if (state.current) {
     applyThemeToDocument(state.current);

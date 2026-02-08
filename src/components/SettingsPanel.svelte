@@ -72,11 +72,7 @@
     const select = e.target as HTMLSelectElement;
     const name = select.value;
     settingsStore.update('appearance', { theme: name });
-    if (name === 'glass-dark') {
-      themeStore.resetToDefault();
-    } else {
-      themeStore.switchTheme(name);
-    }
+    themeStore.switchTheme(name);
   }
 
   function handleKeybindingChange(e: Event) {
@@ -133,7 +129,7 @@
             <label for="theme-select">Theme</label>
             <select
               id="theme-select"
-              value={$themeStore.current?.metadata?.name || 'Liquid Glass Dark'}
+              value={$themeStore.current?.metadata?.name || 'MilkyText'}
               on:change={handleThemeChange}
             >
               {#each $themeStore.available as theme}

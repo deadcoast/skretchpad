@@ -1063,28 +1063,30 @@
     }
   
     :global(.cm-scroller) {
-      overflow: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--scrollbar-thumb, rgba(255, 255, 255, 0.2)) 
-                       var(--scrollbar-track, transparent);
+      overflow: auto !important;
+      overflow-x: hidden !important;
     }
-  
+
     :global(.cm-scroller::-webkit-scrollbar) {
-      width: 10px;
-      height: 10px;
+      width: 6px;
+      height: 0;
     }
-  
+
     :global(.cm-scroller::-webkit-scrollbar-track) {
-      background: var(--scrollbar-track, transparent);
+      background: transparent;
     }
-  
+
     :global(.cm-scroller::-webkit-scrollbar-thumb) {
-      background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.2));
-      border-radius: 5px;
+      background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.12));
+      border-radius: 3px;
     }
-  
+
     :global(.cm-scroller::-webkit-scrollbar-thumb:hover) {
-      background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.3));
+      background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.25));
+    }
+
+    :global(.cm-scroller::-webkit-scrollbar-corner) {
+      background: transparent;
     }
   
     :global(.cm-content) {

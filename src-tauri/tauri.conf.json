@@ -22,16 +22,12 @@
           "minHeight": 400,
           "resizable": true,
           "fullscreen": false,
-          "decorations": true,
+          "decorations": false,
           "transparent": true,
           "alwaysOnTop": false,
           "contentProtected": false,
           "skipTaskbar": false,
-          "theme": "Dark",
-          "titleBarStyle": "Overlay",
-          "hiddenTitle": true,
-          "acceptFirstMouse": true,
-          "tabbingIdentifier": null
+          "theme": "Dark"
         }
       ],
       "security": {

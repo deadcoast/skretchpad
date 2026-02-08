@@ -21,7 +21,14 @@
       "Bash(grep:*)",
       "Bash(if not exist \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\src\\\\lib\\\\icons\" mkdir \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\src\\\\lib\\\\icons\")",
       "Bash(ls \"C:\\\\Users\\\\ryanf\\\\github\\\\_new\\\\skretchpad\\\\plugins\\\\git\\\\components\"\" 2>/dev/null || echo \"Directory empty or gone \")",
-      "Bash(cargo tauri dev:*)"
+      "Bash(cargo tauri dev:*)",
+      "Bash(npx tauri dev)",
+      "Bash(findstr:*)",
+      "mcp__plugin_serena_serena__read_file",
+      "mcp__plugin_serena_serena__activate_project",
+      "Bash(timeout:*)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

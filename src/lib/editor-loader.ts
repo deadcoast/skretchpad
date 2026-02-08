@@ -12,8 +12,10 @@ import {
   indentUnit,
   syntaxHighlighting,
   defaultHighlightStyle,
+  HighlightStyle,
   LanguageSupport
 } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { lintKeymap } from '@codemirror/lint';
@@ -296,6 +298,105 @@ function createThemeExtension(theme?: Theme): Extension {
 }
 
 // ============================================================================
+// SYNTAX HIGHLIGHTING FROM THEME
+// ============================================================================
+
+function createSyntaxHighlighting(theme?: Theme): Extension {
+  if (!theme) return syntaxHighlighting(defaultHighlightStyle, { fallback: true });
+
+  const s = theme.syntax;
+
+  const highlightStyle = HighlightStyle.define([
+    // Comments
+    { tag: tags.comment, color: s.comment, fontStyle: 'italic' },
+    { tag: tags.lineComment, color: s.comment, fontStyle: 'italic' },
+    { tag: tags.blockComment, color: s.comment, fontStyle: 'italic' },
+    { tag: tags.docComment, color: s.comment, fontStyle: 'italic' },
+
+    // Keywords
+    { tag: tags.keyword, color: s.keyword },
+    { tag: tags.controlKeyword, color: s.keyword },
+    { tag: tags.definitionKeyword, color: s.keyword },
+    { tag: tags.moduleKeyword, color: s.keyword },
+    { tag: tags.operatorKeyword, color: s.keyword },
+    { tag: tags.modifier, color: s.keyword },
+    { tag: tags.self, color: s.keyword, fontStyle: 'italic' },
+    { tag: tags.null, color: s.constant },
+    { tag: tags.atom, color: s.constant },
+    { tag: tags.bool, color: s.constant },
+    { tag: tags.unit, color: s.keyword },
+
+    // Strings
+    { tag: tags.string, color: s.string },
+    { tag: tags.docString, color: s.string },
+    { tag: tags.character, color: s.string },
+    { tag: tags.attributeValue, color: s.string },
+    { tag: tags.escape, color: s.operator },
+    { tag: tags.regexp, color: s.regexp ?? s.string },
+
+    // Numbers
+    { tag: tags.number, color: s.number },
+    { tag: tags.integer, color: s.number },
+    { tag: tags.float, color: s.number },
+
+    // Operators & punctuation
+    { tag: tags.operator, color: s.operator },
+    { tag: tags.arithmeticOperator, color: s.operator },
+    { tag: tags.logicOperator, color: s.operator },
+    { tag: tags.bitwiseOperator, color: s.operator },
+    { tag: tags.compareOperator, color: s.operator },
+    { tag: tags.updateOperator, color: s.operator },
+    { tag: tags.derefOperator, color: s.operator },
+    { tag: tags.punctuation, color: s.punctuation ?? theme.ui.textSecondary },
+    { tag: tags.paren, color: s.punctuation ?? theme.ui.textSecondary },
+    { tag: tags.squareBracket, color: s.punctuation ?? theme.ui.textSecondary },
+    { tag: tags.brace, color: s.punctuation ?? theme.ui.textSecondary },
+    { tag: tags.separator, color: s.punctuation ?? theme.ui.textSecondary },
+
+    // Names
+    { tag: tags.variableName, color: s.variable },
+    { tag: tags.definition(tags.variableName), color: s.variable },
+    { tag: tags.function(tags.variableName), color: s.function },
+    { tag: tags.definition(tags.function(tags.variableName)), color: s.function },
+    { tag: tags.propertyName, color: s.property ?? s.variable },
+    { tag: tags.function(tags.propertyName), color: s.function },
+    { tag: tags.definition(tags.propertyName), color: s.property ?? s.variable },
+    { tag: tags.attributeName, color: s.attribute ?? s.function },
+    { tag: tags.className, color: s.type },
+    { tag: tags.namespace, color: s.type },
+    { tag: tags.macroName, color: s.function },
+    { tag: tags.labelName, color: s.variable },
+
+    // Types
+    { tag: tags.typeName, color: s.type },
+    { tag: tags.tagName, color: s.tag ?? s.keyword },
+    { tag: tags.angleBracket, color: s.punctuation ?? theme.ui.textSecondary },
+
+    // Literals & special
+    { tag: tags.literal, color: s.constant },
+    { tag: tags.color, color: s.constant },
+    { tag: tags.url, color: s.link ?? s.string, textDecoration: 'underline' },
+
+    // Headings (markdown etc.)
+    { tag: tags.heading, color: s.heading ?? s.keyword, fontWeight: 'bold' },
+    { tag: tags.heading1, color: s.heading ?? s.keyword, fontWeight: 'bold' },
+    { tag: tags.heading2, color: s.heading ?? s.keyword, fontWeight: 'bold' },
+    { tag: tags.heading3, color: s.heading ?? s.keyword, fontWeight: 'bold' },
+    { tag: tags.link, color: s.link ?? s.string, textDecoration: 'underline' },
+    { tag: tags.emphasis, fontStyle: 'italic' },
+    { tag: tags.strong, fontWeight: 'bold' },
+    { tag: tags.strikethrough, textDecoration: 'line-through' },
+
+    // Meta & special
+    { tag: tags.meta, color: s.meta ?? theme.ui.textSecondary },
+    { tag: tags.processingInstruction, color: s.meta ?? theme.ui.textSecondary },
+    { tag: tags.invalid, color: theme.ui.error, textDecoration: 'underline wavy' },
+  ]);
+
+  return syntaxHighlighting(highlightStyle);
+}
+
+// ============================================================================
 // PLUGIN HOOKS SYSTEM
 // ============================================================================
 
@@ -411,11 +512,9 @@ export async function createEditor(
     lineNumbersCompartment.of(lineNumbers()),
     tabSizeCompartment.of(indentUnit.of('  ')),
 
-    // Syntax highlighting
-    syntaxHighlighting(defaultHighlightStyle),
-
-    // Indentation
-    indentUnit.of('  '), // 2 spaces
+    // Syntax highlighting from theme
+    createSyntaxHighlighting(theme),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
 
     // Keymaps (order matters - later ones override earlier ones)
     keymap.of([
@@ -473,30 +572,27 @@ export async function createDiffEditor(
   parent: HTMLElement,
   options: DiffEditorOptions
 ): Promise<{ mergeView: MergeView; destroy: () => void }> {
-  const { original, modified } = options;
+  const { original, modified, theme } = options;
+
+  const diffExtensions: Extension[] = [
+    EditorView.editable.of(false),
+    EditorState.readOnly.of(true),
+    highlightActiveLine(),
+    drawSelection(),
+    createSyntaxHighlighting(theme),
+    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+    createThemeExtension(theme),
+    lineNumbers(),
+  ];
 
   const mergeView = new MergeView({
     a: {
       doc: original,
-      extensions: [
-        EditorView.editable.of(false),
-        EditorState.readOnly.of(true),
-        highlightActiveLine(),
-        drawSelection(),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        lineNumbers(),
-      ],
+      extensions: diffExtensions,
     },
     b: {
       doc: modified,
-      extensions: [
-        EditorView.editable.of(false),
-        EditorState.readOnly.of(true),
-        highlightActiveLine(),
-        drawSelection(),
-        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        lineNumbers(),
-      ],
+      extensions: [...diffExtensions],
     },
     parent,
     collapseUnchanged: { margin: 3, minSize: 4 },

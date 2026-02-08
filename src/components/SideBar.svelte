@@ -94,15 +94,19 @@
     .sidebar {
       display: flex;
       flex-direction: column;
-      width: 300px;
+      width: 0;
+      min-width: 0;
       background: var(--chrome-bg);
-      border-right: 1px solid var(--window-border-color);
-      transform: translateX(-100%);
-      transition: transform var(--transition-chrome, 200ms);
+      border-right: none;
+      overflow: hidden;
+      transition: width 200ms ease-out, min-width 200ms ease-out, border-right 200ms ease-out;
+      flex-shrink: 0;
     }
-  
+
     .sidebar--visible {
-      transform: translateX(0);
+      width: 260px;
+      min-width: 260px;
+      border-right: 1px solid var(--window-border-color);
     }
   
     .sidebar__tabs {
