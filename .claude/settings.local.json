@@ -40,7 +40,12 @@
       "Bash(git reset:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add comprehensive test suite achieving 90%+ frontend coverage\n\nAdd 318 frontend tests across 11 test files and expand Rust tests to\n142, establishing a professional testing baseline with CI/CD pipeline.\n\nFrontend coverage: 98.8% statements, 87.87% branches, 98.62% functions,\n99.48% lines. Includes Vitest config with V8 coverage, Tauri API mocks,\nGitHub Actions CI workflow, and Husky pre-commit hooks.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(cargo fmt:*)"
+      "Bash(cargo fmt:*)",
+      "mcp__plugin_serena_serena__initial_instructions",
+      "mcp__plugin_serena_serena__check_onboarding_performed",
+      "mcp__plugin_serena_serena__get_symbols_overview",
+      "mcp__plugin_serena_serena__find_symbol",
+      "mcp__plugin_serena_serena__think_about_collected_information"
     ],
     "deny": [],
     "ask": []

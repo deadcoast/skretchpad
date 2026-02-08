@@ -4,6 +4,28 @@ author = "heat"
 version = "1.0.0"
 base = "dark"
 
+[palette]
+background = "rgba(18, 18, 18, 0.85)"
+foreground = "#e4e4e4"
+cursor_color = "#00d9ff"
+selection_background = "rgba(0, 217, 255, 0.2)"
+black = "#1c1c1c"
+red = "#ff5555"
+green = "#50fa7b"
+yellow = "#f1fa8c"
+blue = "#bd93f9"
+purple = "#ff79c6"
+cyan = "#8be9fd"
+white = "#f8f8f2"
+bright_black = "#6272a4"
+bright_red = "#ff6e6e"
+bright_green = "#69ff94"
+bright_yellow = "#ffffa5"
+bright_blue = "#d6acff"
+bright_purple = "#ff92df"
+bright_cyan = "#a4ffff"
+bright_white = "#ffffff"
+
 [window]
 background.base = "rgba(18, 18, 18, 0.85)"
 background.blur = 20
@@ -11,11 +33,20 @@ border.radius = 12
 border.width = 1
 border.color = "rgba(255, 255, 255, 0.1)"
 
+[window.shadow]
+color = "rgba(0, 0, 0, 0.5)"
+blur = 40
+offset = [0, 10]
+
 [chrome]
 background.color = "rgba(28, 28, 28, 0.95)"
 background.blur = 10
 height = 32
 foreground = "rgba(228, 228, 228, 0.9)"
+border = "rgba(255, 255, 255, 0.1)"
+menu_background = "rgba(36, 36, 36, 0.98)"
+menu_hover = "rgba(0, 217, 255, 0.15)"
+menu_foreground = "rgba(228, 228, 228, 0.9)"
 
 [editor]
 background = "transparent"
@@ -23,6 +54,18 @@ foreground = "#e4e4e4"
 cursor.color = "#00d9ff"
 cursor.width = 2
 selection.background = "rgba(0, 217, 255, 0.2)"
+font_family = "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace"
+font_size = 14
+line_height = 1.6
+
+[editor.line]
+active = "rgba(255, 255, 255, 0.05)"
+number = "rgba(228, 228, 228, 0.4)"
+number_active = "#00d9ff"
+
+[editor.gutter]
+background = "rgba(0, 0, 0, 0.2)"
+border = "rgba(255, 255, 255, 0.1)"
 
 [syntax]
 comment = { color = "#6a737d", style = "italic" }
@@ -34,11 +77,41 @@ function = { color = "#8be9fd" }
 variable = { color = "#f8f8f2" }
 type = { color = "#8be9fd", style = "italic" }
 constant = { color = "#bd93f9", style = "bold" }
+tag = { color = "#ff79c6" }
+attribute = { color = "#50fa7b" }
+property = { color = "#f8f8f2" }
+punctuation = { color = "#6272a4" }
+regexp = { color = "#f1fa8c" }
+heading = { color = "#8be9fd" }
+link = { color = "#50fa7b" }
+meta = { color = "#6272a4" }
 
 [ui]
 status_bar.background = "rgba(28, 28, 28, 0.95)"
 status_bar.foreground = "rgba(228, 228, 228, 0.7)"
 status_bar.height = 24
+primary = "#00d9ff"
+border = "rgba(255, 255, 255, 0.1)"
+border_subtle = "rgba(255, 255, 255, 0.06)"
+text_primary = "#e4e4e4"
+text_secondary = "rgba(228, 228, 228, 0.6)"
+text_disabled = "rgba(228, 228, 228, 0.3)"
+button_background = "rgba(255, 255, 255, 0.1)"
+button_hover = "rgba(255, 255, 255, 0.15)"
+button_active = "rgba(0, 217, 255, 0.3)"
+input_background = "rgba(0, 0, 0, 0.3)"
+input_border = "rgba(255, 255, 255, 0.2)"
+input_focus = "rgba(0, 217, 255, 0.5)"
+tooltip_background = "rgba(28, 28, 28, 0.95)"
+scrollbar_thumb = "rgba(255, 255, 255, 0.12)"
+scrollbar_thumb_hover = "rgba(255, 255, 255, 0.25)"
+error = "#ff5555"
+warning = "#f1fa8c"
+success = "#50fa7b"
+info = "#00d9ff"
+search_match = "rgba(255, 193, 7, 0.3)"
+search_match_selected = "rgba(255, 193, 7, 0.5)"
+selection_match = "rgba(0, 217, 255, 0.1)"
 
 [transitions]
 chrome_toggle = 200

@@ -31,5 +31,6 @@ module.exports = {
         'error',
         { argsIgnorePattern: '^_' },
       ],
+      'svelte/no-at-html-tags': 'off',
     },
   };

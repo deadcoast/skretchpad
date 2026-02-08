@@ -2,27 +2,70 @@
 name = "MilkyText"
 author = "heat"
 version = "1.0.0"
-base = "light"
+base = "dark"
+
+[palette]
+background = "#030304"
+foreground = "#FFFFFF"
+cursor_color = "#FFCCD5"
+selection_background = "rgba(255, 255, 255, 0.15)"
+black = "#363941"
+red = "#FF758F"
+green = "#E6FF75"
+yellow = "#FBD58E"
+blue = "#8875FF"
+purple = "#FF75C6"
+cyan = "#75FFCF"
+white = "#FFCCD5"
+bright_black = "#505664"
+bright_red = "#FF8FA3"
+bright_green = "#F3F3B0"
+bright_yellow = "#FDDEBC"
+bright_blue = "#C4AEF5"
+bright_purple = "#FFAED8"
+bright_cyan = "#BAF3DD"
+bright_white = "#FFE6EA"
 
 [window]
 background.base = "#030304"
 background.blur = 20
 border.radius = 12
 border.width = 1
-border.color = "rgba(0, 0, 0, 0.1)"
+border.color = "rgba(255, 255, 255, 0.08)"
+
+[window.shadow]
+color = "rgba(0, 0, 0, 0.6)"
+blur = 40
+offset = [0, 10]
 
 [chrome]
 background.color = "#363941"
 background.blur = 10
 height = 32
 foreground = "#FFFFFF"
+border = "rgba(255, 255, 255, 0.06)"
+menu_background = "rgba(54, 57, 65, 0.98)"
+menu_hover = "rgba(255, 204, 213, 0.12)"
+menu_foreground = "rgba(255, 255, 255, 0.85)"
 
 [editor]
 background = "transparent"
 foreground = "#FFFFFF"
 cursor.color = "#FFCCD5"
 cursor.width = 2
-selection.background = "#FFFFFF"
+selection.background = "rgba(255, 255, 255, 0.15)"
+font_family = "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace"
+font_size = 14
+line_height = 1.6
+
+[editor.line]
+active = "rgba(255, 255, 255, 0.04)"
+number = "rgba(255, 255, 255, 0.25)"
+number_active = "#FFCCD5"
+
+[editor.gutter]
+background = "rgba(0, 0, 0, 0.15)"
+border = "rgba(255, 255, 255, 0.06)"
 
 [syntax]
 comment = "#8875FF"
@@ -34,11 +77,41 @@ function = "#F3F3B0"
 variable = "#FFCCD5"
 type = "#C4AEF5"
 constant = "#FFAED8"
+tag = "#FF75C6"
+attribute = "#F3F3B0"
+property = "#FFCCD5"
+punctuation = "rgba(255, 255, 255, 0.5)"
+regexp = "#75FFCF"
+heading = "#FF75C6"
+link = "#75FFCF"
+meta = "#505664"
 
 [ui]
 status_bar.background = "#363941"
 status_bar.foreground = "#FFFFFF"
 status_bar.height = 24
+primary = "#FFCCD5"
+border = "rgba(255, 255, 255, 0.1)"
+border_subtle = "rgba(255, 255, 255, 0.06)"
+text_primary = "#FFFFFF"
+text_secondary = "rgba(255, 255, 255, 0.55)"
+text_disabled = "rgba(255, 255, 255, 0.25)"
+button_background = "rgba(255, 255, 255, 0.08)"
+button_hover = "rgba(255, 255, 255, 0.12)"
+button_active = "rgba(255, 204, 213, 0.2)"
+input_background = "rgba(0, 0, 0, 0.25)"
+input_border = "rgba(255, 255, 255, 0.12)"
+input_focus = "rgba(255, 204, 213, 0.4)"
+tooltip_background = "rgba(54, 57, 65, 0.97)"
+scrollbar_thumb = "rgba(255, 255, 255, 0.12)"
+scrollbar_thumb_hover = "rgba(255, 255, 255, 0.25)"
+error = "#FF758F"
+warning = "#FBD58E"
+success = "#75FFCF"
+info = "#8875FF"
+search_match = "rgba(251, 213, 142, 0.3)"
+search_match_selected = "rgba(251, 213, 142, 0.5)"
+selection_match = "rgba(255, 204, 213, 0.12)"
 
 [transitions]
 chrome_toggle = 200

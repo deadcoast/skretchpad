@@ -79,7 +79,7 @@
     const select = e.target as HTMLSelectElement;
     const name = select.value;
     settingsStore.update('keybindings', { scheme: name });
-    const scheme = $keybindingStore.available.find(s => s.name === name);
+    const scheme = $keybindingStore.available.find((s) => s.name === name);
     if (scheme) {
       keybindingStore.setScheme(scheme);
     }
@@ -99,7 +99,10 @@
   const fontSizes = [10, 11, 12, 13, 14, 15, 16, 18, 20, 24];
   const tabSizes = [2, 4, 8];
   const fontFamilies = [
-    { label: 'System Default', value: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace" },
+    {
+      label: 'System Default',
+      value: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
+    },
     { label: 'Fira Code', value: "'Fira Code', monospace" },
     { label: 'JetBrains Mono', value: "'JetBrains Mono', monospace" },
     { label: 'Cascadia Code', value: "'Cascadia Code', monospace" },
@@ -112,12 +115,23 @@
 
 {#if visible}
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-  <div class="settings-backdrop" on:click={handleClose} on:keydown={handleKeydown} role="dialog" aria-modal="true" aria-labelledby="settings-title">
-    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
+  <div
+    class="settings-backdrop"
+    on:click={handleClose}
+    on:keydown={handleKeydown}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settings-title"
+  >
     <div class="settings-panel" on:click|stopPropagation on:keydown|stopPropagation role="document">
       <div class="settings-header">
         <h2 id="settings-title">Settings</h2>
-        <button class="settings-close" on:click={handleClose} title="Close" aria-label="Close settings">{@html icons.close}</button>
+        <button
+          class="settings-close"
+          on:click={handleClose}
+          title="Close"
+          aria-label="Close settings">{@html icons.close}</button
+        >
       </div>
 
       <div class="settings-body">
@@ -129,16 +143,12 @@
             <label for="theme-select">Theme</label>
             <select
               id="theme-select"
-              value={$themeStore.current?.metadata?.name || 'MilkyText'}
+              value={$themeStore.current?.metadata?.name || ''}
               on:change={handleThemeChange}
             >
               {#each $themeStore.available as theme}
-                <option value={theme.metadata.name}>{theme.metadata.name}</option>
+                <option value={theme.name}>{theme.name}</option>
               {/each}
-              {#if $themeStore.available.length === 0}
-                <option value="glass-dark">Liquid Glass Dark</option>
-                <option value="glass-light">Liquid Glass Light</option>
-              {/if}
             </select>
           </div>
 
@@ -232,7 +242,11 @@
           {#if autoSave}
             <div class="setting-row">
               <label for="auto-save-delay">Auto Save Delay</label>
-              <select id="auto-save-delay" value={autoSaveDelay} on:change={handleAutoSaveDelayChange}>
+              <select
+                id="auto-save-delay"
+                value={autoSaveDelay}
+                on:change={handleAutoSaveDelayChange}
+              >
                 <option value={500}>500ms</option>
                 <option value={1000}>1 second</option>
                 <option value={2000}>2 seconds</option>
@@ -263,8 +277,12 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .settings-panel {
@@ -282,8 +300,14 @@
   }
 
   @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .settings-header {

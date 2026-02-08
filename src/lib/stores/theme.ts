@@ -1,6 +1,7 @@
 // src/lib/stores/theme.ts
 
 import { writable, derived, get } from 'svelte/store';
+import { invoke } from '@tauri-apps/api/core';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -131,275 +132,154 @@ export interface Theme {
   transitions: TransitionTheme;
 }
 
+export interface ThemeInfo {
+  name: string;
+  author: string;
+  version: string;
+  base: string;
+  file: string;
+}
+
 export interface ThemeState {
   current: Theme | null;
-  available: Theme[];
+  available: ThemeInfo[];
   loading: boolean;
   error: string | null;
 }
 
 // ============================================================================
-// MILKYTEXT THEME (Default)
+// BACKEND THEME LOADING
 // ============================================================================
 
-const MILKYTEXT: Theme = {
-  metadata: {
-    name: 'MilkyText',
-    author: 'heat',
-    version: '1.0.0',
-    base: 'dark',
-  },
-  palette: {
-    background: '#030304',
-    foreground: '#FFFFFF',
-    cursorColor: '#FFCCD5',
-    selectionBackground: 'rgba(255, 255, 255, 0.15)',
-    black: '#363941',
-    red: '#FF758F',
-    green: '#E6FF75',
-    yellow: '#FBD58E',
-    blue: '#8875FF',
-    purple: '#FF75C6',
-    cyan: '#75FFCF',
-    white: '#FFCCD5',
-    brightBlack: '#505664',
-    brightRed: '#FF8FA3',
-    brightGreen: '#F3F3B0',
-    brightYellow: '#FDDEBC',
-    brightBlue: '#C4AEF5',
-    brightPurple: '#FFAED8',
-    brightCyan: '#BAF3DD',
-    brightWhite: '#FFE6EA',
-  },
-  window: {
-    background: { base: '#030304', blur: 20 },
-    border: { radius: 12, width: 1, color: 'rgba(255, 255, 255, 0.08)' },
-    shadow: { color: 'rgba(0, 0, 0, 0.6)', blur: 40, offset: [0, 10] },
-  },
-  chrome: {
-    background: '#363941',
-    foreground: '#FFFFFF',
-    height: 32,
-    blur: 10,
-    border: 'rgba(255, 255, 255, 0.06)',
-    menuBackground: 'rgba(54, 57, 65, 0.98)',
-    menuHover: 'rgba(255, 204, 213, 0.12)',
-    menuForeground: 'rgba(255, 255, 255, 0.85)',
-  },
-  editor: {
-    background: 'transparent',
-    foreground: '#FFFFFF',
-    cursor: { color: '#FFCCD5', width: 2 },
-    selection: { background: 'rgba(255, 255, 255, 0.15)' },
-    line: {
-      active: 'rgba(255, 255, 255, 0.04)',
-      number: 'rgba(255, 255, 255, 0.25)',
-      numberActive: '#FFCCD5',
-    },
-    gutter: { background: 'rgba(0, 0, 0, 0.15)', border: 'rgba(255, 255, 255, 0.06)' },
-    fontFamily: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
-    fontSize: 14,
-    lineHeight: 1.6,
-  },
-  syntax: {
-    comment: '#8875FF',
-    keyword: '#FF75C6',
-    string: '#75FFCF',
-    number: '#BAF3DD',
-    operator: '#FF758F',
-    function: '#F3F3B0',
-    variable: '#FFCCD5',
-    type: '#C4AEF5',
-    constant: '#FFAED8',
-    tag: '#FF75C6',
-    attribute: '#F3F3B0',
-    property: '#FFCCD5',
-    punctuation: 'rgba(255, 255, 255, 0.5)',
-    regexp: '#75FFCF',
-    heading: '#FF75C6',
-    link: '#75FFCF',
-    meta: '#505664',
-  },
-  ui: {
-    statusBar: { background: '#363941', foreground: '#FFFFFF', height: 24 },
-    primary: '#FFCCD5',
-    border: 'rgba(255, 255, 255, 0.1)',
-    borderSubtle: 'rgba(255, 255, 255, 0.06)',
-    textPrimary: '#FFFFFF',
-    textSecondary: 'rgba(255, 255, 255, 0.55)',
-    textDisabled: 'rgba(255, 255, 255, 0.25)',
-    buttonBackground: 'rgba(255, 255, 255, 0.08)',
-    buttonHover: 'rgba(255, 255, 255, 0.12)',
-    buttonActive: 'rgba(255, 204, 213, 0.2)',
-    inputBackground: 'rgba(0, 0, 0, 0.25)',
-    inputBorder: 'rgba(255, 255, 255, 0.12)',
-    inputFocus: 'rgba(255, 204, 213, 0.4)',
-    tooltipBackground: 'rgba(54, 57, 65, 0.97)',
-    scrollbarThumb: 'rgba(255, 255, 255, 0.12)',
-    scrollbarThumbHover: 'rgba(255, 255, 255, 0.25)',
-    error: '#FF758F',
-    warning: '#FBD58E',
-    success: '#75FFCF',
-    info: '#8875FF',
-    searchMatch: 'rgba(251, 213, 142, 0.3)',
-    searchMatchSelected: 'rgba(251, 213, 142, 0.5)',
-    selectionMatch: 'rgba(255, 204, 213, 0.12)',
-  },
-  transitions: {
-    chromeToggle: 200,
-    themeSwitch: 300,
-    hover: 100,
-    easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
-  },
-};
+/** Load a theme from the Rust backend by TOML file stem (e.g. "milkytext") */
+async function loadThemeFromBackend(fileName: string): Promise<Theme> {
+  const data = await invoke<Theme>('load_theme_data', { themeName: fileName });
+  return data;
+}
 
-// ============================================================================
-// LIQUID GLASS DARK (Legacy)
-// ============================================================================
-
-const LIQUID_GLASS_DARK: Theme = {
-  metadata: {
-    name: 'Liquid Glass Dark',
-    author: 'skretchpad',
-    version: '1.0.0',
-    base: 'dark',
-  },
-  palette: {
-    background: 'rgba(18, 18, 18, 0.85)',
-    foreground: '#e4e4e4',
-    cursorColor: '#00d9ff',
-    selectionBackground: 'rgba(0, 217, 255, 0.2)',
-    black: '#1c1c1c',
-    red: '#ff5555',
-    green: '#50fa7b',
-    yellow: '#f1fa8c',
-    blue: '#bd93f9',
-    purple: '#ff79c6',
-    cyan: '#8be9fd',
-    white: '#f8f8f2',
-    brightBlack: '#6272a4',
-    brightRed: '#ff6e6e',
-    brightGreen: '#69ff94',
-    brightYellow: '#ffffa5',
-    brightBlue: '#d6acff',
-    brightPurple: '#ff92df',
-    brightCyan: '#a4ffff',
-    brightWhite: '#ffffff',
-  },
-  window: {
-    background: { base: 'rgba(18, 18, 18, 0.85)', blur: 20 },
-    border: { radius: 12, width: 1, color: 'rgba(255, 255, 255, 0.1)' },
-    shadow: { color: 'rgba(0, 0, 0, 0.5)', blur: 40, offset: [0, 10] },
-  },
-  chrome: {
-    background: 'rgba(28, 28, 28, 0.95)',
-    foreground: 'rgba(228, 228, 228, 0.9)',
-    height: 32,
-    blur: 10,
-    border: 'rgba(255, 255, 255, 0.1)',
-    menuBackground: 'rgba(36, 36, 36, 0.98)',
-    menuHover: 'rgba(0, 217, 255, 0.15)',
-    menuForeground: 'rgba(228, 228, 228, 0.9)',
-  },
-  editor: {
-    background: 'transparent',
-    foreground: '#e4e4e4',
-    cursor: { color: '#00d9ff', width: 2 },
-    selection: { background: 'rgba(0, 217, 255, 0.2)' },
-    line: {
-      active: 'rgba(255, 255, 255, 0.05)',
-      number: 'rgba(228, 228, 228, 0.4)',
-      numberActive: '#00d9ff',
-    },
-    gutter: { background: 'rgba(0, 0, 0, 0.2)', border: 'rgba(255, 255, 255, 0.1)' },
-    fontFamily: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
-    fontSize: 14,
-    lineHeight: 1.6,
-  },
-  syntax: {
-    comment: '#6a737d',
-    keyword: '#ff79c6',
-    string: '#50fa7b',
-    number: '#bd93f9',
-    operator: '#ff79c6',
-    function: '#8be9fd',
-    variable: '#f8f8f2',
-    type: '#8be9fd',
-    constant: '#bd93f9',
-    tag: '#ff79c6',
-    attribute: '#50fa7b',
-    property: '#f8f8f2',
-    punctuation: '#6272a4',
-    regexp: '#f1fa8c',
-    heading: '#8be9fd',
-    link: '#50fa7b',
-    meta: '#6272a4',
-  },
-  ui: {
-    statusBar: { background: 'rgba(28, 28, 28, 0.95)', foreground: 'rgba(228, 228, 228, 0.7)', height: 24 },
-    primary: '#00d9ff',
-    border: 'rgba(255, 255, 255, 0.1)',
-    borderSubtle: 'rgba(255, 255, 255, 0.06)',
-    textPrimary: '#e4e4e4',
-    textSecondary: 'rgba(228, 228, 228, 0.6)',
-    textDisabled: 'rgba(228, 228, 228, 0.3)',
-    buttonBackground: 'rgba(255, 255, 255, 0.1)',
-    buttonHover: 'rgba(255, 255, 255, 0.15)',
-    buttonActive: 'rgba(0, 217, 255, 0.3)',
-    inputBackground: 'rgba(0, 0, 0, 0.3)',
-    inputBorder: 'rgba(255, 255, 255, 0.2)',
-    inputFocus: 'rgba(0, 217, 255, 0.5)',
-    tooltipBackground: 'rgba(28, 28, 28, 0.95)',
-    scrollbarThumb: 'rgba(255, 255, 255, 0.12)',
-    scrollbarThumbHover: 'rgba(255, 255, 255, 0.25)',
-    error: '#ff5555',
-    warning: '#f1fa8c',
-    success: '#50fa7b',
-    info: '#00d9ff',
-    searchMatch: 'rgba(255, 193, 7, 0.3)',
-    searchMatchSelected: 'rgba(255, 193, 7, 0.5)',
-    selectionMatch: 'rgba(0, 217, 255, 0.1)',
-  },
-  transitions: {
-    chromeToggle: 200,
-    themeSwitch: 300,
-    hover: 100,
-    easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
-  },
-};
+/** List available themes from the backend */
+async function listThemesFromBackend(): Promise<ThemeInfo[]> {
+  return await invoke<ThemeInfo[]>('list_themes');
+}
 
 // ============================================================================
 // THEME STORE
 // ============================================================================
 
+/** Cache of loaded themes keyed by file stem */
+const themeCache = new Map<string, Theme>();
+
 function createThemeStore() {
   const { subscribe, update } = writable<ThemeState>({
-    current: MILKYTEXT,
-    available: [MILKYTEXT, LIQUID_GLASS_DARK],
-    loading: false,
+    current: null,
+    available: [],
+    loading: true,
     error: null,
   });
 
+  /** Extract file stem from ThemeInfo.file (e.g. "milkytext.toml" -> "milkytext") */
+  function fileStem(file: string): string {
+    return file.replace(/\.toml$/, '');
+  }
+
+  /** Load a theme by file stem, using cache if available */
+  async function loadTheme(stem: string): Promise<Theme> {
+    const cached = themeCache.get(stem);
+    if (cached) return cached;
+
+    const theme = await loadThemeFromBackend(stem);
+    themeCache.set(stem, theme);
+    return theme;
+  }
+
   return {
     subscribe,
+
+    /** Initialize the theme store by listing available themes and loading the default */
+    init: async () => {
+      try {
+        update((s) => ({ ...s, loading: true, error: null }));
+
+        const available = (await listThemesFromBackend()) ?? [];
+        update((s) => ({ ...s, available }));
+
+        // Try to load saved preference, fall back to first available
+        const savedStem =
+          typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
+
+        // Determine which theme to load
+        let stemToLoad: string | null = null;
+        if (savedStem && available.some((t) => fileStem(t.file) === savedStem)) {
+          stemToLoad = savedStem;
+        } else if (available.length > 0) {
+          stemToLoad = fileStem(available[0].file);
+        }
+
+        if (stemToLoad) {
+          const theme = await loadTheme(stemToLoad);
+          update((s) => ({ ...s, current: theme, loading: false }));
+          applyThemeToDocument(theme);
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('theme', stemToLoad);
+          }
+        } else {
+          update((s) => ({ ...s, loading: false, error: 'No themes available' }));
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('Failed to initialize themes:', msg);
+        update((s) => ({ ...s, loading: false, error: msg }));
+      }
+    },
 
     setTheme: (theme: Theme) => {
       update((state) => ({ ...state, current: theme, error: null }));
       applyThemeToDocument(theme);
     },
 
-    switchTheme: (themeName: string) => {
+    /** Switch theme by display name (matches ThemeInfo.name or metadata.name) */
+    switchTheme: async (themeName: string) => {
       const state = get({ subscribe });
-      const theme = state.available.find((t) => t.metadata.name === themeName);
-      if (theme) {
-        update((s) => ({ ...s, current: theme }));
+
+      // Find the matching ThemeInfo
+      const info = state.available?.find((t) => t.name === themeName);
+      if (!info) {
+        console.warn(`Theme not found: ${themeName}`);
+        return;
+      }
+
+      const stem = fileStem(info.file);
+
+      try {
+        update((s) => ({ ...s, loading: true }));
+        const theme = await loadTheme(stem);
+        update((s) => ({ ...s, current: theme, loading: false }));
         applyThemeToDocument(theme);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('theme', stem);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`Failed to load theme '${themeName}':`, msg);
+        update((s) => ({ ...s, loading: false, error: msg }));
       }
     },
 
-    resetToDefault: () => {
-      update((state) => ({ ...state, current: MILKYTEXT, error: null }));
-      applyThemeToDocument(MILKYTEXT);
+    resetToDefault: async () => {
+      const state = get({ subscribe });
+      if (state.available?.length > 0) {
+        const stem = fileStem(state.available[0].file);
+        try {
+          const theme = await loadTheme(stem);
+          update((s) => ({ ...s, current: theme, error: null }));
+          applyThemeToDocument(theme);
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('theme', stem);
+          }
+        } catch (err) {
+          console.error('Failed to reset to default theme:', err);
+        }
+      }
     },
   };
 }
@@ -568,8 +448,8 @@ export const themeColors = derived(themeStore, ($theme) => {
 // ============================================================================
 
 if (typeof window !== 'undefined') {
-  const state = get(themeStore);
-  if (state.current) {
-    applyThemeToDocument(state.current);
-  }
+  // Kick off async initialization — theme will load from backend
+  themeStore.init().catch((err) => {
+    console.error('Theme initialization failed:', err);
+  });
 }

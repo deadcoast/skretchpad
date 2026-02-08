@@ -317,6 +317,7 @@ fn main() {
             clear_audit_logs,
             // Theme engine
             theme_engine::load_theme,
+            theme_engine::load_theme_data,
             theme_engine::apply_theme,
             theme_engine::get_theme_metadata,
             theme_engine::list_themes,
