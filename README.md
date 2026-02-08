@@ -47,7 +47,7 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 - Auto-discovery from `plugins/` directory
 - First-party plugins activate on startup
 
-![desktop-preview-python](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/editor-python-desktop.png)
+![milkytext-python](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-python.png)
 
 ### Editor
 - CodeMirror 6 with compartment-based hot-swapping
