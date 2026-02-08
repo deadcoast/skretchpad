@@ -8,6 +8,7 @@
   import SettingsPanel from './components/SettingsPanel.svelte';
   import PluginPermissionDialog from './components/PluginPermissionDialog.svelte';
   import DiffView from './features/diff/DiffView.svelte';
+  import BootScreen from './components/BootScreen.svelte';
   import { onMount } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
@@ -18,6 +19,7 @@
   import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
   import { invoke } from '@tauri-apps/api/core';
 
+  let booting = true;
   let menuVisible = true;
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
@@ -241,7 +243,11 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="app glass-window">
+{#if booting}
+  <BootScreen on:complete={() => booting = false} />
+{/if}
+
+<div class="app glass-window" class:app--hidden={booting}>
   <Chrome
     {alwaysOnTop}
     {menuVisible}
@@ -298,6 +304,11 @@
     border-radius: var(--window-border-radius, 12px);
     border: var(--window-border-width, 1px) solid var(--window-border-color, rgba(255, 255, 255, 0.1));
     overflow: hidden;
+  }
+
+  .app--hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .glass-window {
