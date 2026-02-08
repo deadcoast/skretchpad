@@ -1,4 +1,3 @@
-
 <div align="center">
 
 ```
@@ -9,7 +8,7 @@
 
 **v0.1.0**
 
-A text editor built for developers who care about the tools they use.
+Fast, Minimal, Feature Rich Text Editor inspired by 80's Compute Aesthetics.
 
 Tauri 2.0 &middot; Svelte 4 &middot; CodeMirror 6 &middot; Rust &middot; deno_core V8
 
