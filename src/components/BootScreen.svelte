@@ -68,20 +68,21 @@
       pluginData = getPluginData();
     }
 
-    // Show discovered plugins
+    // Build plugin lines from discovered data
     if (pluginData.length > 0) {
-      for (const p of pluginData) {
-        const line: BootLine = {
-          text: `  ${p.name} ${p.version} (${p.trust})  [${p.state === 'active' ? 'ACTIVE' : p.state.toUpperCase()}]`,
-          type: 'plugin',
-          delay: 120,
-        };
-        await sleep(line.delay);
-        visibleLines = [...visibleLines, line];
-      }
+      pluginLines = pluginData.map(p => ({
+        text: `  ${p.name} ${p.version} (${p.trust})  [${p.state === 'active' ? 'ACTIVE' : p.state.toUpperCase()}]`,
+        type: 'plugin' as const,
+        delay: 120,
+      }));
     } else {
-      await sleep(120);
-      visibleLines = [...visibleLines, { text: '  No plugins discovered.', type: 'info', delay: 0 }];
+      pluginLines = [{ text: '  No plugins discovered.', type: 'info' as const, delay: 120 }];
+    }
+
+    // Display plugin lines
+    for (const line of pluginLines) {
+      await sleep(line.delay);
+      visibleLines = [...visibleLines, line];
     }
 
     // Final lines
