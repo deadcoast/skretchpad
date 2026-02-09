@@ -21,6 +21,7 @@ use plugin_system::{
     ops::EditorStateHandle,
     sandbox::SandboxRegistry,
 };
+use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::RwLock;
@@ -114,6 +115,148 @@ async fn get_all_plugin_statuses(
         .into_iter()
         .map(|s| serde_json::to_value(s).map_err(|e| e.to_string()))
         .collect()
+}
+
+// ============================================================================
+// PLUGIN HOT-RELOAD
+// ============================================================================
+
+/// Registry for hot-reload file watchers (one per plugin)
+struct HotReloadRegistry {
+    watchers: tokio::sync::Mutex<HashMap<String, notify::RecommendedWatcher>>,
+}
+
+impl HotReloadRegistry {
+    fn new() -> Self {
+        Self {
+            watchers: tokio::sync::Mutex::new(HashMap::new()),
+        }
+    }
+}
+
+#[tauri::command]
+async fn enable_plugin_hot_reload(
+    plugin_id: String,
+    plugin_manager: State<'_, Arc<RwLock<PluginManager>>>,
+    hot_reload: State<'_, Arc<HotReloadRegistry>>,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    use notify::{Event, RecursiveMode, Watcher};
+
+    // Get plugin path from loader
+    let plugin_dir = {
+        let manager = plugin_manager.read().await;
+        let info = manager
+            .loader()
+            .get(&plugin_id)
+            .ok_or_else(|| format!("Plugin not found: {}", plugin_id))?;
+        info.path.clone()
+    };
+
+    // Check if already watching
+    {
+        let watchers = hot_reload.watchers.lock().await;
+        if watchers.contains_key(&plugin_id) {
+            return Ok(()); // Already watching
+        }
+    }
+
+    let pid = plugin_id.clone();
+    let pm = plugin_manager.inner().clone();
+    let handle = app_handle.clone();
+
+    // Debounce: track last reload time
+    let last_reload = Arc::new(tokio::sync::Mutex::new(std::time::Instant::now()));
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<Event>(32);
+
+    // Spawn debounced reload handler
+    let reload_pid = pid.clone();
+    let reload_last = last_reload.clone();
+    tokio::spawn(async move {
+        while let Some(_event) = rx.recv().await {
+            // Debounce: skip if last reload was < 500ms ago
+            let mut last = reload_last.lock().await;
+            let elapsed = last.elapsed();
+            if elapsed < std::time::Duration::from_millis(500) {
+                continue;
+            }
+            *last = std::time::Instant::now();
+            drop(last);
+
+            // Small delay to let file writes complete
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+            let mut manager = pm.write().await;
+            match manager.reload(&reload_pid).await {
+                Ok(()) => {
+                    println!("[hot-reload] Reloaded plugin: {}", reload_pid);
+                    let _ = handle.emit(
+                        "plugin:hot-reload",
+                        serde_json::json!({
+                            "plugin_id": reload_pid,
+                            "status": "reloaded",
+                        }),
+                    );
+                }
+                Err(e) => {
+                    eprintln!("[hot-reload] Failed to reload {}: {}", reload_pid, e);
+                    let _ = handle.emit(
+                        "plugin:hot-reload",
+                        serde_json::json!({
+                            "plugin_id": reload_pid,
+                            "status": "error",
+                            "error": e.to_string(),
+                        }),
+                    );
+                }
+            }
+        }
+    });
+
+    // Create file watcher
+    let watcher_tx = tx.clone();
+    let mut watcher = notify::recommended_watcher(move |res: Result<Event, notify::Error>| {
+        if let Ok(event) = res {
+            // Only reload on content changes (modify, create)
+            match event.kind {
+                notify::EventKind::Modify(_) | notify::EventKind::Create(_) => {
+                    let _ = watcher_tx.blocking_send(event);
+                }
+                _ => {}
+            }
+        }
+    })
+    .map_err(|e| format!("Failed to create watcher: {}", e))?;
+
+    watcher
+        .watch(plugin_dir.as_ref(), RecursiveMode::Recursive)
+        .map_err(|e| format!("Failed to watch plugin dir: {}", e))?;
+
+    // Store watcher
+    {
+        let mut watchers = hot_reload.watchers.lock().await;
+        watchers.insert(pid.clone(), watcher);
+    }
+
+    println!(
+        "[hot-reload] Watching plugin: {} at {}",
+        pid,
+        plugin_dir.display()
+    );
+    Ok(())
+}
+
+#[tauri::command]
+async fn disable_plugin_hot_reload(
+    plugin_id: String,
+    hot_reload: State<'_, Arc<HotReloadRegistry>>,
+) -> Result<(), String> {
+    let mut watchers = hot_reload.watchers.lock().await;
+    if watchers.remove(&plugin_id).is_some() {
+        println!("[hot-reload] Stopped watching plugin: {}", plugin_id);
+    }
+    Ok(())
 }
 
 // ============================================================================
@@ -252,6 +395,7 @@ fn main() {
             )));
             let audit_logger = Arc::new(AuditLogger::new(10000));
             let watcher_registry = Arc::new(FileWatcherRegistry::new());
+            let hot_reload_registry = Arc::new(HotReloadRegistry::new());
 
             // Store state
             app.manage(plugin_manager.clone());
@@ -259,13 +403,19 @@ fn main() {
             app.manage(audit_logger.clone());
             app.manage(watcher_registry.clone());
             app.manage(editor_state.clone());
+            app.manage(hot_reload_registry.clone());
 
             // Auto-discover and load plugins
+            let hr_registry = hot_reload_registry.clone();
+            let app_handle_for_hr = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let mut manager = plugin_manager.write().await;
 
                 if let Ok(plugins) = manager.discover() {
                     println!("Discovered {} plugins", plugins.len());
+
+                    // Collect plugin IDs for hot-reload setup
+                    let mut activated_plugins = Vec::new();
 
                     for plugin_id in plugins {
                         // Load plugin
@@ -283,12 +433,93 @@ fn main() {
                             ) {
                                 match manager.activate(&plugin_id).await {
                                     Ok(()) => {
-                                        println!("  Activated plugin: {} (first-party)", plugin_id)
+                                        println!("  Activated plugin: {} (first-party)", plugin_id);
+                                        activated_plugins.push(plugin_id.clone());
                                     }
                                     Err(e) => eprintln!(
                                         "  Failed to activate plugin {}: {}",
                                         plugin_id, e
                                     ),
+                                }
+                            }
+                        }
+                    }
+
+                    // Enable hot-reload for all activated plugins in dev mode
+                    if cfg!(debug_assertions) {
+                        for plugin_id in &activated_plugins {
+                            if let Some(info) = manager.loader().get(plugin_id) {
+                                let plugin_dir = info.path.clone();
+
+                                use notify::{Event, RecursiveMode, Watcher};
+
+                                let pm = plugin_manager.clone();
+                                let pid = plugin_id.clone();
+                                let handle = app_handle_for_hr.clone();
+                                let last_reload =
+                                    Arc::new(tokio::sync::Mutex::new(std::time::Instant::now()));
+
+                                let (tx, mut rx) = tokio::sync::mpsc::channel::<Event>(32);
+                                let reload_pid = pid.clone();
+                                let reload_last = last_reload.clone();
+
+                                tokio::spawn(async move {
+                                    while let Some(_event) = rx.recv().await {
+                                        let mut last = reload_last.lock().await;
+                                        if last.elapsed() < std::time::Duration::from_millis(500) {
+                                            continue;
+                                        }
+                                        *last = std::time::Instant::now();
+                                        drop(last);
+                                        tokio::time::sleep(std::time::Duration::from_millis(200))
+                                            .await;
+                                        let mut mgr = pm.write().await;
+                                        match mgr.reload(&reload_pid).await {
+                                            Ok(()) => {
+                                                println!(
+                                                    "[hot-reload] Reloaded plugin: {}",
+                                                    reload_pid
+                                                );
+                                                let _ = handle.emit(
+                                                    "plugin:hot-reload",
+                                                    serde_json::json!({
+                                                        "plugin_id": reload_pid,
+                                                        "status": "reloaded",
+                                                    }),
+                                                );
+                                            }
+                                            Err(e) => {
+                                                eprintln!(
+                                                    "[hot-reload] Failed to reload {}: {}",
+                                                    reload_pid, e
+                                                );
+                                            }
+                                        }
+                                    }
+                                });
+
+                                let watcher_tx = tx.clone();
+                                if let Ok(mut watcher) = notify::recommended_watcher(
+                                    move |res: Result<Event, notify::Error>| {
+                                        if let Ok(event) = res {
+                                            match event.kind {
+                                                notify::EventKind::Modify(_)
+                                                | notify::EventKind::Create(_) => {
+                                                    let _ = watcher_tx.blocking_send(event);
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    },
+                                ) {
+                                    if watcher
+                                        .watch(plugin_dir.as_ref(), RecursiveMode::Recursive)
+                                        .is_ok()
+                                    {
+                                        let mut watchers = hr_registry.watchers.lock().await;
+                                        watchers.insert(pid.clone(), watcher);
+                                        println!("[hot-reload] Auto-watching plugin: {}", pid);
+                                    }
                                 }
                             }
                         }
@@ -313,6 +544,8 @@ fn main() {
             reload_plugin,
             get_plugin_status,
             get_all_plugin_statuses,
+            enable_plugin_hot_reload,
+            disable_plugin_hot_reload,
             // Filesystem operations
             plugin_read_file,
             plugin_write_file,

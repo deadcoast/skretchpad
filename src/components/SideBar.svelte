@@ -111,10 +111,14 @@
               </button>
             </div>
             <div class="sidebar__panel-content">
-              <div class="sidebar__panel-placeholder">
-                <p>Panel: {panel.id}</p>
-                <p>Plugin: {panel.plugin_id}</p>
-              </div>
+              {#if panel.content}
+                <div class="sidebar__plugin-html">{@html panel.content}</div>
+              {:else}
+                <div class="sidebar__panel-placeholder">
+                  <p>Panel: {panel.id}</p>
+                  <p>Plugin: {panel.plugin_id}</p>
+                </div>
+              {/if}
             </div>
           </div>
         {/if}
@@ -287,5 +291,49 @@
     text-align: center;
     padding: 32px 16px;
     font-size: 12px;
+  }
+
+  /* Plugin HTML content - scoped styling */
+  .sidebar__plugin-html {
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--editor-fg);
+    overflow-y: auto;
+    word-wrap: break-word;
+  }
+
+  .sidebar__plugin-html :global(a) {
+    color: var(--color-info, #00d9ff);
+    text-decoration: none;
+  }
+
+  .sidebar__plugin-html :global(a:hover) {
+    text-decoration: underline;
+  }
+
+  .sidebar__plugin-html :global(button) {
+    background: var(--button-bg, rgba(255, 255, 255, 0.06));
+    color: var(--text-primary, #e4e4e4);
+    border: 1px solid var(--window-border-color, rgba(255, 255, 255, 0.1));
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .sidebar__plugin-html :global(code) {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .sidebar__plugin-html :global(pre) {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
   }
 </style>

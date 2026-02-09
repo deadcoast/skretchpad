@@ -2,6 +2,9 @@
   import Editor from './components/Editor.svelte';
   import Chrome from './components/Chrome.svelte';
   import TabBar from './components/TabBar.svelte';
+  import Breadcrumb from './components/Breadcrumb.svelte';
+  import Minimap from './components/Minimap.svelte';
+  import SplitPane from './components/SplitPane.svelte';
   import StatusBar from './components/StatusBar.svelte';
   import SideBar from './components/SideBar.svelte';
   import NotificationToast from './components/NotificationToast.svelte';
@@ -30,6 +33,10 @@
   let sidebarVisible = false;
   let activeSidebarPanel = 'explorer';
   let editorRef: Editor;
+  let splitEditorRef: Editor;
+  let minimapVisible = true;
+  let splitActive = false;
+  let splitDirection: 'horizontal' | 'vertical' = 'horizontal';
 
   // Diff view state
   let diffViewVisible = false;
@@ -157,6 +164,15 @@
         keybinding: 'Ctrl+Shift+G',
         category: 'View',
       },
+      { id: 'view.toggleMinimap', label: 'Toggle Minimap', category: 'View' },
+      {
+        id: 'view.splitEditorRight',
+        label: 'Split Editor Right',
+        keybinding: 'Ctrl+\\',
+        category: 'View',
+      },
+      { id: 'view.splitEditorDown', label: 'Split Editor Down', category: 'View' },
+      { id: 'view.closeSplitEditor', label: 'Close Split Editor', category: 'View' },
       { id: 'view.openSettings', label: 'Open Settings', keybinding: 'Ctrl+,', category: 'View' },
     ];
 
@@ -233,6 +249,20 @@
         break;
       case 'view.sourceControl':
         openSourceControl();
+        break;
+      case 'view.toggleMinimap':
+        minimapVisible = !minimapVisible;
+        break;
+      case 'view.splitEditorRight':
+        splitDirection = 'horizontal';
+        splitActive = true;
+        break;
+      case 'view.splitEditorDown':
+        splitDirection = 'vertical';
+        splitActive = true;
+        break;
+      case 'view.closeSplitEditor':
+        splitActive = false;
         break;
       case 'view.openSettings':
         settingsVisible = true;
@@ -376,6 +406,16 @@
       editorRef?.close();
       return;
     }
+    if (mod && e.key === '\\') {
+      e.preventDefault();
+      if (splitActive) {
+        splitActive = false;
+      } else {
+        splitDirection = 'horizontal';
+        splitActive = true;
+      }
+      return;
+    }
     if (mod && e.key === ',') {
       e.preventDefault();
       settingsVisible = !settingsVisible;
@@ -427,6 +467,9 @@
           on:newTab={() => editorStore.createFile()}
         />
       {/if}
+      {#if $activeFile?.path}
+        <Breadcrumb filePath={$activeFile.path} />
+      {/if}
       {#if diffViewVisible}
         <DiffView
           original={diffOriginal}
@@ -436,8 +479,20 @@
           language={diffLanguage}
           on:close={() => (diffViewVisible = false)}
         />
+      {:else if splitActive}
+        <SplitPane direction={splitDirection}>
+          <div slot="first" class="split-editor-pane">
+            <Editor bind:this={editorRef} />
+          </div>
+          <div slot="second" class="split-editor-pane">
+            <Editor bind:this={splitEditorRef} />
+          </div>
+        </SplitPane>
       {:else}
-        <Editor bind:this={editorRef} />
+        <div class="editor-with-minimap">
+          <Editor bind:this={editorRef} />
+          <Minimap editorView={editorRef?.getEditorView() ?? null} visible={minimapVisible} />
+        </div>
       {/if}
     </div>
   </div>
@@ -491,6 +546,23 @@
     flex-direction: column;
     min-height: 0;
     min-width: 0;
+  }
+
+  .editor-with-minimap {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .split-editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
   }
 
   :global(body) {

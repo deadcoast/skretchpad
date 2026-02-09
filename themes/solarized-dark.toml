@@ -1,0 +1,120 @@
+[metadata]
+name = "Solarized Dark"
+author = "skretchpad"
+version = "1.0.0"
+base = "dark"
+
+[palette]
+background = "rgba(0, 43, 54, 0.95)"
+foreground = "#839496"
+cursor_color = "#268bd2"
+selection_background = "rgba(38, 139, 210, 0.2)"
+black = "#002b36"
+red = "#dc322f"
+green = "#859900"
+yellow = "#b58900"
+blue = "#268bd2"
+purple = "#6c71c4"
+cyan = "#2aa198"
+white = "#93a1a1"
+bright_black = "#586e75"
+bright_red = "#cb4b16"
+bright_green = "#859900"
+bright_yellow = "#b58900"
+bright_blue = "#268bd2"
+bright_purple = "#d33682"
+bright_cyan = "#2aa198"
+bright_white = "#fdf6e3"
+
+[window]
+background.base = "rgba(0, 43, 54, 0.95)"
+background.blur = 20
+border.radius = 12
+border.width = 1
+border.color = "rgba(131, 148, 150, 0.1)"
+
+[window.shadow]
+color = "rgba(0, 0, 0, 0.4)"
+blur = 40
+offset = [0, 10]
+
+[chrome]
+background.color = "rgba(7, 54, 66, 0.95)"
+background.blur = 10
+height = 32
+foreground = "rgba(131, 148, 150, 0.9)"
+border = "rgba(131, 148, 150, 0.08)"
+menu_background = "rgba(7, 54, 66, 0.98)"
+menu_hover = "rgba(38, 139, 210, 0.15)"
+menu_foreground = "rgba(131, 148, 150, 0.9)"
+
+[editor]
+background = "transparent"
+foreground = "#839496"
+cursor.color = "#268bd2"
+cursor.width = 2
+selection.background = "rgba(38, 139, 210, 0.2)"
+font_family = "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace"
+font_size = 14
+line_height = 1.6
+
+[editor.line]
+active = "rgba(131, 148, 150, 0.05)"
+number = "rgba(131, 148, 150, 0.35)"
+number_active = "#268bd2"
+
+[editor.gutter]
+background = "rgba(0, 0, 0, 0.15)"
+border = "rgba(131, 148, 150, 0.08)"
+
+[syntax]
+comment = { color = "#586e75", style = "italic" }
+keyword = { color = "#859900", style = "bold" }
+string = { color = "#2aa198" }
+number = { color = "#d33682" }
+operator = { color = "#859900" }
+function = { color = "#268bd2" }
+variable = { color = "#839496" }
+type = { color = "#b58900", style = "italic" }
+constant = { color = "#cb4b16", style = "bold" }
+tag = { color = "#268bd2" }
+attribute = { color = "#b58900" }
+property = { color = "#839496" }
+punctuation = { color = "#586e75" }
+regexp = { color = "#dc322f" }
+heading = { color = "#cb4b16" }
+link = { color = "#6c71c4" }
+meta = { color = "#586e75" }
+
+[ui]
+status_bar.background = "rgba(7, 54, 66, 0.95)"
+status_bar.foreground = "rgba(131, 148, 150, 0.7)"
+status_bar.height = 24
+primary = "#268bd2"
+border = "rgba(131, 148, 150, 0.1)"
+border_subtle = "rgba(131, 148, 150, 0.05)"
+text_primary = "#839496"
+text_secondary = "rgba(131, 148, 150, 0.6)"
+text_disabled = "rgba(131, 148, 150, 0.3)"
+button_background = "rgba(131, 148, 150, 0.1)"
+button_hover = "rgba(131, 148, 150, 0.15)"
+button_active = "rgba(38, 139, 210, 0.25)"
+input_background = "rgba(0, 43, 54, 0.8)"
+input_border = "rgba(131, 148, 150, 0.2)"
+input_focus = "rgba(38, 139, 210, 0.4)"
+tooltip_background = "rgba(7, 54, 66, 0.95)"
+scrollbar_thumb = "rgba(131, 148, 150, 0.12)"
+scrollbar_thumb_hover = "rgba(131, 148, 150, 0.25)"
+error = "#dc322f"
+warning = "#b58900"
+success = "#859900"
+info = "#268bd2"
+search_match = "rgba(181, 137, 0, 0.3)"
+search_match_selected = "rgba(181, 137, 0, 0.5)"
+selection_match = "rgba(38, 139, 210, 0.1)"
+
+[transitions]
+chrome_toggle = 200
+theme_switch = 300
+hover = 100
+easing = "cubic-bezier(0.4, 0.0, 0.2, 1)"

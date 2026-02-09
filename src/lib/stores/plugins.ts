@@ -3,6 +3,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import DOMPurify from 'dompurify';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -19,6 +20,7 @@ export interface PluginMetadata {
 
 export interface PluginCapabilities {
   filesystem: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   network: any;
   commands: {
     allowlist: string[];
@@ -32,12 +34,7 @@ export interface PluginCapabilities {
   };
 }
 
-export type PluginLifecycleState =
-  | 'loaded'
-  | 'activating'
-  | 'active'
-  | 'deactivating'
-  | 'error';
+export type PluginLifecycleState = 'loaded' | 'activating' | 'active' | 'deactivating' | 'error';
 
 export interface PluginStatus {
   id: string;
@@ -62,6 +59,7 @@ export interface PluginPanel {
   title: string;
   position: 'sidebar' | 'bottom' | 'modal';
   visible: boolean;
+  content?: string; // Sanitized HTML content from plugin
 }
 
 export interface PluginStatusBarItem {
@@ -393,9 +391,7 @@ function createPluginsStore() {
      */
     getActivePlugins(): PluginStatus[] {
       const state = get({ subscribe });
-      return Array.from(state.plugins.values()).filter(
-        (plugin) => plugin.state === 'active'
-      );
+      return Array.from(state.plugins.values()).filter((plugin) => plugin.state === 'active');
     },
 
     /**
@@ -404,11 +400,11 @@ function createPluginsStore() {
     getCommands(pluginId?: string): PluginCommand[] {
       const state = get({ subscribe });
       const commands = Array.from(state.commands.values());
-      
+
       if (pluginId) {
         return commands.filter((cmd) => cmd.plugin_id === pluginId);
       }
-      
+
       return commands;
     },
 
@@ -418,11 +414,11 @@ function createPluginsStore() {
     getPanels(pluginId?: string): PluginPanel[] {
       const state = get({ subscribe });
       const panels = Array.from(state.panels.values());
-      
+
       if (pluginId) {
         return panels.filter((panel) => panel.plugin_id === pluginId);
       }
-      
+
       return panels;
     },
 
@@ -432,11 +428,11 @@ function createPluginsStore() {
     getStatusBarItems(pluginId?: string): PluginStatusBarItem[] {
       const state = get({ subscribe });
       const items = Array.from(state.statusBarItems.values());
-      
+
       if (pluginId) {
         return items.filter((item) => item.plugin_id === pluginId);
       }
-      
+
       return items.sort((a, b) => b.priority - a.priority);
     },
 
@@ -448,7 +444,13 @@ function createPluginsStore() {
       const statusBarAddUnlisten = await listen<PluginStatusBarItem>(
         'plugin:status_bar:add',
         (event) => {
-          pluginsStore.registerStatusBarItem(event.payload);
+          // Sanitize text content from plugins (strip all HTML tags)
+          const payload = { ...event.payload };
+          payload.text = DOMPurify.sanitize(payload.text, { ALLOWED_TAGS: [] });
+          if (payload.tooltip) {
+            payload.tooltip = DOMPurify.sanitize(payload.tooltip, { ALLOWED_TAGS: [] });
+          }
+          pluginsStore.registerStatusBarItem(payload);
         }
       );
       eventListeners.push(statusBarAddUnlisten);
@@ -462,10 +464,75 @@ function createPluginsStore() {
       eventListeners.push(statusBarRemoveUnlisten);
 
       // Listen for panel events
-      const panelShowUnlisten = await listen<PluginPanel>(
+      const panelShowUnlisten = await listen<PluginPanel & { content?: string }>(
         'plugin:panel:show',
         (event) => {
-          pluginsStore.registerPanel({ ...event.payload, visible: true });
+          const payload = event.payload;
+          // Sanitize plugin-provided HTML to prevent XSS
+          const sanitizedContent = payload.content
+            ? DOMPurify.sanitize(payload.content, {
+                ALLOWED_TAGS: [
+                  'div',
+                  'span',
+                  'p',
+                  'h1',
+                  'h2',
+                  'h3',
+                  'h4',
+                  'h5',
+                  'h6',
+                  'ul',
+                  'ol',
+                  'li',
+                  'a',
+                  'strong',
+                  'em',
+                  'code',
+                  'pre',
+                  'br',
+                  'hr',
+                  'img',
+                  'table',
+                  'thead',
+                  'tbody',
+                  'tr',
+                  'th',
+                  'td',
+                  'button',
+                  'input',
+                  'label',
+                  'select',
+                  'option',
+                  'textarea',
+                ],
+                ALLOWED_ATTR: [
+                  'class',
+                  'id',
+                  'style',
+                  'href',
+                  'target',
+                  'src',
+                  'alt',
+                  'type',
+                  'value',
+                  'placeholder',
+                  'disabled',
+                  'checked',
+                  'title',
+                  'data-*',
+                  'aria-label',
+                  'role',
+                ],
+                ALLOW_DATA_ATTR: true,
+                FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form'],
+                FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+              })
+            : undefined;
+          pluginsStore.registerPanel({
+            ...payload,
+            content: sanitizedContent,
+            visible: true,
+          });
         }
       );
       eventListeners.push(panelShowUnlisten);
@@ -478,6 +545,23 @@ function createPluginsStore() {
       );
       eventListeners.push(panelHideUnlisten);
 
+      // Listen for hot-reload events
+      const hotReloadUnlisten = await listen<{
+        plugin_id: string;
+        status: 'reloaded' | 'error';
+        error?: string;
+      }>('plugin:hot-reload', async (event) => {
+        const { plugin_id, status, error } = event.payload;
+        if (status === 'reloaded') {
+          console.log(`[hot-reload] Plugin reloaded: ${plugin_id}`);
+          await pluginsStore.refreshStatus(plugin_id);
+        } else if (status === 'error') {
+          console.error(`[hot-reload] Plugin reload failed: ${plugin_id}`, error);
+          await pluginsStore.refreshStatus(plugin_id);
+        }
+      });
+      eventListeners.push(hotReloadUnlisten);
+
       // Listen for notification events
       const notificationUnlisten = await listen<{
         plugin_id: string;
@@ -489,6 +573,28 @@ function createPluginsStore() {
         console.log('Plugin notification:', event.payload);
       });
       eventListeners.push(notificationUnlisten);
+    },
+
+    /**
+     * Enable hot-reload for a plugin
+     */
+    async enableHotReload(pluginId: string): Promise<void> {
+      try {
+        await invoke('enable_plugin_hot_reload', { pluginId });
+      } catch (error) {
+        console.error(`Failed to enable hot-reload for ${pluginId}:`, error);
+      }
+    },
+
+    /**
+     * Disable hot-reload for a plugin
+     */
+    async disableHotReload(pluginId: string): Promise<void> {
+      try {
+        await invoke('disable_plugin_hot_reload', { pluginId });
+      } catch (error) {
+        console.error(`Failed to disable hot-reload for ${pluginId}:`, error);
+      }
     },
 
     /**
@@ -558,8 +664,9 @@ export const pluginsList = derived(pluginsStore, ($plugins) =>
 /**
  * Active plugins count
  */
-export const activePluginCount = derived(pluginsStore, ($plugins) =>
-  Array.from($plugins.plugins.values()).filter((p) => p.state === 'active').length
+export const activePluginCount = derived(
+  pluginsStore,
+  ($plugins) => Array.from($plugins.plugins.values()).filter((p) => p.state === 'active').length
 );
 
 /**
@@ -591,9 +698,7 @@ export const commandsByCategory = derived(pluginsStore, ($plugins) => {
  * Visible panels
  */
 export const visiblePanels = derived(pluginsStore, ($plugins) =>
-  Array.from($plugins.panels.values()).filter(
-    (panel): panel is PluginPanel => panel.visible
-  )
+  Array.from($plugins.panels.values()).filter((panel): panel is PluginPanel => panel.visible)
 );
 
 /**

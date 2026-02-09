@@ -1,0 +1,120 @@
+[metadata]
+name = "Cyberpunk"
+author = "skretchpad"
+version = "1.0.0"
+base = "dark"
+
+[palette]
+background = "rgba(10, 0, 20, 0.92)"
+foreground = "#e0d0ff"
+cursor_color = "#ff2a6d"
+selection_background = "rgba(255, 42, 109, 0.25)"
+black = "#0a0014"
+red = "#ff2a6d"
+green = "#05d9e8"
+yellow = "#ffcc00"
+blue = "#7b2dff"
+purple = "#ff2a6d"
+cyan = "#05d9e8"
+white = "#d1c4e9"
+bright_black = "#3d2066"
+bright_red = "#ff5c8a"
+bright_green = "#39ffce"
+bright_yellow = "#ffe566"
+bright_blue = "#a77bff"
+bright_purple = "#ff6eb4"
+bright_cyan = "#67fff0"
+bright_white = "#ffffff"
+
+[window]
+background.base = "rgba(10, 0, 20, 0.92)"
+background.blur = 20
+border.radius = 12
+border.width = 1
+border.color = "rgba(255, 42, 109, 0.3)"
+
+[window.shadow]
+color = "rgba(123, 45, 255, 0.3)"
+blur = 40
+offset = [0, 10]
+
+[chrome]
+background.color = "rgba(15, 5, 30, 0.95)"
+background.blur = 10
+height = 32
+foreground = "rgba(224, 208, 255, 0.9)"
+border = "rgba(255, 42, 109, 0.2)"
+menu_background = "rgba(20, 8, 40, 0.98)"
+menu_hover = "rgba(255, 42, 109, 0.2)"
+menu_foreground = "rgba(224, 208, 255, 0.9)"
+
+[editor]
+background = "transparent"
+foreground = "#e0d0ff"
+cursor.color = "#ff2a6d"
+cursor.width = 2
+selection.background = "rgba(255, 42, 109, 0.25)"
+font_family = "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace"
+font_size = 14
+line_height = 1.6
+
+[editor.line]
+active = "rgba(255, 42, 109, 0.08)"
+number = "rgba(224, 208, 255, 0.3)"
+number_active = "#ff2a6d"
+
+[editor.gutter]
+background = "rgba(0, 0, 0, 0.3)"
+border = "rgba(255, 42, 109, 0.15)"
+
+[syntax]
+comment = { color = "#5c4a8a", style = "italic" }
+keyword = { color = "#ff2a6d", style = "bold" }
+string = { color = "#05d9e8" }
+number = { color = "#ffcc00" }
+operator = { color = "#ff2a6d" }
+function = { color = "#39ffce" }
+variable = { color = "#e0d0ff" }
+type = { color = "#a77bff", style = "italic" }
+constant = { color = "#ffcc00", style = "bold" }
+tag = { color = "#ff2a6d" }
+attribute = { color = "#05d9e8" }
+property = { color = "#d1c4e9" }
+punctuation = { color = "#5c4a8a" }
+regexp = { color = "#ff6eb4" }
+heading = { color = "#05d9e8" }
+link = { color = "#39ffce" }
+meta = { color = "#5c4a8a" }
+
+[ui]
+status_bar.background = "rgba(15, 5, 30, 0.95)"
+status_bar.foreground = "rgba(224, 208, 255, 0.7)"
+status_bar.height = 24
+primary = "#ff2a6d"
+border = "rgba(255, 42, 109, 0.2)"
+border_subtle = "rgba(255, 42, 109, 0.1)"
+text_primary = "#e0d0ff"
+text_secondary = "rgba(224, 208, 255, 0.6)"
+text_disabled = "rgba(224, 208, 255, 0.3)"
+button_background = "rgba(255, 42, 109, 0.15)"
+button_hover = "rgba(255, 42, 109, 0.25)"
+button_active = "rgba(255, 42, 109, 0.4)"
+input_background = "rgba(0, 0, 0, 0.4)"
+input_border = "rgba(255, 42, 109, 0.3)"
+input_focus = "rgba(255, 42, 109, 0.5)"
+tooltip_background = "rgba(15, 5, 30, 0.95)"
+scrollbar_thumb = "rgba(255, 42, 109, 0.2)"
+scrollbar_thumb_hover = "rgba(255, 42, 109, 0.4)"
+error = "#ff2a6d"
+warning = "#ffcc00"
+success = "#05d9e8"
+info = "#a77bff"
+search_match = "rgba(255, 204, 0, 0.3)"
+search_match_selected = "rgba(255, 204, 0, 0.5)"
+selection_match = "rgba(255, 42, 109, 0.15)"
+
+[transitions]
+chrome_toggle = 200
+theme_switch = 300
+hover = 100
+easing = "cubic-bezier(0.4, 0.0, 0.2, 1)"
