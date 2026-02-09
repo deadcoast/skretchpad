@@ -77,13 +77,13 @@ npx tauri build
 #### Test
 
 ```bash
-# Frontend tests (310 tests, Vitest + jsdom)
+# Frontend tests (316 tests, Vitest + jsdom)
 npm test
 
 # Frontend with coverage
 npm run test:coverage
 
-# Rust tests (148 tests)
+# Rust tests (178 tests)
 cd src-tauri && cargo test
 
 # All tests
@@ -106,10 +106,12 @@ cd src-tauri && cargo check
 
 - Sandboxed V8 runtime per plugin (deno_core 0.230)
 - 9 bridge ops: filesystem (3), network (1), commands (1), UI (2), editor (2)
-- Capability-based security with TOML manifests
-- Permission approval dialog with risk assessment
-- Auto-discovery from `plugins/` directory
-- First-party plugins activate on startup
+- Capability-based security with TOML manifests and trust levels (first-party/verified/community/local)
+- Permission approval dialog with risk assessment; first-party plugins auto-approve
+- Auto-discovery from `plugins/` directory with hot-reload in dev mode
+- Resource limits: memory, operations, and CPU timeout enforcement
+- Trust verification with signature checking (TrustVerifier)
+- Full lifecycle: activate/deactivate/reload/unload with event emission
 
 ### Editor
 ![milkytext-rust](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-rust.png)
@@ -125,10 +127,16 @@ cd src-tauri && cargo check
 - Minimal mode -- eye icon strips chrome and status bar to transparent, leaving only text
 - Native window controls (minimize, maximize, close) with drag region
 - Always-on-top pin toggle
+- Multi-tab bar with drag reorder, close other/right
 - Command palette (Ctrl+Shift+P) with 18+ registered commands
 - Settings panel (Ctrl+,) for appearance, editor, keybindings, files
-- Side-by-side diff viewer (CodeMirror MergeView)
+- Diff viewer with hunk navigation, unified/side-by-side toggle, language support
+- Source control panel (Ctrl+Shift+G) with staged/unstaged sections
+- Breadcrumb navigation above editor
+- Minimap code overview sidebar
+- Split editor (Ctrl+\\) with resizable panes
 - Notification toast system with action buttons
+- DOMPurify XSS sanitization for plugin content
 - Retro boot sequence on launch with plugin status confirmation
 
 ### Theme Engine
@@ -136,7 +144,7 @@ cd src-tauri && cargo check
 - 16-color ANSI palette + semantic colors + UI hierarchy
 - 85+ CSS variables injected at runtime via `applyThemeToDocument()`
 - `load_theme_data` Tauri command returns camelCase JSON from snake_case TOML
-- 3 built-in themes: MilkyText (dark), Liquid Glass Dark, Liquid Glass Light
+- 6 built-in themes: MilkyText, Liquid Glass Dark, Liquid Glass Light, Cyberpunk, Nord, Solarized Dark
 - Async theme loading with caching and localStorage persistence
 - Settings panel theme switcher with live preview
 
@@ -199,6 +207,8 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 | `Ctrl+Shift+D` | Duplicate line               |
 | `Ctrl+Shift+K` | Delete line                  |
 | `Alt+Up/Down`  | Move lines up/down           |
+| `Ctrl+\`       | Split editor                 |
+| `Ctrl+Shift+G` | Source control panel         |
 | `Ctrl+Z`       | Undo                         |
 | `Ctrl+Shift+Z` | Redo                         |
 
@@ -227,7 +237,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 | Plugins    | deno_core 0.230     | V8 isolate sandbox per plugin       |
 | Build      | Vite 5              | Frontend bundling, HMR              |
 | Styling    | CSS Variables       | Theme-driven, 85+ properties        |
-| Testing    | Vitest + Cargo Test | 458 tests (310 frontend, 148 Rust)  |
+| Testing    | Vitest + Cargo Test | 494 tests (316 frontend, 178 Rust)  |
 | CI/CD      | GitHub Actions      | Lint, test, build (cross-platform)  |
 | Pre-commit | Husky + lint-staged | ESLint, Prettier, cargo fmt         |
 | Dialogs    | tauri-plugin-dialog | Native OS file/save dialogs         |

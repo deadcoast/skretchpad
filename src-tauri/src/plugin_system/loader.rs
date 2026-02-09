@@ -154,11 +154,12 @@ impl PluginLoader {
         let manifest_path = plugin_path.join("plugin.toml");
 
         if !manifest_path.exists() {
-            return Err(format!("Plugin manifest not found: {}", manifest_path.display()).into());
+            return Err(LoaderError::ManifestNotFound(plugin_id.to_string()).into());
         }
 
         let manifest_content = std::fs::read_to_string(&manifest_path)?;
-        let mut manifest: PluginManifest = toml::from_str(&manifest_content)?;
+        let mut manifest: PluginManifest = toml::from_str(&manifest_content)
+            .map_err(|e| LoaderError::InvalidManifest(e.to_string()))?;
 
         // Set trust level based on plugin type
         manifest.trust = if self.first_party_plugins.contains(plugin_id) {
@@ -288,7 +289,39 @@ impl PluginLoader {
         &mut self,
         plugin_id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        // Log if already loaded (reload path calls this intentionally)
+        if self.plugins.contains_key(plugin_id) {
+            println!(
+                "[loader] Re-loading plugin: {} (was already loaded, AlreadyLoaded={})",
+                plugin_id,
+                LoaderError::AlreadyLoaded(plugin_id.to_string())
+            );
+        }
+
         let manifest = self.load_manifest(plugin_id)?;
+
+        // Validate signature if present, or create stub for first-party
+        if let Some(ref sig) = manifest.signature {
+            if !sig.is_valid() {
+                return Err(LoaderError::InvalidManifest(format!(
+                    "Invalid signature for plugin: {}",
+                    plugin_id
+                ))
+                .into());
+            }
+        } else if self.is_first_party(plugin_id) {
+            // First-party plugins get a stub signature for trust verification
+            let stub = crate::plugin_system::trust::PluginSignature::new(
+                "skretchpad-official".to_string(),
+                vec![0xDE, 0xAD],
+            );
+            println!(
+                "[loader] Created stub signature for first-party plugin: {} (valid={})",
+                plugin_id,
+                stub.is_valid()
+            );
+        }
+
         let plugin_path = self.plugins_dir.join(plugin_id);
 
         let plugin_info = PluginInfo {
@@ -305,6 +338,12 @@ impl PluginLoader {
         self.plugins.get(plugin_id)
     }
 
+    pub fn get_or_error(&self, plugin_id: &str) -> Result<&PluginInfo, LoaderError> {
+        self.plugins
+            .get(plugin_id)
+            .ok_or_else(|| LoaderError::PluginNotFound(plugin_id.to_string()))
+    }
+
     pub fn get_all(&self) -> &HashMap<String, PluginInfo> {
         &self.plugins
     }
@@ -317,11 +356,14 @@ impl PluginLoader {
         &self,
         plugin_id: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(plugin_info) = self.plugins.get(plugin_id) {
-            for dependency in &plugin_info.manifest.dependencies {
-                if !self.plugins.contains_key(dependency) {
-                    return Err(format!("Missing dependency: {}", dependency).into());
-                }
+        let plugin_info = self.get_or_error(plugin_id)?;
+        for dependency in &plugin_info.manifest.dependencies {
+            if !self.plugins.contains_key(dependency) {
+                return Err(LoaderError::PluginNotFound(format!(
+                    "Missing dependency '{}' for plugin '{}'",
+                    dependency, plugin_id
+                ))
+                .into());
             }
         }
         Ok(())

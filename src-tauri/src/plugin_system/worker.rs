@@ -288,10 +288,30 @@ impl PluginWorker {
         }
     }
 
-    /// Shutdown the worker
-    pub fn shutdown(self) {
+    /// Get worker id
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get worker capabilities
+    pub fn capabilities(&self) -> &PluginCapabilities {
+        &self.capabilities
+    }
+
+    /// Get worker resource limits
+    pub fn resource_limits(&self) -> &ResourceLimits {
+        &self.resource_limits
+    }
+
+    /// Send shutdown message without consuming self
+    pub fn send_shutdown(&self) {
         let _ = self.sender.send(WorkerMessage::Shutdown);
-        if let Some(handle) = self.handle {
+    }
+
+    /// Shutdown the worker (consumes self, joins thread)
+    pub fn shutdown(mut self) {
+        let _ = self.sender.send(WorkerMessage::Shutdown);
+        if let Some(handle) = self.handle.take() {
             let _ = handle.join();
         }
     }
@@ -431,5 +451,70 @@ mod tests {
     fn test_worker_registry_new() {
         let registry = WorkerRegistry::new();
         assert!(registry.workers.is_empty());
+    }
+
+    #[test]
+    fn test_worker_registry_get_nonexistent() {
+        let registry = WorkerRegistry::new();
+        assert!(registry.get_worker("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_worker_registry_get_mut_nonexistent() {
+        let mut registry = WorkerRegistry::new();
+        assert!(registry.get_worker_mut("nonexistent").is_none());
+    }
+
+    #[test]
+    fn test_worker_registry_remove_nonexistent() {
+        let mut registry = WorkerRegistry::new();
+        assert!(!registry.remove_worker("nonexistent"));
+    }
+
+    #[test]
+    fn test_worker_registry_shutdown_all_empty() {
+        let mut registry = WorkerRegistry::new();
+        registry.shutdown_all(); // should not panic
+        assert!(registry.workers.is_empty());
+    }
+
+    #[test]
+    fn test_worker_message_shutdown_variant() {
+        // Verify the Shutdown variant exists and is constructible
+        let msg = WorkerMessage::Shutdown;
+        match msg {
+            WorkerMessage::Shutdown => {} // expected
+            _ => panic!("Expected Shutdown variant"),
+        }
+    }
+
+    #[test]
+    fn test_worker_response_error_roundtrip() {
+        let original = WorkerResponse::Error("test error".to_string());
+        let json = serde_json::to_string(&original).unwrap();
+        let deserialized: WorkerResponse = serde_json::from_str(&json).unwrap();
+        match deserialized {
+            WorkerResponse::Error(msg) => assert_eq!(msg, "test error"),
+            _ => panic!("Expected Error"),
+        }
+    }
+
+    #[test]
+    fn test_worker_response_success_complex_json() {
+        let data = serde_json::json!({
+            "files": ["a.rs", "b.rs"],
+            "count": 2,
+            "nested": {"key": true}
+        });
+        let response = WorkerResponse::Success(data.clone());
+        let json = serde_json::to_string(&response).unwrap();
+        let deserialized: WorkerResponse = serde_json::from_str(&json).unwrap();
+        match deserialized {
+            WorkerResponse::Success(v) => {
+                assert_eq!(v["count"], 2);
+                assert_eq!(v["nested"]["key"], true);
+            }
+            _ => panic!("Expected Success"),
+        }
     }
 }

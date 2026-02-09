@@ -17,9 +17,12 @@ use plugin_system::{
         plugin_show_notification, plugin_show_panel, plugin_unwatch_path, plugin_watch_path,
         plugin_write_file, AuditLogger, FileWatcherRegistry,
     },
+    capabilities::PluginCapabilities,
     manager::PluginManager,
     ops::EditorStateHandle,
     sandbox::SandboxRegistry,
+    trust::TrustVerifier,
+    worker::WorkerRegistry,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -64,7 +67,35 @@ async fn load_plugin(
 async fn activate_plugin(
     plugin_id: String,
     state: State<'_, Arc<RwLock<PluginManager>>>,
+    verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
+    worker_registry: State<'_, Arc<RwLock<WorkerRegistry>>>,
 ) -> Result<(), String> {
+    // Trust verification before activation
+    {
+        let manager = state.read().await;
+        if let Some(info) = manager.loader().get(&plugin_id) {
+            if info.manifest.trust.requires_signature() {
+                if let Some(ref sig) = info.manifest.signature {
+                    let v = verifier.read().await;
+                    if !v.verify_signature(sig) {
+                        return Err(format!(
+                            "Plugin '{}' requires a trusted signature but verification failed",
+                            plugin_id
+                        ));
+                    }
+                }
+            }
+        } else {
+            return Err(format!("Plugin not loaded: {}", plugin_id));
+        }
+    }
+
+    // Clean up old worker if exists (from previous activation)
+    {
+        let mut wr = worker_registry.write().await;
+        let _ = wr.remove_worker(&plugin_id);
+    }
+
     let mut manager = state.write().await;
     manager
         .activate(&plugin_id)
@@ -76,12 +107,19 @@ async fn activate_plugin(
 async fn deactivate_plugin(
     plugin_id: String,
     state: State<'_, Arc<RwLock<PluginManager>>>,
+    worker_registry: State<'_, Arc<RwLock<WorkerRegistry>>>,
 ) -> Result<(), String> {
     let mut manager = state.write().await;
     manager
         .deactivate(&plugin_id)
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+
+    // Clean up worker tracking
+    let mut wr = worker_registry.write().await;
+    let _ = wr.remove_worker(&plugin_id);
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -110,11 +148,248 @@ async fn get_all_plugin_statuses(
     state: State<'_, Arc<RwLock<PluginManager>>>,
 ) -> Result<Vec<serde_json::Value>, String> {
     let manager = state.read().await;
+    // Cross-check with sandbox registry for active sandbox count
+    let active_sandboxes = manager.sandbox_registry().list_sandboxes().await;
+    println!(
+        "[plugin] Status check: {} active sandboxes",
+        active_sandboxes.len()
+    );
+
     let statuses = manager.get_all_statuses();
     statuses
         .into_iter()
         .map(|s| serde_json::to_value(s).map_err(|e| e.to_string()))
         .collect()
+}
+
+// ============================================================================
+// NEW PLUGIN SYSTEM COMMANDS (v0.0.11)
+// ============================================================================
+
+#[tauri::command]
+async fn unload_plugin(
+    plugin_id: String,
+    state: State<'_, Arc<RwLock<PluginManager>>>,
+) -> Result<(), String> {
+    let mut manager = state.write().await;
+    manager.unload(&plugin_id).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_plugin_event_listeners(
+    event_name: String,
+    state: State<'_, Arc<RwLock<PluginManager>>>,
+) -> Result<Vec<String>, String> {
+    let manager = state.read().await;
+    Ok(manager.get_event_listeners(&event_name))
+}
+
+#[tauri::command]
+async fn get_file_watcher_count(
+    watcher_registry: State<'_, Arc<FileWatcherRegistry>>,
+) -> Result<usize, String> {
+    Ok(watcher_registry.count().await)
+}
+
+#[tauri::command]
+async fn list_active_sandboxes(
+    registry: State<'_, Arc<SandboxRegistry>>,
+) -> Result<Vec<String>, String> {
+    Ok(registry.list_sandboxes().await)
+}
+
+#[tauri::command]
+async fn get_plugin_resource_stats(
+    plugin_id: String,
+    registry: State<'_, Arc<SandboxRegistry>>,
+) -> Result<serde_json::Value, String> {
+    let sandbox = registry
+        .get_sandbox(&plugin_id)
+        .await
+        .ok_or_else(|| format!("No active sandbox for plugin: {}", plugin_id))?;
+
+    let sandbox = sandbox.read().await;
+
+    // Use sandbox getters for metadata
+    let sandbox_id = sandbox.id().to_string();
+    let caps = sandbox.capabilities().clone();
+    let limits = sandbox.resource_limits().clone();
+
+    // Check limits (will error if exceeded)
+    sandbox.check_resource_limits().map_err(|e| e.to_string())?;
+
+    let stats = sandbox.get_resource_stats();
+    serde_json::to_value(serde_json::json!({
+        "sandbox_id": sandbox_id,
+        "capabilities": caps,
+        "limits": {
+            "max_memory": limits.max_memory,
+            "max_cpu_time_ms": limits.max_cpu_time.as_millis() as u64,
+            "max_operations": limits.max_operations,
+        },
+        "stats": stats,
+    }))
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn grant_plugin_capability(
+    plugin_id: String,
+    domain: Option<String>,
+    allow_command: Option<String>,
+    disallow_command: Option<String>,
+    ui_preset: Option<String>,
+    state: State<'_, Arc<RwLock<PluginManager>>>,
+) -> Result<serde_json::Value, String> {
+    let manager = state.read().await;
+    let mut caps = manager
+        .get_plugin_capabilities(&plugin_id)
+        .ok_or_else(|| format!("Plugin not found: {}", plugin_id))?;
+
+    // Apply domain addition
+    if let Some(d) = domain {
+        caps.network.add_domain(d);
+    }
+
+    // Apply command changes
+    if let Some(cmd) = allow_command {
+        // Use CommandCapability::new for fresh construction when needed
+        if caps.commands.allowlist.is_empty() {
+            caps.commands = crate::plugin_system::capabilities::CommandCapability::new(vec![cmd]);
+        } else {
+            caps.commands.allow_command(cmd);
+        }
+    }
+    if let Some(cmd) = disallow_command {
+        caps.commands.disallow_command(&cmd);
+    }
+
+    // Apply UI preset
+    if let Some(preset) = ui_preset {
+        use crate::plugin_system::capabilities::UiCapability;
+        let ui = match preset.as_str() {
+            "all" => UiCapability::all(),
+            "basic" => UiCapability::basic(),
+            _ => UiCapability::default(),
+        };
+        caps.ui = ui;
+    }
+
+    // Merge with existing capabilities (most permissive)
+    let existing = manager
+        .get_plugin_capabilities(&plugin_id)
+        .unwrap_or_default();
+    let merged = existing.merge(&caps);
+
+    // Compute tier for response
+    let tier = if merged.is_subset_of(&PluginCapabilities::none()) {
+        "sandboxed"
+    } else if merged.is_subset_of(&PluginCapabilities::workspace_read()) {
+        "read-only"
+    } else if merged.is_subset_of(&PluginCapabilities::workspace_read_write()) {
+        "read-write"
+    } else {
+        "full"
+    };
+
+    // Also check first_party preset for reference
+    let _first_party_caps = PluginCapabilities::first_party();
+
+    serde_json::to_value(serde_json::json!({
+        "plugin_id": plugin_id,
+        "capabilities": merged,
+        "tier": tier,
+    }))
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_worker_info(
+    plugin_id: String,
+    worker_registry: State<'_, Arc<RwLock<WorkerRegistry>>>,
+) -> Result<serde_json::Value, String> {
+    let mut registry = worker_registry.write().await;
+
+    // Use get_worker_mut for mutable access (e.g. future resource tracking)
+    if let Some(worker) = registry.get_worker_mut(&plugin_id) {
+        let info = serde_json::json!({
+            "id": worker.id(),
+            "capabilities": worker.capabilities(),
+            "limits": {
+                "max_memory": worker.resource_limits().max_memory,
+                "max_cpu_time_ms": worker.resource_limits().max_cpu_time.as_millis() as u64,
+                "max_operations": worker.resource_limits().max_operations,
+            },
+        });
+        Ok(info)
+    } else if let Some(worker) = registry.get_worker(&plugin_id) {
+        // Fallback to read-only access
+        Ok(serde_json::json!({
+            "id": worker.id(),
+            "capabilities": worker.capabilities(),
+            "limits": {
+                "max_memory": worker.resource_limits().max_memory,
+                "max_cpu_time_ms": worker.resource_limits().max_cpu_time.as_millis() as u64,
+                "max_operations": worker.resource_limits().max_operations,
+            },
+        }))
+    } else {
+        Err(format!("No worker found for plugin: {}", plugin_id))
+    }
+}
+
+#[tauri::command]
+async fn register_plugin_worker(
+    plugin_id: String,
+    state: State<'_, Arc<RwLock<PluginManager>>>,
+    worker_registry: State<'_, Arc<RwLock<WorkerRegistry>>>,
+    app_handle: AppHandle,
+    editor_state_handle: State<'_, EditorStateHandle>,
+) -> Result<(), String> {
+    let manager = state.read().await;
+    let info = manager
+        .loader()
+        .get(&plugin_id)
+        .ok_or_else(|| format!("Plugin not loaded: {}", plugin_id))?;
+
+    let workspace_root = if cfg!(debug_assertions) {
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        manifest_dir.parent().unwrap().to_path_buf()
+    } else {
+        app_handle
+            .path()
+            .app_data_dir()
+            .expect("Failed to get app data directory")
+    };
+
+    let mut wr = worker_registry.write().await;
+    wr.create_worker(
+        plugin_id.clone(),
+        info.manifest.capabilities.clone(),
+        workspace_root,
+        app_handle.clone(),
+        editor_state_handle.inner().clone(),
+    )
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn add_trusted_key(
+    key: String,
+    verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
+) -> Result<(), String> {
+    let mut v = verifier.write().await;
+    v.add_trusted_key(key);
+    Ok(())
+}
+
+#[tauri::command]
+async fn remove_trusted_key(
+    key: String,
+    verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
+) -> Result<bool, String> {
+    let mut v = verifier.write().await;
+    Ok(v.remove_trusted_key(&key))
 }
 
 // ============================================================================
@@ -396,6 +671,8 @@ fn main() {
             let audit_logger = Arc::new(AuditLogger::new(10000));
             let watcher_registry = Arc::new(FileWatcherRegistry::new());
             let hot_reload_registry = Arc::new(HotReloadRegistry::new());
+            let trust_verifier = Arc::new(RwLock::new(TrustVerifier::new()));
+            let worker_registry = Arc::new(RwLock::new(WorkerRegistry::new()));
 
             // Store state
             app.manage(plugin_manager.clone());
@@ -404,6 +681,8 @@ fn main() {
             app.manage(watcher_registry.clone());
             app.manage(editor_state.clone());
             app.manage(hot_reload_registry.clone());
+            app.manage(trust_verifier.clone());
+            app.manage(worker_registry.clone());
 
             // Auto-discover and load plugins
             let hr_registry = hot_reload_registry.clone();
@@ -542,10 +821,21 @@ fn main() {
             activate_plugin,
             deactivate_plugin,
             reload_plugin,
+            unload_plugin,
             get_plugin_status,
             get_all_plugin_statuses,
             enable_plugin_hot_reload,
             disable_plugin_hot_reload,
+            // Plugin system (v0.0.11)
+            get_plugin_event_listeners,
+            get_file_watcher_count,
+            list_active_sandboxes,
+            get_plugin_resource_stats,
+            grant_plugin_capability,
+            add_trusted_key,
+            remove_trusted_key,
+            get_worker_info,
+            register_plugin_worker,
             // Filesystem operations
             plugin_read_file,
             plugin_write_file,

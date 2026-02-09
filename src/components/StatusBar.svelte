@@ -156,6 +156,17 @@
           <div class="plugin-item" class:plugin-item--active={plugin.state === 'active'}>
             <div class="plugin-item__header">
               <span class="plugin-item__name">{plugin.name}</span>
+              {#if plugin.trust === 'first-party'}
+                <span
+                  class="plugin-item__trust plugin-item__trust--first-party"
+                  title="First-party plugin">{@html icons.shield}</span
+                >
+              {:else if plugin.trust === 'verified'}
+                <span
+                  class="plugin-item__trust plugin-item__trust--verified"
+                  title="Verified plugin">{@html icons.shield}</span
+                >
+              {/if}
               <span class="plugin-item__version">{plugin.version}</span>
             </div>
 
@@ -181,6 +192,13 @@
 
               <button class="plugin-action" on:click={() => pluginsStore.reload(plugin.id)}>
                 Reload
+              </button>
+
+              <button
+                class="plugin-action plugin-action--danger"
+                on:click={() => pluginsStore.unload(plugin.id)}
+              >
+                Unload
               </button>
             </div>
           </div>
@@ -378,5 +396,33 @@
 
   .plugin-action:hover {
     background: var(--button-hover);
+  }
+
+  .plugin-action--danger {
+    color: var(--color-error, #ff5555);
+    border-color: var(--color-error, #ff5555);
+  }
+
+  .plugin-action--danger:hover {
+    background: rgba(255, 85, 85, 0.15);
+  }
+
+  .plugin-item__trust {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+  }
+
+  .plugin-item__trust :global(svg) {
+    width: 12px;
+    height: 12px;
+  }
+
+  .plugin-item__trust--first-party {
+    color: var(--color-success, #50fa7b);
+  }
+
+  .plugin-item__trust--verified {
+    color: var(--color-info, #00d9ff);
   }
 </style>

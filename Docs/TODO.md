@@ -1,10 +1,46 @@
 # TODO - Skretchpad Development Tasks
 
-> Last updated: v0.0.8 (2026-02-08)
+> Last updated: v0.0.11 (2026-02-08)
 
 ---
 
 ## Completed
+
+### v0.0.11 - Wire Plugin System Scaffolding
+
+- [x] **Trust system integration**: TrustVerifier managed state, signature validation in activate, auto_grant_permissions for first-party
+- [x] **PluginStatus enriched**: trust, loaded_at, auto_approve, capability_tier fields
+- [x] **Capability tier computation**: is_subset_of + presets (none/workspace_read/workspace_read_write/first_party)
+- [x] **Event cleanup on deactivate**: unregister_event_listener for all events, lifecycle events emitted
+- [x] **Real resource limit enforcement**: check_resource_limits returns MemoryLimitExceeded/RateLimitExceeded
+- [x] **WorkerRegistry**: Managed state tracking workers alongside SandboxRegistry
+- [x] **10 new Tauri commands**: unload_plugin, get_plugin_event_listeners, get_file_watcher_count, list_active_sandboxes, get_plugin_resource_stats, grant_plugin_capability, add/remove_trusted_key, get_worker_info, register_plugin_worker
+- [x] **Frontend trust support**: TrustLevel type, auto-approve first-party, unload method, trust badges
+- [x] **Dead code elimination**: All 24 warnings resolved by wiring APIs into real execution paths (0 warnings)
+
+### v0.0.10 - Security, Themes & UI Components
+
+- [x] **DOMPurify**: XSS sanitization for plugin panel HTML content and status bar text
+- [x] **3 new themes**: Cyberpunk, Nord, Solarized Dark (6 total, auto-discovered)
+- [x] **Plugin hot-reload**: notify-based file watcher on plugin dirs, debounced 500ms
+- [x] **Breadcrumb.svelte**: File path breadcrumbs above editor with clickable segments
+- [x] **Minimap.svelte**: Canvas-based code overview sidebar, click-to-scroll
+- [x] **SplitPane.svelte**: Resizable horizontal/vertical split with drag divider
+- [x] **Split editor**: Ctrl+\\ toggles split, view.splitEditorRight/Down/Close commands
+- [x] **Dead plugin files**: Superseded .ts files cleaned up
+
+### v0.0.9 - Tab Bar, Git Integration & Source Control
+
+- [x] **TabBar.svelte**: Visual multi-tab bar with reorderTabs, closeOtherTabs, closeTabsToRight
+- [x] **git.rs**: 15 Tauri commands wrapping git CLI
+- [x] **git.ts**: Reactive Svelte store with 3s auto-refresh
+- [x] **SideBar overhaul**: Activity bar (40px icon strip) + built-in panels (Explorer, Source Control)
+- [x] **SourceControlPanel.svelte**: VSCode-style SCM panel with staged/unstaged sections
+- [x] **ChangeItem.svelte**: File change row with status badge + hover actions
+- [x] **StatusBar.svelte**: Built-in git branch + sync status
+- [x] **DiffView overhaul**: Hunk nav (Alt+Up/Down), unified/side-by-side toggle, language support, stats
+- [x] **9 new SVG icons**: git-related icons
+- [x] **Ctrl+Shift+G**: Source Control shortcut
 
 ### v0.0.8 - Plugin System Improvements
 
@@ -59,36 +95,32 @@
 
 ## Remaining Work
 
-### MEDIUM Priority
-
-- [ ] **More themes**: Cyberpunk, Nord, Solarized
-- [ ] **Plugin hot-reload**: Watch plugin directory for changes, auto-reload
-- [ ] **Multi-tab / split editor**: Tab bar with multiple open files
-
-### LOW Priority
-
-- [ ] **Minimap component**: Code overview sidebar
-- [ ] **Breadcrumb navigation**: File path breadcrumbs above editor
-- [ ] **XSS in plugin panel HTML**: Sanitize or sandbox plugin HTML before rendering (DOMPurify or iframe sandbox)
-- [ ] **Dead plugin files**: Delete `plugins/git/main.ts`, `plugins/git-status/main.ts`, `plugins/git/components/StatusPanel.svelte` (superseded by `.js` versions)
+- [ ] **File Explorer panel**: Currently placeholder, needs tree view with file operations
+- [ ] **Split editor state sharing**: Second pane opens independently but doesn't share tab state with main pane
+- [ ] **Frontend wiring for new commands**: 10 new v0.0.11 Tauri commands need UI hooks (except unload_plugin)
+- [ ] **Plugin marketplace/registry**: Discovery and installation of third-party plugins
+- [ ] **Terminal panel**: Integrated terminal emulator
+- [ ] **Search across files**: Project-wide search (Ctrl+Shift+F)
+- [ ] **Vim/Emacs keybinding modes**: Wire keybinding store selections to CodeMirror keymap extensions
 
 ---
 
 ## Current Stats
 
-| Metric | Value |
-|--------|-------|
-| Frontend tests | 310 (10 files) |
-| Rust tests | 148 (7 modules) |
-| Total tests | 458 |
-| Frontend coverage | 98.8% statements, 87.9% branches |
-| Vite modules | 122 |
-| Languages supported | 16 |
-| Themes | 3 (MilkyText, Liquid Glass Dark, Liquid Glass Light) |
-| CSS variables | 85+ |
-| Plugin bridge ops | 9 |
-| Command palette commands | 18+ |
-| Keyboard shortcuts | 17 |
+| Metric                   | Value                                                                     |
+|--------------------------|---------------------------------------------------------------------------|
+| Frontend tests           | 316 (10 files)                                                            |
+| Rust tests               | 178 (11 modules)                                                          |
+| Total tests              | 494                                                                       |
+| Vite modules             | 136                                                                       |
+| Languages supported      | 16                                                                        |
+| Themes                   | 6 (MilkyText, Glass Dark, Glass Light, Cyberpunk, Nord, Solarized Dark)   |
+| CSS variables            | 85+                                                                       |
+| Plugin bridge ops        | 9                                                                         |
+| Tauri commands           | 40+                                                                       |
+| Command palette commands | 18+                                                                       |
+| Keyboard shortcuts       | 20+                                                                       |
+| Cargo warnings           | 0                                                                         |
 
 ---
 

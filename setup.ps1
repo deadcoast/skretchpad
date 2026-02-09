@@ -6,8 +6,8 @@
     Validates prerequisites, installs dependencies, verifies builds, and ensures
     a fully operational development environment for the Skretchpad editor.
 .NOTES
-    Version: 2.0.0
-    Project: Skretchpad v0.1.0
+    Version: 2.1.0
+    Project: Skretchpad v0.0.11
     Stack:   Tauri 2.0 + Svelte 4 + CodeMirror 6 + Rust + deno_core V8
 #>
 
@@ -61,11 +61,15 @@ $Script:RequiredNodeMajor = 18
 $Script:RequiredNpmPackages = @(
     "codemirror",
     "@codemirror/commands",
+    "@codemirror/lang-cpp",
     "@codemirror/lang-css",
+    "@codemirror/lang-go",
     "@codemirror/lang-html",
+    "@codemirror/lang-java",
     "@codemirror/lang-javascript",
     "@codemirror/lang-json",
     "@codemirror/lang-markdown",
+    "@codemirror/lang-php",
     "@codemirror/lang-python",
     "@codemirror/lang-rust",
     "@codemirror/lang-sql",
@@ -79,19 +83,24 @@ $Script:RequiredNpmPackages = @(
     "@tauri-apps/api",
     "@tauri-apps/plugin-dialog",
     "@tauri-apps/plugin-fs",
+    "dompurify",
     "nanostores"
 )
 
 $Script:RequiredDevPackages = @(
     "@sveltejs/vite-plugin-svelte",
     "@tauri-apps/cli",
+    "@testing-library/jest-dom",
+    "@testing-library/svelte",
     "@tsconfig/svelte",
+    "@types/dompurify",
     "@types/node",
     "@typescript-eslint/eslint-plugin",
     "@typescript-eslint/parser",
     "autoprefixer",
     "eslint",
     "eslint-plugin-svelte",
+    "jsdom",
     "postcss",
     "prettier",
     "prettier-plugin-svelte",
@@ -100,7 +109,8 @@ $Script:RequiredDevPackages = @(
     "tailwindcss",
     "tslib",
     "typescript",
-    "vite"
+    "vite",
+    "vitest"
 )
 
 $Script:RequiredFiles = @(
@@ -129,30 +139,37 @@ $Script:RequiredSourceFiles = @(
     @{ Path = "src-tauri\src\plugin_system\manager.rs";      Label = "Plugin manager" },
     @{ Path = "src-tauri\src\plugin_system\api.rs";          Label = "Plugin API commands" },
     @{ Path = "src-tauri\src\plugin_system\ops.rs";          Label = "deno_core ops bridge" },
+    @{ Path = "src-tauri\src\plugin_system\trust.rs";        Label = "Trust system" },
     @{ Path = "src-tauri\src\theme_engine.rs";               Label = "Theme engine" },
+    @{ Path = "src-tauri\src\git.rs";                        Label = "Git CLI wrapper" },
     @{ Path = "src-tauri\src\security\threat_matrix.rs";     Label = "Security threat matrix" },
     # Frontend -- Components
     @{ Path = "src\components\Editor.svelte";                Label = "Editor (CodeMirror 6)" },
     @{ Path = "src\components\Chrome.svelte";                Label = "Chrome (title bar)" },
     @{ Path = "src\components\StatusBar.svelte";             Label = "Status bar" },
+    @{ Path = "src\components\TabBar.svelte";                Label = "Tab bar" },
     @{ Path = "src\components\CommandPalette.svelte";        Label = "Command palette" },
     @{ Path = "src\components\NotificationToast.svelte";     Label = "Notification toasts" },
     @{ Path = "src\components\SideBar.svelte";               Label = "Sidebar panel" },
+    @{ Path = "src\components\SourceControlPanel.svelte";    Label = "Source control panel" },
+    @{ Path = "src\components\ChangeItem.svelte";            Label = "Change item row" },
     @{ Path = "src\components\PluginPermissionDialog.svelte";Label = "Permission dialog" },
     @{ Path = "src\components\SettingsPanel.svelte";         Label = "Settings panel" },
     @{ Path = "src\components\BootScreen.svelte";            Label = "Boot screen" },
+    @{ Path = "src\components\Breadcrumb.svelte";            Label = "Breadcrumb nav" },
+    @{ Path = "src\components\Minimap.svelte";               Label = "Minimap sidebar" },
+    @{ Path = "src\components\SplitPane.svelte";             Label = "Split pane" },
     @{ Path = "src\features\diff\DiffView.svelte";           Label = "Diff viewer" },
     # Frontend -- Libraries
     @{ Path = "src\lib\editor-loader.ts";                    Label = "Editor loader + syntax" },
-    @{ Path = "src\lib\plugin-api.ts";                       Label = "Plugin API bridge" },
     @{ Path = "src\lib\codemirror-loader.ts";                Label = "CodeMirror loader" },
-    @{ Path = "src\lib\theme-engine.ts";                     Label = "Frontend theme engine" },
     @{ Path = "src\lib\icons\index.ts";                      Label = "SVG icon system" },
     # Frontend -- Stores
     @{ Path = "src\lib\stores\editor.ts";                    Label = "Editor store" },
     @{ Path = "src\lib\stores\theme.ts";                     Label = "Theme store" },
     @{ Path = "src\lib\stores\keybindings.ts";               Label = "Keybinding store" },
     @{ Path = "src\lib\stores\plugins.ts";                   Label = "Plugin store" },
+    @{ Path = "src\lib\stores\git.ts";                       Label = "Git store" },
     @{ Path = "src\lib\stores\notifications.ts";             Label = "Notification store" },
     @{ Path = "src\lib\stores\ui.ts";                        Label = "UI store" },
     @{ Path = "src\lib\stores\settings.ts";                  Label = "Settings store" },
@@ -162,6 +179,9 @@ $Script:RequiredSourceFiles = @(
     # Theme definitions
     @{ Path = "themes\glass-dark.toml";                      Label = "Glass Dark theme" },
     @{ Path = "themes\milkytext.toml";                       Label = "MilkyText theme" },
+    @{ Path = "themes\cyberpunk.toml";                       Label = "Cyberpunk theme" },
+    @{ Path = "themes\nord.toml";                            Label = "Nord theme" },
+    @{ Path = "themes\solarized-dark.toml";                  Label = "Solarized Dark theme" },
     # Plugins
     @{ Path = "plugins\git\plugin.toml";                     Label = "Git plugin manifest" },
     @{ Path = "plugins\git\main.js";                         Label = "Git plugin entry" },

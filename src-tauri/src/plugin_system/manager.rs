@@ -5,6 +5,7 @@ use crate::plugin_system::{
     loader::{LoaderError, PluginLoader},
     ops::EditorStateHandle,
     sandbox::{PluginSandbox, SandboxRegistry},
+    trust::TrustLevel,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -83,6 +84,10 @@ pub struct PluginStatus {
     pub state: PluginState,
     pub capabilities: PluginCapabilities,
     pub error: Option<String>,
+    pub trust: TrustLevel,
+    pub loaded_at: Option<u64>,
+    pub auto_approve: bool,
+    pub capability_tier: String,
 }
 
 // ============================================================================
@@ -169,7 +174,22 @@ impl PluginManager {
             }
         }
 
-        // Check dependencies
+        // Trust system checks
+        let is_first_party = self.loader.is_first_party(plugin_id);
+        let is_trusted = plugin_info.manifest.trust.is_trusted();
+        println!(
+            "[plugin] {} trust: {:?} (first-party={}, trusted={})",
+            plugin_id, plugin_info.manifest.trust, is_first_party, is_trusted
+        );
+
+        if plugin_info.manifest.trust.auto_grant_permissions() {
+            println!(
+                "[plugin] {} auto-granted permissions (first-party)",
+                plugin_id
+            );
+        }
+
+        // Check dependencies (uses loader.verify_dependencies first)
         self.check_dependencies(plugin_id)?;
 
         // Set state to activating
@@ -240,6 +260,13 @@ impl PluginManager {
             .insert(plugin_id.to_string(), PluginState::Active);
         self.errors.remove(plugin_id);
 
+        // Emit lifecycle event
+        self.emit_event(
+            "plugin:activated",
+            serde_json::json!({"plugin_id": plugin_id}),
+        )
+        .await;
+
         Ok(())
     }
 
@@ -258,6 +285,12 @@ impl PluginManager {
         self.active_plugins
             .insert(plugin_id.to_string(), PluginState::Deactivating);
 
+        // Clean up event listeners for this plugin
+        let event_names: Vec<String> = self.event_listeners.keys().cloned().collect();
+        for event_name in event_names {
+            self.unregister_event_listener(plugin_id, &event_name);
+        }
+
         // Call deactivation hook
         if let Some(sandbox) = self.sandbox_registry.get_sandbox(plugin_id).await {
             let sandbox = sandbox.read().await;
@@ -273,6 +306,13 @@ impl PluginManager {
         self.active_plugins
             .insert(plugin_id.to_string(), PluginState::Loaded);
         self.errors.remove(plugin_id);
+
+        // Emit lifecycle event
+        self.emit_event(
+            "plugin:deactivated",
+            serde_json::json!({"plugin_id": plugin_id}),
+        )
+        .await;
 
         Ok(())
     }
@@ -298,6 +338,23 @@ impl PluginManager {
         let plugin_info = self.loader.get(plugin_id)?;
         let state = self.active_plugins.get(plugin_id).copied()?;
 
+        let caps = &plugin_info.manifest.capabilities;
+        let capability_tier = if caps.is_subset_of(&PluginCapabilities::none()) {
+            "sandboxed"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read()) {
+            "read-only"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read_write()) {
+            "read-write"
+        } else {
+            "full"
+        };
+
+        let loaded_at = plugin_info
+            .loaded_at
+            .duration_since(std::time::UNIX_EPOCH)
+            .ok()
+            .map(|d| d.as_millis() as u64);
+
         Some(PluginStatus {
             id: plugin_id.to_string(),
             name: plugin_info.manifest.name.clone(),
@@ -305,6 +362,10 @@ impl PluginManager {
             state,
             capabilities: plugin_info.manifest.capabilities.clone(),
             error: self.errors.get(plugin_id).cloned(),
+            trust: plugin_info.manifest.trust.clone(),
+            loaded_at,
+            auto_approve: plugin_info.manifest.trust.auto_grant_permissions(),
+            capability_tier: capability_tier.to_string(),
         })
     }
 
@@ -369,20 +430,23 @@ impl PluginManager {
 
     /// Check plugin dependencies
     fn check_dependencies(&self, plugin_id: &str) -> Result<()> {
+        // First check that all dependencies are loaded (via loader)
+        self.loader
+            .verify_dependencies(plugin_id)
+            .map_err(|e| ManagerError::DependencyNotSatisfied(e.to_string()))?;
+
         let plugin_info = self
             .loader
             .get(plugin_id)
             .ok_or_else(|| ManagerError::PluginNotLoaded(plugin_id.to_string()))?;
 
+        // Then check that all dependencies are active
         for dep in &plugin_info.manifest.dependencies {
-            // Check if dependency is loaded
-            if self.loader.get(dep).is_none() {
-                return Err(ManagerError::DependencyNotSatisfied(dep.clone()));
-            }
-
-            // Check if dependency is active
             if !self.is_active(dep) {
-                return Err(ManagerError::DependencyNotSatisfied(dep.clone()));
+                return Err(ManagerError::DependencyNotSatisfied(format!(
+                    "{} (not active)",
+                    dep
+                )));
             }
         }
 
@@ -411,6 +475,26 @@ impl PluginManager {
         }
 
         visited.remove(plugin_id);
+        Ok(())
+    }
+
+    /// Unload a plugin (deactivate first if active, then remove from loader)
+    pub async fn unload(&mut self, plugin_id: &str) -> Result<()> {
+        // Deactivate if active
+        if self.is_active(plugin_id) {
+            self.deactivate(plugin_id).await?;
+        }
+
+        // Remove from loader
+        if !self.loader.unload(plugin_id) {
+            return Err(ManagerError::PluginNotLoaded(plugin_id.to_string()));
+        }
+
+        // Remove from active plugins map
+        self.active_plugins.remove(plugin_id);
+        self.errors.remove(plugin_id);
+
+        println!("[plugin] Unloaded plugin: {}", plugin_id);
         Ok(())
     }
 
@@ -600,6 +684,7 @@ mod tests {
     #[test]
     fn test_plugin_status_serialization() {
         use crate::plugin_system::capabilities::*;
+        use crate::plugin_system::trust::TrustLevel;
         let status = PluginStatus {
             id: "test".to_string(),
             name: "Test Plugin".to_string(),
@@ -607,16 +692,23 @@ mod tests {
             state: PluginState::Active,
             capabilities: PluginCapabilities::default(),
             error: None,
+            trust: TrustLevel::Community,
+            loaded_at: Some(1700000000000),
+            auto_approve: false,
+            capability_tier: "sandboxed".to_string(),
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"id\":\"test\""));
         assert!(json.contains("\"state\":\"active\""));
         assert!(json.contains("\"version\":\"1.0.0\""));
+        assert!(json.contains("\"trust\":\"community\""));
+        assert!(json.contains("\"capability_tier\":\"sandboxed\""));
     }
 
     #[test]
     fn test_plugin_status_with_error() {
         use crate::plugin_system::capabilities::*;
+        use crate::plugin_system::trust::TrustLevel;
         let status = PluginStatus {
             id: "test".to_string(),
             name: "Test Plugin".to_string(),
@@ -624,9 +716,148 @@ mod tests {
             state: PluginState::Error,
             capabilities: PluginCapabilities::default(),
             error: Some("sandbox timeout".to_string()),
+            trust: TrustLevel::Community,
+            loaded_at: None,
+            auto_approve: false,
+            capability_tier: "sandboxed".to_string(),
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"state\":\"error\""));
         assert!(json.contains("sandbox timeout"));
+    }
+
+    #[test]
+    fn test_plugin_status_first_party_trust() {
+        use crate::plugin_system::capabilities::*;
+        use crate::plugin_system::trust::TrustLevel;
+        let status = PluginStatus {
+            id: "git".to_string(),
+            name: "Git Plugin".to_string(),
+            version: "0.1.0".to_string(),
+            state: PluginState::Active,
+            capabilities: PluginCapabilities::first_party(),
+            error: None,
+            trust: TrustLevel::FirstParty,
+            loaded_at: Some(1700000000000),
+            auto_approve: true,
+            capability_tier: "full".to_string(),
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"trust\":\"first-party\""));
+        assert!(json.contains("\"auto_approve\":true"));
+        assert!(json.contains("\"capability_tier\":\"full\""));
+    }
+
+    #[test]
+    fn test_plugin_status_verified_trust() {
+        use crate::plugin_system::capabilities::*;
+        use crate::plugin_system::trust::TrustLevel;
+        let status = PluginStatus {
+            id: "ext".to_string(),
+            name: "External Plugin".to_string(),
+            version: "2.0.0".to_string(),
+            state: PluginState::Loaded,
+            capabilities: PluginCapabilities::workspace_read(),
+            error: None,
+            trust: TrustLevel::Verified,
+            loaded_at: Some(1700000000000),
+            auto_approve: false,
+            capability_tier: "read-only".to_string(),
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"trust\":\"verified\""));
+        assert!(json.contains("\"auto_approve\":false"));
+        assert!(json.contains("\"capability_tier\":\"read-only\""));
+    }
+
+    #[test]
+    fn test_capability_tier_sandboxed() {
+        use crate::plugin_system::capabilities::*;
+        let caps = PluginCapabilities::none();
+        let tier = if caps.is_subset_of(&PluginCapabilities::none()) {
+            "sandboxed"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read()) {
+            "read-only"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read_write()) {
+            "read-write"
+        } else {
+            "full"
+        };
+        assert_eq!(tier, "sandboxed");
+    }
+
+    #[test]
+    fn test_capability_tier_read_only() {
+        use crate::plugin_system::capabilities::*;
+        let caps = PluginCapabilities::workspace_read();
+        let tier = if caps.is_subset_of(&PluginCapabilities::none()) {
+            "sandboxed"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read()) {
+            "read-only"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read_write()) {
+            "read-write"
+        } else {
+            "full"
+        };
+        assert_eq!(tier, "read-only");
+    }
+
+    #[test]
+    fn test_capability_tier_read_write() {
+        use crate::plugin_system::capabilities::*;
+        let caps = PluginCapabilities::workspace_read_write();
+        let tier = if caps.is_subset_of(&PluginCapabilities::none()) {
+            "sandboxed"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read()) {
+            "read-only"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read_write()) {
+            "read-write"
+        } else {
+            "full"
+        };
+        assert_eq!(tier, "read-write");
+    }
+
+    #[test]
+    fn test_capability_tier_full() {
+        use crate::plugin_system::capabilities::*;
+        let caps = PluginCapabilities::first_party();
+        let tier = if caps.is_subset_of(&PluginCapabilities::none()) {
+            "sandboxed"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read()) {
+            "read-only"
+        } else if caps.is_subset_of(&PluginCapabilities::workspace_read_write()) {
+            "read-write"
+        } else {
+            "full"
+        };
+        assert_eq!(tier, "full");
+    }
+
+    #[test]
+    fn test_plugin_status_local_trust_no_loaded_at() {
+        use crate::plugin_system::capabilities::*;
+        use crate::plugin_system::trust::TrustLevel;
+        let status = PluginStatus {
+            id: "dev-plugin".to_string(),
+            name: "Dev Plugin".to_string(),
+            version: "0.0.1".to_string(),
+            state: PluginState::Loaded,
+            capabilities: PluginCapabilities::default(),
+            error: None,
+            trust: TrustLevel::Local,
+            loaded_at: None,
+            auto_approve: false,
+            capability_tier: "sandboxed".to_string(),
+        };
+        let json = serde_json::to_string(&status).unwrap();
+        assert!(json.contains("\"trust\":\"local\""));
+        assert!(json.contains("\"loaded_at\":null"));
+    }
+
+    #[test]
+    fn test_manager_error_plugin_not_loaded() {
+        let err = ManagerError::PluginNotLoaded("missing-plugin".to_string());
+        assert!(err.to_string().contains("missing-plugin"));
     }
 }

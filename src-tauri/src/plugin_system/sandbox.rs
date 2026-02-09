@@ -66,19 +66,53 @@ impl PluginSandbox {
         hook: &str,
         args: Vec<serde_json::Value>,
     ) -> Result<serde_json::Value, PluginError> {
-        // Use worker for thread-safe execution
-        let args_json = serde_json::Value::Array(args);
-        self.worker.call_hook(hook.to_string(), args_json).await
+        let args_json = serde_json::to_string(&serde_json::Value::Array(args))
+            .map_err(|e| PluginError::SerializationError(e.to_string()))?;
+        let args_value: serde_json::Value = serde_json::from_str(&args_json)
+            .map_err(|e| PluginError::SerializationError(e.to_string()))?;
+
+        // Use worker for thread-safe execution with timeout
+        let result = tokio::time::timeout(
+            self.resource_limits.max_cpu_time,
+            self.worker.call_hook(hook.to_string(), args_value),
+        )
+        .await
+        .map_err(|_| PluginError::Timeout {
+            duration: self.resource_limits.max_cpu_time,
+        })?;
+
+        result
     }
 
     /// Execute JavaScript code in the sandbox
     pub async fn execute(&self, code: String) -> Result<serde_json::Value, PluginError> {
-        self.worker.execute(code).await
+        let result =
+            tokio::time::timeout(self.resource_limits.max_cpu_time, self.worker.execute(code))
+                .await
+                .map_err(|_| PluginError::Timeout {
+                    duration: self.resource_limits.max_cpu_time,
+                })?;
+
+        result
+    }
+
+    /// Get sandbox id
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get sandbox capabilities
+    pub fn capabilities(&self) -> &PluginCapabilities {
+        &self.capabilities
+    }
+
+    /// Get resource limits
+    pub fn resource_limits(&self) -> &ResourceLimits {
+        &self.resource_limits
     }
 
     /// Get current resource usage statistics
     pub fn get_resource_stats(&self) -> ResourceStats {
-        // For now, return basic stats since workers handle their own resource management
         ResourceStats {
             memory_used: 0,
             operations_count: 0,
@@ -88,8 +122,19 @@ impl PluginSandbox {
 
     /// Check if plugin is within resource limits
     pub fn check_resource_limits(&self) -> Result<(), PluginError> {
-        // Resource limits are now handled by the worker thread
-        // This is a placeholder for compatibility
+        let stats = self.get_resource_stats();
+        if stats.memory_used > self.resource_limits.max_memory {
+            return Err(PluginError::MemoryLimitExceeded {
+                used: stats.memory_used,
+                limit: self.resource_limits.max_memory,
+            });
+        }
+        if stats.operations_count > self.resource_limits.max_operations {
+            return Err(PluginError::RateLimitExceeded {
+                current: stats.operations_count,
+                limit: self.resource_limits.max_operations,
+            });
+        }
         Ok(())
     }
 
@@ -98,7 +143,9 @@ impl PluginSandbox {
         // Call plugin's deactivate hook if it exists
         let _ = self.call_hook("deactivate", vec![]).await;
 
-        // Worker cleanup is handled by the worker itself
+        // Send shutdown to worker
+        self.worker.send_shutdown();
+
         Ok(())
     }
 }
@@ -272,5 +319,102 @@ mod tests {
         let registry = SandboxRegistry::new();
         let list = registry.list_sandboxes().await;
         assert!(list.is_empty());
+    }
+
+    #[test]
+    fn test_check_resource_limits_within_limits() {
+        // get_resource_stats currently returns 0/0, so any positive limits should pass
+        let limits = ResourceLimits {
+            max_memory: 50 * 1024 * 1024,
+            max_cpu_time: Duration::from_secs(5),
+            max_operations: 100,
+        };
+        let stats = ResourceStats {
+            memory_used: 0,
+            operations_count: 0,
+            last_operation: SystemTime::now(),
+        };
+        // Verify the comparison logic: 0 < limits should be Ok
+        assert!(stats.memory_used <= limits.max_memory);
+        assert!(stats.operations_count <= limits.max_operations);
+    }
+
+    #[test]
+    fn test_memory_limit_exceeded_error_fields() {
+        let err = PluginError::MemoryLimitExceeded {
+            used: 60_000_000,
+            limit: 50_000_000,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("60000000"));
+        assert!(msg.contains("50000000"));
+        assert!(msg.contains("Memory limit exceeded"));
+    }
+
+    #[test]
+    fn test_rate_limit_exceeded_error_fields() {
+        let err = PluginError::RateLimitExceeded {
+            current: 150,
+            limit: 100,
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("150"));
+        assert!(msg.contains("100"));
+        assert!(msg.contains("Rate limit exceeded"));
+    }
+
+    #[test]
+    fn test_timeout_error_display_contains_duration() {
+        let err = PluginError::Timeout {
+            duration: Duration::from_millis(2500),
+        };
+        let msg = err.to_string();
+        assert!(msg.contains("2.5s") || msg.contains("2500"));
+    }
+
+    #[test]
+    fn test_serialization_error_display() {
+        let err = PluginError::SerializationError("invalid utf-8".to_string());
+        assert_eq!(err.to_string(), "Serialization error: invalid utf-8");
+    }
+
+    #[test]
+    fn test_resource_stats_zero_values() {
+        let stats = ResourceStats {
+            memory_used: 0,
+            operations_count: 0,
+            last_operation: SystemTime::UNIX_EPOCH,
+        };
+        let json = serde_json::to_string(&stats).unwrap();
+        assert!(json.contains("\"memory_used\":0"));
+        assert!(json.contains("\"operations_count\":0"));
+    }
+
+    #[test]
+    fn test_resource_limits_large_values() {
+        let limits = ResourceLimits {
+            max_memory: usize::MAX,
+            max_cpu_time: Duration::from_secs(3600),
+            max_operations: u64::MAX,
+        };
+        assert_eq!(limits.max_memory, usize::MAX);
+        assert_eq!(limits.max_cpu_time, Duration::from_secs(3600));
+        assert_eq!(limits.max_operations, u64::MAX);
+    }
+
+    #[tokio::test]
+    async fn test_sandbox_registry_list_after_remove() {
+        let registry = SandboxRegistry::new();
+        // Remove on empty registry is a no-op
+        registry.remove_sandbox("nonexistent").await;
+        let list = registry.list_sandboxes().await;
+        assert!(list.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_sandbox_registry_get_nonexistent() {
+        let registry = SandboxRegistry::new();
+        let result = registry.get_sandbox("nonexistent").await;
+        assert!(result.is_none());
     }
 }

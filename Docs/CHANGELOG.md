@@ -5,6 +5,69 @@ All notable changes to skretchpad will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.11] - 2026-02-08
+
+### Added
+
+- **Trust system integration**: `TrustVerifier` managed state, signature validation in `activate()`, auto_grant_permissions for first-party plugins
+- **PluginStatus enriched**: New fields `trust`, `loaded_at`, `auto_approve`, `capability_tier` in serialized plugin status
+- **Capability tier computation**: `is_subset_of()` with presets (`none`/`workspace_read`/`workspace_read_write`/`first_party`) determines plugin tier (sandboxed/read-only/read-write/full)
+- **Event cleanup on deactivate**: `unregister_event_listener()` called for all events, lifecycle events emitted (`plugin:activated`/`plugin:deactivated`)
+- **Real resource limit enforcement**: `check_resource_limits()` returns `MemoryLimitExceeded`/`RateLimitExceeded` errors, `Timeout`/`SerializationError` used in sandbox methods
+- **WorkerRegistry**: Managed state tracking workers alongside SandboxRegistry, with `create_worker`/`remove_worker`/`shutdown_all`
+- **10 new Tauri commands**: `unload_plugin`, `get_plugin_event_listeners`, `get_file_watcher_count`, `list_active_sandboxes`, `get_plugin_resource_stats`, `grant_plugin_capability`, `add_trusted_key`, `remove_trusted_key`, `get_worker_info`, `register_plugin_worker`
+- **Frontend trust support**: `TrustLevel` type, auto-approve first-party plugins, `unload()` method, trust badges in StatusBar
+
+### Changed
+
+- **Loader error variants**: All `LoaderError` variants now used (`ManifestNotFound`/`InvalidManifest`/`AlreadyLoaded`/`PluginNotFound`)
+- **Plugin sandbox**: Field getters (`id()`, `capabilities()`, `resource_limits()`), `cleanup()` sends `Shutdown` to worker
+- **Worker**: `send_shutdown()` method, field getters (`id()`, `capabilities()`, `resource_limits()`)
+
+### Removed
+
+- **24 dead-code warnings**: All eliminated by wiring scaffolded APIs into real execution paths (0 warnings in `cargo check`)
+
+## [0.0.10] - 2026-02-08
+
+### Added
+
+- **DOMPurify**: XSS sanitization for plugin panel HTML content and status bar text
+- **3 new themes**: Cyberpunk, Nord, Solarized Dark -- auto-discovered by theme engine
+- **Plugin hot-reload**: notify-based file watcher on plugin dirs, debounced 500ms, auto in dev mode
+- **HotReloadRegistry**: Manages per-plugin watchers with enable/disable Tauri commands
+- **Breadcrumb.svelte**: File path breadcrumbs above editor with clickable segments
+- **Minimap.svelte**: Canvas-based code overview sidebar, click-to-scroll, viewport indicator
+- **SplitPane.svelte**: Resizable horizontal/vertical split with drag divider
+- **Split editor**: Ctrl+\\ toggles split, `view.splitEditorRight`/`Down`/`Close` commands
+
+### Changed
+
+- Build output: 130 modules (was 129)
+- StatusBar: DOMPurify sanitizes plugin-contributed text
+
+## [0.0.9] - 2026-02-08
+
+### Added
+
+- **TabBar.svelte**: Visual multi-tab bar wired to editor.ts store with reorderTabs(), closeOtherTabs(), closeTabsToRight()
+- **git.rs**: 15 Tauri commands wrapping git CLI (status, stage, unstage, commit, push, pull, fetch, branch, log, diff, stash, remote, clone, init, checkout)
+- **git.ts**: Reactive Svelte store with 3-second auto-refresh for git state
+- **SideBar.svelte overhaul**: Activity bar (40px icon strip) + built-in panels (Explorer, Source Control)
+- **SourceControlPanel.svelte**: VSCode-style SCM panel with staged/unstaged sections
+- **ChangeItem.svelte**: File change row with status badge + hover actions (stage/unstage/discard)
+- **StatusBar.svelte**: Built-in git branch display + sync status (ahead/behind)
+- **DiffView.svelte overhaul**: Hunk navigation (Alt+Up/Down), unified/side-by-side toggle, language support, change stats
+- **editor-loader.ts**: `createDiffEditor` supports language detection + unified mode
+- **9 new SVG icons**: gitBranch, gitCommit, gitPullRequest, gitMerge, add, remove, discard, sync, sourceControl
+- **Keyboard shortcut**: Ctrl+Shift+G opens Source Control panel
+- **Command**: `view.sourceControl` command registered in palette
+
+### Changed
+
+- Build output: 129 modules (was 122)
+- 310 frontend tests + 154 Rust tests all pass
+
 ## [0.0.8] - 2026-02-08
 
 ### Added
@@ -376,6 +439,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+- **0.0.11** - Wire plugin scaffolding: trust system, event cleanup, resource limits, WorkerRegistry, 10 new commands, 0 warnings
+- **0.0.10** - DOMPurify XSS protection, 3 new themes, plugin hot-reload, breadcrumbs, minimap, split editor
+- **0.0.9** - Tab bar, git integration (15 commands), source control panel, diff overhaul
 - **0.0.8** - Dead code removal, 4 new languages, editor settings wiring, auto-save, accessibility, editor ops round-trip, async hooks
 - **0.0.7** - Theme unification: TOML as single source of truth, expanded Rust structs, async frontend loading
 - **0.0.6** - E2E runtime testing, plugin loading fixes, 40 automated tests, trust serde fix

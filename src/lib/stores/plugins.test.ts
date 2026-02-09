@@ -824,3 +824,140 @@ describe('derived stores', () => {
     expect(visible[0].id).toBe('p1');
   });
 });
+
+describe('v0.0.11 features', () => {
+  it('unload removes plugin from store', async () => {
+    // First load a plugin into the store
+    mockInvokeHandler('load_plugin', undefined);
+    mockInvokeHandler('get_plugin_status', {
+      id: 'test-plugin',
+      name: 'Test Plugin',
+      version: '1.0.0',
+      state: 'loaded',
+      capabilities: {},
+      trust: 'community',
+      loaded_at: Date.now(),
+      auto_approve: false,
+      capability_tier: 'sandboxed',
+    });
+    await pluginsStore.load('test-plugin');
+    expect(get(pluginsStore).plugins.has('test-plugin')).toBe(true);
+
+    clearInvokeHandlers();
+    mockInvokeHandler('unload_plugin', undefined);
+    await pluginsStore.unload('test-plugin');
+    expect(get(pluginsStore).plugins.has('test-plugin')).toBe(false);
+  });
+
+  it('plugin status includes trust field', async () => {
+    mockInvokeHandler('load_plugin', undefined);
+    mockInvokeHandler('get_plugin_status', {
+      id: 'git',
+      name: 'Git',
+      version: '0.1.0',
+      state: 'active',
+      capabilities: {},
+      trust: 'first-party',
+      loaded_at: 1700000000000,
+      auto_approve: true,
+      capability_tier: 'full',
+    });
+    await pluginsStore.load('git');
+    const plugin = get(pluginsStore).plugins.get('git');
+    expect(plugin?.trust).toBe('first-party');
+    expect(plugin?.auto_approve).toBe(true);
+    expect(plugin?.capability_tier).toBe('full');
+  });
+
+  it('plugin status includes loaded_at timestamp', async () => {
+    const now = Date.now();
+    mockInvokeHandler('load_plugin', undefined);
+    mockInvokeHandler('get_plugin_status', {
+      id: 'ts',
+      name: 'TS Plugin',
+      version: '1.0.0',
+      state: 'loaded',
+      capabilities: {},
+      trust: 'community',
+      loaded_at: now,
+      auto_approve: false,
+      capability_tier: 'sandboxed',
+    });
+    await pluginsStore.load('ts');
+    const plugin = get(pluginsStore).plugins.get('ts');
+    expect(plugin?.loaded_at).toBe(now);
+  });
+
+  it('verified trust does not auto-approve', async () => {
+    mockInvokeHandler('load_plugin', undefined);
+    mockInvokeHandler('get_plugin_status', {
+      id: 'ext',
+      name: 'External',
+      version: '2.0.0',
+      state: 'loaded',
+      capabilities: {},
+      trust: 'verified',
+      loaded_at: Date.now(),
+      auto_approve: false,
+      capability_tier: 'read-only',
+    });
+    await pluginsStore.load('ext');
+    const plugin = get(pluginsStore).plugins.get('ext');
+    expect(plugin?.trust).toBe('verified');
+    expect(plugin?.auto_approve).toBe(false);
+  });
+
+  it('local trust has sandboxed capability tier', async () => {
+    mockInvokeHandler('load_plugin', undefined);
+    mockInvokeHandler('get_plugin_status', {
+      id: 'dev',
+      name: 'Dev Plugin',
+      version: '0.0.1',
+      state: 'loaded',
+      capabilities: {},
+      trust: 'local',
+      loaded_at: null,
+      auto_approve: false,
+      capability_tier: 'sandboxed',
+    });
+    await pluginsStore.load('dev');
+    const plugin = get(pluginsStore).plugins.get('dev');
+    expect(plugin?.trust).toBe('local');
+    expect(plugin?.loaded_at).toBeNull();
+    expect(plugin?.capability_tier).toBe('sandboxed');
+  });
+
+  it('activePluginCount with mixed trust levels', async () => {
+    mockInvokeHandler('load_plugin', undefined);
+    // Load first plugin (active)
+    mockInvokeHandler('get_plugin_status', {
+      id: 'a',
+      name: 'A',
+      version: '1.0.0',
+      state: 'active',
+      capabilities: {},
+      trust: 'first-party',
+      loaded_at: Date.now(),
+      auto_approve: true,
+      capability_tier: 'full',
+    });
+    await pluginsStore.load('a');
+
+    clearInvokeHandlers();
+    mockInvokeHandler('load_plugin', undefined);
+    // Load second plugin (loaded, not active)
+    mockInvokeHandler('get_plugin_status', {
+      id: 'b',
+      name: 'B',
+      version: '1.0.0',
+      state: 'loaded',
+      capabilities: {},
+      trust: 'community',
+      loaded_at: Date.now(),
+      auto_approve: false,
+      capability_tier: 'sandboxed',
+    });
+    await pluginsStore.load('b');
+    expect(get(activePluginCount)).toBe(1);
+  });
+});

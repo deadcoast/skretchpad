@@ -36,6 +36,8 @@ export interface PluginCapabilities {
 
 export type PluginLifecycleState = 'loaded' | 'activating' | 'active' | 'deactivating' | 'error';
 
+export type TrustLevel = 'first-party' | 'verified' | 'community' | 'local';
+
 export interface PluginStatus {
   id: string;
   name: string;
@@ -43,6 +45,10 @@ export interface PluginStatus {
   state: PluginLifecycleState;
   capabilities: PluginCapabilities;
   error?: string;
+  trust: TrustLevel;
+  loaded_at?: number;
+  auto_approve: boolean;
+  capability_tier: string;
 }
 
 export interface PluginCommand {
@@ -215,6 +221,22 @@ function createPluginsStore() {
         await pluginsStore.refreshStatus(pluginId);
       } catch (error) {
         console.error(`Failed to deactivate plugin ${pluginId}:`, error);
+        throw error;
+      }
+    },
+
+    /**
+     * Unload a plugin (removes from loaded plugins)
+     */
+    async unload(pluginId: string): Promise<void> {
+      try {
+        await invoke('unload_plugin', { pluginId });
+        update((state) => {
+          state.plugins.delete(pluginId);
+          return { ...state };
+        });
+      } catch (error) {
+        console.error(`Failed to unload plugin ${pluginId}:`, error);
         throw error;
       }
     },
@@ -627,11 +649,14 @@ function createPluginsStore() {
 
   // Helper: check if plugin capabilities need user approval
   function needsPermissionApproval(plugin: PluginStatus): boolean {
+    // First-party/auto-approved plugins skip permission dialog
+    if (plugin.auto_approve || plugin.trust === 'first-party') {
+      return false;
+    }
+
     const caps = plugin.capabilities;
     if (!caps) return false;
 
-    // First-party plugins are auto-approved
-    // (trust level isn't on PluginStatus directly, so check capabilities)
     const hasFs = caps.filesystem && caps.filesystem !== 'None';
     const hasNet = caps.network && caps.network !== 'None';
     const hasCmds = caps.commands?.allowlist?.length > 0;

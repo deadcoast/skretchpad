@@ -49,7 +49,19 @@
       "Bash(git commit:*)",
       "Bash(npx eslint:*)",
       "Bash(git rm:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(git status:*)",
+      "Bash(cut:*)",
+      "Bash(ls:*)",
+      "Bash(for f in \"src-tauri\\\\src\\\\plugin_system\\\\trust.rs\" \"src-tauri\\\\src\\\\git.rs\" \"src\\\\components\\\\TabBar.svelte\" \"src\\\\components\\\\SourceControlPanel.svelte\" \"src\\\\components\\\\ChangeItem.svelte\" \"src\\\\components\\\\Breadcrumb.svelte\" \"src\\\\components\\\\Minimap.svelte\" \"src\\\\components\\\\SplitPane.svelte\" \"src\\\\lib\\\\stores\\\\git.ts\" \"themes\\\\cyberpunk.toml\" \"themes\\\\nord.toml\" \"themes\\\\solarized-dark.toml\")",
+      "Bash(do if test -f \"$f\")",
+      "Bash(then echo \"OK: $f\")",
+      "Bash(else echo \"MISSING: $f\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for f in \"src\\\\lib\\\\plugin-api.ts\" \"src\\\\lib\\\\theme-engine.ts\")",
+      "Bash(then echo \"EXISTS \\(should be deleted\\): $f\")",
+      "Bash(else echo \"GONE \\(correct\\): $f\")"
     ],
     "deny": [],
     "ask": []
