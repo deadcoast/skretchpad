@@ -72,6 +72,7 @@ export interface LanguageInfo {
 // Compartments allow us to dynamically reconfigure parts of the editor
 const languageCompartment = new Compartment();
 const themeCompartment = new Compartment();
+const syntaxHighlightingCompartment = new Compartment();
 const keybindingCompartment = new Compartment();
 const readOnlyCompartment = new Compartment();
 const pluginHooksCompartment = new Compartment();
@@ -569,8 +570,8 @@ export async function createEditor(
     lineNumbersCompartment.of(lineNumbers()),
     tabSizeCompartment.of(indentUnit.of('  ')),
 
-    // Syntax highlighting from theme
-    createSyntaxHighlighting(theme),
+    // Syntax highlighting from theme (in compartment for hot-swapping)
+    syntaxHighlightingCompartment.of(createSyntaxHighlighting(theme)),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
 
     // Keymaps (order matters - later ones override earlier ones)
@@ -727,7 +728,10 @@ export function getAvailableLanguages(): LanguageInfo[] {
 
 export function updateTheme(view: EditorView, theme: Theme): void {
   view.dispatch({
-    effects: themeCompartment.reconfigure(createThemeExtension(theme)),
+    effects: [
+      themeCompartment.reconfigure(createThemeExtension(theme)),
+      syntaxHighlightingCompartment.reconfigure(createSyntaxHighlighting(theme)),
+    ],
   });
 }
 

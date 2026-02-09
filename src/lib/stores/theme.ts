@@ -203,7 +203,7 @@ function createThemeStore() {
         const available = (await listThemesFromBackend()) ?? [];
         update((s) => ({ ...s, available }));
 
-        // Try to load saved preference, fall back to first available
+        // Try to load saved preference, fall back to milkytext, then first available
         const savedStem =
           typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
 
@@ -211,8 +211,14 @@ function createThemeStore() {
         let stemToLoad: string | null = null;
         if (savedStem && available.some((t) => fileStem(t.file) === savedStem)) {
           stemToLoad = savedStem;
-        } else if (available.length > 0) {
-          stemToLoad = fileStem(available[0].file);
+        } else {
+          // Prefer milkytext as default, fall back to first available
+          const milkytext = available.find((t) => fileStem(t.file) === 'milkytext');
+          stemToLoad = milkytext
+            ? 'milkytext'
+            : available.length > 0
+              ? fileStem(available[0].file)
+              : null;
         }
 
         if (stemToLoad) {
