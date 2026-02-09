@@ -61,7 +61,11 @@
       "Bash(done)",
       "Bash(for f in \"src\\\\lib\\\\plugin-api.ts\" \"src\\\\lib\\\\theme-engine.ts\")",
       "Bash(then echo \"EXISTS \\(should be deleted\\): $f\")",
-      "Bash(else echo \"GONE \\(correct\\): $f\")"
+      "Bash(else echo \"GONE \\(correct\\): $f\")",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(git mv:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
