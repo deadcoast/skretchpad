@@ -4,6 +4,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 #[allow(dead_code)]
+mod git;
 mod plugin_system;
 mod theme_engine;
 
@@ -347,6 +348,22 @@ fn main() {
             theme_engine::apply_theme,
             theme_engine::get_theme_metadata,
             theme_engine::list_themes,
+            // Git operations
+            git::git_is_repo,
+            git::git_status,
+            git::git_diff_file_content,
+            git::git_stage,
+            git::git_unstage,
+            git::git_discard_changes,
+            git::git_commit,
+            git::git_log,
+            git::git_branches,
+            git::git_checkout,
+            git::git_push,
+            git::git_pull,
+            git::git_fetch,
+            git::git_stash,
+            git::get_workspace_root,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

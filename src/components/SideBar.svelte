@@ -1,93 +1,124 @@
 <!-- src/lib/components/Sidebar.svelte -->
 
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import { pluginsStore, visiblePanels } from '$lib/stores/plugins';
-  import { onMount } from 'svelte';
+  import { totalChanges } from '$lib/stores/git';
   import { icons } from '../lib/icons/index';
+  import SourceControlPanel from './SourceControlPanel.svelte';
 
   export let visible = true;
+  export let activeSidebarPanel: string = 'explorer';
+
+  const dispatch = createEventDispatcher<{
+    openDiff: { path: string; staged: boolean };
+    panelChange: { panel: string };
+  }>();
 
   // Get visible plugin panels
   $: pluginPanels = $visiblePanels.filter((panel) => panel.position === 'sidebar');
 
-  // Active panel
-  let activePanel: string | null = null;
-
-  onMount(() => {
-    // Set first panel as active if available
-    if (pluginPanels.length > 0) {
-      activePanel = pluginPanels[0].id;
-    }
-  });
-
   function setActivePanel(panelId: string) {
-    activePanel = panelId;
+    activeSidebarPanel = panelId;
+    dispatch('panelChange', { panel: panelId });
   }
 
-  function closePanel(panelId: string) {
+  function closePluginPanel(panelId: string) {
     pluginsStore.hidePanel(panelId);
+  }
 
-    // If closing active panel, switch to another
-    if (activePanel === panelId && pluginPanels.length > 1) {
-      const index = pluginPanels.findIndex((p) => p.id === panelId);
-      const nextPanel = pluginPanels[index + 1] || pluginPanels[index - 1];
-      activePanel = nextPanel?.id || null;
-    }
+  function handleDiff(e: CustomEvent<{ path: string; staged: boolean }>) {
+    dispatch('openDiff', e.detail);
   }
 </script>
 
 <aside class="sidebar" class:sidebar--visible={visible} aria-label="Sidebar">
-  <!-- Sidebar tabs -->
-  {#if pluginPanels.length > 0}
-    <div class="sidebar__tabs" role="tablist">
+  <!-- Activity bar: icon strip -->
+  <div class="activity-bar">
+    <button
+      class="activity-icon"
+      class:activity-icon--active={activeSidebarPanel === 'explorer'}
+      title="Explorer"
+      aria-label="Explorer"
+      on:click={() => setActivePanel('explorer')}
+    >
+      {@html icons.folder}
+    </button>
+
+    <button
+      class="activity-icon"
+      class:activity-icon--active={activeSidebarPanel === 'scm'}
+      title="Source Control"
+      aria-label="Source Control"
+      on:click={() => setActivePanel('scm')}
+    >
+      {@html icons.gitBranch}
+      {#if $totalChanges > 0}
+        <span class="activity-badge">{$totalChanges > 99 ? '99+' : $totalChanges}</span>
+      {/if}
+    </button>
+
+    <!-- Plugin panel icons -->
+    {#if pluginPanels.length > 0}
+      <div class="activity-separator"></div>
       {#each pluginPanels as panel (panel.id)}
         <button
-          class="sidebar__tab"
-          class:sidebar__tab--active={activePanel === panel.id}
+          class="activity-icon"
+          class:activity-icon--active={activeSidebarPanel === panel.id}
           title={panel.title}
+          aria-label={panel.title}
           on:click={() => setActivePanel(panel.id)}
-          role="tab"
-          aria-selected={activePanel === panel.id}
         >
-          {panel.title}
+          {@html icons.plugin}
         </button>
       {/each}
-    </div>
-  {/if}
+    {/if}
+  </div>
 
-  <!-- Sidebar content -->
-  <div class="sidebar__content" role="tabpanel">
-    {#each pluginPanels as panel (panel.id)}
-      {#if activePanel === panel.id}
-        <div class="sidebar__panel">
-          <div class="sidebar__panel-header">
-            <h3 class="sidebar__panel-title">{panel.title}</h3>
-            <button
-              class="sidebar__panel-close"
-              on:click={() => closePanel(panel.id)}
-              aria-label="Close panel"
-            >
-              {@html icons.close}
-            </button>
-          </div>
-
-          <div class="sidebar__panel-content">
-            <!-- Panel content would be rendered here -->
-            <!-- This would typically be a webview or iframe for plugin content -->
-            <div class="sidebar__panel-placeholder">
-              <p>Panel: {panel.id}</p>
-              <p>Plugin: {panel.plugin_id}</p>
+  <!-- Panel content -->
+  <div class="sidebar__content">
+    {#if activeSidebarPanel === 'explorer'}
+      <div class="sidebar__panel">
+        <div class="sidebar__panel-header">
+          <h3 class="sidebar__panel-title">Explorer</h3>
+        </div>
+        <div class="sidebar__panel-placeholder">
+          <p>File Explorer (coming soon)</p>
+        </div>
+      </div>
+    {:else if activeSidebarPanel === 'scm'}
+      <div class="sidebar__panel">
+        <div class="sidebar__panel-header">
+          <h3 class="sidebar__panel-title">Source Control</h3>
+        </div>
+        <div class="sidebar__panel-body">
+          <SourceControlPanel on:openDiff={handleDiff} />
+        </div>
+      </div>
+    {:else}
+      <!-- Plugin panel -->
+      {#each pluginPanels as panel (panel.id)}
+        {#if activeSidebarPanel === panel.id}
+          <div class="sidebar__panel">
+            <div class="sidebar__panel-header">
+              <h3 class="sidebar__panel-title">{panel.title}</h3>
+              <button
+                class="sidebar__panel-close"
+                on:click={() => closePluginPanel(panel.id)}
+                aria-label="Close panel"
+              >
+                {@html icons.close}
+              </button>
+            </div>
+            <div class="sidebar__panel-content">
+              <div class="sidebar__panel-placeholder">
+                <p>Panel: {panel.id}</p>
+                <p>Plugin: {panel.plugin_id}</p>
+              </div>
             </div>
           </div>
-        </div>
-      {/if}
-    {/each}
-
-    <!-- Default content when no panels -->
-    {#if pluginPanels.length === 0}
-      <div class="sidebar__empty">
-        <p>No active plugin panels</p>
-      </div>
+        {/if}
+      {/each}
     {/if}
   </div>
 </aside>
@@ -95,7 +126,7 @@
 <style>
   .sidebar {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     width: 0;
     min-width: 0;
     background: var(--chrome-bg);
@@ -109,42 +140,87 @@
   }
 
   .sidebar--visible {
-    width: 260px;
-    min-width: 260px;
+    width: 300px;
+    min-width: 300px;
     border-right: 1px solid var(--window-border-color);
   }
 
-  .sidebar__tabs {
+  /* Activity bar */
+  .activity-bar {
     display: flex;
-    border-bottom: 1px solid var(--window-border-color);
-    overflow-x: auto;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    min-width: 40px;
+    padding: 4px 0;
+    background: var(--chrome-bg, rgba(30, 30, 30, 0.85));
+    border-right: 1px solid var(--window-border-color, rgba(255, 255, 255, 0.06));
     flex-shrink: 0;
   }
 
-  .sidebar__tab {
-    padding: 8px 16px;
+  .activity-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: 1px 0;
     background: transparent;
     border: none;
-    border-bottom: 2px solid transparent;
-    color: inherit;
-    font-size: 12px;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    color: var(--text-secondary, rgba(228, 228, 228, 0.5));
     cursor: pointer;
-    white-space: nowrap;
-    transition: all var(--transition-hover, 100ms);
+    transition:
+      color 150ms ease,
+      border-color 150ms ease;
   }
 
-  .sidebar__tab:hover {
-    background: var(--button-hover);
+  .activity-icon :global(svg) {
+    width: 20px;
+    height: 20px;
   }
 
-  .sidebar__tab--active {
-    border-bottom-color: var(--color-info, #00d9ff);
-    font-weight: 600;
+  .activity-icon:hover {
+    color: var(--text-primary, #e4e4e4);
   }
 
+  .activity-icon--active {
+    color: var(--text-primary, #e4e4e4);
+    border-left-color: var(--color-info, #00d9ff);
+  }
+
+  .activity-badge {
+    position: absolute;
+    top: 4px;
+    right: 3px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    background: var(--color-info, #00d9ff);
+    color: #000;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+    border-radius: 7px;
+  }
+
+  .activity-separator {
+    width: 20px;
+    height: 1px;
+    margin: 6px 0;
+    background: var(--window-border-color, rgba(255, 255, 255, 0.1));
+  }
+
+  /* Panel content */
   .sidebar__content {
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .sidebar__panel {
@@ -157,15 +233,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--window-border-color);
     flex-shrink: 0;
   }
 
   .sidebar__panel-title {
     margin: 0;
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .sidebar__panel-close {
@@ -192,6 +270,11 @@
     background: var(--button-hover);
   }
 
+  .sidebar__panel-body {
+    flex: 1;
+    overflow: hidden;
+  }
+
   .sidebar__panel-content {
     flex: 1;
     overflow-y: auto;
@@ -200,19 +283,9 @@
 
   .sidebar__panel-placeholder {
     color: var(--editor-fg);
-    opacity: 0.6;
-    text-align: center;
-    padding: 32px 16px;
-  }
-
-  .sidebar__empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--editor-fg);
     opacity: 0.4;
     text-align: center;
-    padding: 32px;
+    padding: 32px 16px;
+    font-size: 12px;
   }
 </style>

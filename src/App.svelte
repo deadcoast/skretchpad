@@ -1,6 +1,7 @@
 <script lang="ts">
   import Editor from './components/Editor.svelte';
   import Chrome from './components/Chrome.svelte';
+  import TabBar from './components/TabBar.svelte';
   import StatusBar from './components/StatusBar.svelte';
   import SideBar from './components/SideBar.svelte';
   import NotificationToast from './components/NotificationToast.svelte';
@@ -9,15 +10,17 @@
   import PluginPermissionDialog from './components/PluginPermissionDialog.svelte';
   import DiffView from './features/diff/DiffView.svelte';
   import BootScreen from './components/BootScreen.svelte';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
   import { pluginsStore } from './lib/stores/plugins';
   import { keybindingStore } from './lib/stores/keybindings';
   import { editorStore, activeFile } from './lib/stores/editor';
-  import { settingsStore, type AppSettings } from './lib/stores/settings';
+  import { settingsStore } from './lib/stores/settings';
+  import { gitStore } from './lib/stores/git';
   import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
   import { invoke } from '@tauri-apps/api/core';
+  import { detectLanguage } from './lib/editor-loader';
 
   let booting = true;
   let menuVisible = true;
@@ -25,6 +28,7 @@
   let commandPaletteVisible = false;
   let settingsVisible = false;
   let sidebarVisible = false;
+  let activeSidebarPanel = 'explorer';
   let editorRef: Editor;
 
   // Diff view state
@@ -33,6 +37,11 @@
   let diffModified = '';
   let diffOriginalLabel = 'Original';
   let diffModifiedLabel = 'Modified';
+  let diffLanguage: string | null = null;
+
+  onDestroy(() => {
+    gitStore.cleanup();
+  });
 
   // Reactive current file from editor store (used for window title updates)
   $: currentFile = $activeFile?.path || '';
@@ -67,6 +76,14 @@
     // Initialize plugin system (discover and load plugins)
     await pluginsStore.initialize();
 
+    // Initialize git store
+    try {
+      const workdir = await invoke<string>('get_workspace_root');
+      await gitStore.initialize(workdir);
+    } catch (err) {
+      console.warn('Git initialization skipped:', err);
+    }
+
     // Register built-in editor commands for the command palette
     registerBuiltinCommands();
 
@@ -77,23 +94,69 @@
     const builtins = [
       { id: 'editor.undo', label: 'Undo', keybinding: 'Ctrl+Z', category: 'Editor' },
       { id: 'editor.redo', label: 'Redo', keybinding: 'Ctrl+Shift+Z', category: 'Editor' },
-      { id: 'editor.toggleComment', label: 'Toggle Comment', keybinding: 'Ctrl+/', category: 'Editor' },
-      { id: 'editor.duplicateLine', label: 'Duplicate Line', keybinding: 'Ctrl+Shift+D', category: 'Editor' },
-      { id: 'editor.deleteLine', label: 'Delete Line', keybinding: 'Ctrl+Shift+K', category: 'Editor' },
-      { id: 'editor.moveLinesUp', label: 'Move Lines Up', keybinding: 'Alt+Up', category: 'Editor' },
-      { id: 'editor.moveLinesDown', label: 'Move Lines Down', keybinding: 'Alt+Down', category: 'Editor' },
+      {
+        id: 'editor.toggleComment',
+        label: 'Toggle Comment',
+        keybinding: 'Ctrl+/',
+        category: 'Editor',
+      },
+      {
+        id: 'editor.duplicateLine',
+        label: 'Duplicate Line',
+        keybinding: 'Ctrl+Shift+D',
+        category: 'Editor',
+      },
+      {
+        id: 'editor.deleteLine',
+        label: 'Delete Line',
+        keybinding: 'Ctrl+Shift+K',
+        category: 'Editor',
+      },
+      {
+        id: 'editor.moveLinesUp',
+        label: 'Move Lines Up',
+        keybinding: 'Alt+Up',
+        category: 'Editor',
+      },
+      {
+        id: 'editor.moveLinesDown',
+        label: 'Move Lines Down',
+        keybinding: 'Alt+Down',
+        category: 'Editor',
+      },
       { id: 'editor.find', label: 'Find', keybinding: 'Ctrl+F', category: 'Editor' },
-      { id: 'editor.formatDocument', label: 'Format Document', keybinding: 'Ctrl+Shift+F', category: 'Editor' },
+      {
+        id: 'editor.formatDocument',
+        label: 'Format Document',
+        keybinding: 'Ctrl+Shift+F',
+        category: 'Editor',
+      },
       { id: 'file.open', label: 'Open File', keybinding: 'Ctrl+O', category: 'File' },
       { id: 'file.new', label: 'New File', keybinding: 'Ctrl+N', category: 'File' },
       { id: 'file.save', label: 'Save File', keybinding: 'Ctrl+S', category: 'File' },
       { id: 'file.saveAs', label: 'Save As...', keybinding: 'Ctrl+Shift+S', category: 'File' },
       { id: 'file.close', label: 'Close File', keybinding: 'Ctrl+W', category: 'File' },
-      { id: 'view.commandPalette', label: 'Command Palette', keybinding: 'Ctrl+Shift+P', category: 'View' },
-      { id: 'view.toggleChrome', label: 'Toggle Title Bar', keybinding: 'Ctrl+Shift+H', category: 'View' },
+      {
+        id: 'view.commandPalette',
+        label: 'Command Palette',
+        keybinding: 'Ctrl+Shift+P',
+        category: 'View',
+      },
+      {
+        id: 'view.toggleChrome',
+        label: 'Toggle Title Bar',
+        keybinding: 'Ctrl+Shift+H',
+        category: 'View',
+      },
       { id: 'view.toggleAlwaysOnTop', label: 'Toggle Always on Top', category: 'View' },
       { id: 'view.toggleSidebar', label: 'Toggle Sidebar', keybinding: 'Ctrl+B', category: 'View' },
       { id: 'view.openDiffView', label: 'Open Diff View', category: 'View' },
+      {
+        id: 'view.sourceControl',
+        label: 'Source Control',
+        keybinding: 'Ctrl+Shift+G',
+        category: 'View',
+      },
       { id: 'view.openSettings', label: 'Open Settings', keybinding: 'Ctrl+,', category: 'View' },
     ];
 
@@ -107,19 +170,45 @@
     const commands = editorRef?.editorCommands;
 
     switch (commandId) {
-      case 'editor.undo': commands?.undo(); break;
-      case 'editor.redo': commands?.redo(); break;
-      case 'editor.toggleComment': commands?.toggleComment(); break;
-      case 'editor.duplicateLine': commands?.duplicateLine(); break;
-      case 'editor.deleteLine': commands?.deleteLine(); break;
-      case 'editor.moveLinesUp': commands?.moveLinesUp(); break;
-      case 'editor.moveLinesDown': commands?.moveLinesDown(); break;
-      case 'editor.find': commands?.openSearchReplace(); break;
-      case 'editor.formatDocument': commands?.formatDocument(); break;
-      case 'file.open': handleOpenFile(); break;
-      case 'file.new': editorStore.createFile(); break;
-      case 'file.save': editorRef?.save(); break;
-      case 'file.saveAs': editorStore.saveFileAs(); break;
+      case 'editor.undo':
+        commands?.undo();
+        break;
+      case 'editor.redo':
+        commands?.redo();
+        break;
+      case 'editor.toggleComment':
+        commands?.toggleComment();
+        break;
+      case 'editor.duplicateLine':
+        commands?.duplicateLine();
+        break;
+      case 'editor.deleteLine':
+        commands?.deleteLine();
+        break;
+      case 'editor.moveLinesUp':
+        commands?.moveLinesUp();
+        break;
+      case 'editor.moveLinesDown':
+        commands?.moveLinesDown();
+        break;
+      case 'editor.find':
+        commands?.openSearchReplace();
+        break;
+      case 'editor.formatDocument':
+        commands?.formatDocument();
+        break;
+      case 'file.open':
+        handleOpenFile();
+        break;
+      case 'file.new':
+        editorStore.createFile();
+        break;
+      case 'file.save':
+        editorRef?.save();
+        break;
+      case 'file.saveAs':
+        editorStore.saveFileAs();
+        break;
       case 'file.close': {
         const state = editorStore.getActiveFile();
         if (state) {
@@ -127,12 +216,27 @@
         }
         break;
       }
-      case 'view.commandPalette': commandPaletteVisible = true; break;
-      case 'view.toggleChrome': menuVisible = !menuVisible; break;
-      case 'view.toggleAlwaysOnTop': toggleAlwaysOnTop(); break;
-      case 'view.toggleSidebar': sidebarVisible = !sidebarVisible; break;
-      case 'view.openDiffView': openDiffView(); break;
-      case 'view.openSettings': settingsVisible = true; break;
+      case 'view.commandPalette':
+        commandPaletteVisible = true;
+        break;
+      case 'view.toggleChrome':
+        menuVisible = !menuVisible;
+        break;
+      case 'view.toggleAlwaysOnTop':
+        toggleAlwaysOnTop();
+        break;
+      case 'view.toggleSidebar':
+        sidebarVisible = !sidebarVisible;
+        break;
+      case 'view.openDiffView':
+        openDiffView();
+        break;
+      case 'view.sourceControl':
+        openSourceControl();
+        break;
+      case 'view.openSettings':
+        settingsVisible = true;
+        break;
       default:
         console.log('Unhandled command:', commandId);
     }
@@ -179,6 +283,50 @@
     }
   }
 
+  function openSourceControl() {
+    sidebarVisible = true;
+    activeSidebarPanel = 'scm';
+  }
+
+  async function openDiffFromSCM(e: CustomEvent<{ path: string; staged: boolean }>) {
+    const { path, staged } = e.detail;
+    try {
+      const workdir = await invoke<string>('get_workspace_root');
+      const fullPath = workdir.replace(/\\/g, '/') + '/' + path;
+
+      if (staged) {
+        // Staged: compare HEAD vs index (show HEAD content as original)
+        diffOriginal = await invoke<string>('git_diff_file_content', {
+          workdir,
+          path,
+          refName: 'HEAD',
+        });
+        // For staged files, the index version is what's staged - read the working copy
+        // since staged changes reflect the working copy at staging time
+        diffModified = await invoke<string>('read_file', { path: fullPath });
+      } else {
+        // Unstaged: compare HEAD vs working copy
+        diffOriginal = await invoke<string>('git_diff_file_content', {
+          workdir,
+          path,
+          refName: 'HEAD',
+        });
+        diffModified = await invoke<string>('read_file', { path: fullPath });
+      }
+
+      diffOriginalLabel = `${path} (HEAD)`;
+      diffModifiedLabel = `${path} (Working Tree)`;
+
+      // Detect language from filename
+      const fileName = path.split(/[/\\]/).pop() || '';
+      diffLanguage = detectLanguage(fileName);
+
+      diffViewVisible = true;
+    } catch (err) {
+      console.error('Failed to open diff:', err);
+    }
+  }
+
   // Global keyboard shortcuts
   function handleKeydown(e: KeyboardEvent) {
     const mod = e.ctrlKey || e.metaKey;
@@ -191,6 +339,11 @@
     if (mod && e.shiftKey && (e.key === 'H' || e.key === 'h')) {
       e.preventDefault();
       menuVisible = !menuVisible;
+      return;
+    }
+    if (mod && e.shiftKey && (e.key === 'G' || e.key === 'g')) {
+      e.preventDefault();
+      openSourceControl();
       return;
     }
     if (mod && e.key === 'b') {
@@ -244,7 +397,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if booting}
-  <BootScreen on:complete={() => booting = false} />
+  <BootScreen on:complete={() => (booting = false)} />
 {/if}
 
 <div class="app glass-window" class:app--hidden={booting}>
@@ -253,20 +406,35 @@
     {menuVisible}
     on:command={handleCommandExecute}
     on:togglePin={toggleAlwaysOnTop}
-    on:toggleMenu={() => menuVisible = !menuVisible}
+    on:toggleMenu={() => (menuVisible = !menuVisible)}
   />
 
   <div class="main-content">
-    <SideBar visible={sidebarVisible} />
+    <SideBar
+      visible={sidebarVisible}
+      {activeSidebarPanel}
+      on:openDiff={openDiffFromSCM}
+      on:panelChange={(e) => (activeSidebarPanel = e.detail.panel)}
+    />
 
     <div class="editor-container">
+      {#if $editorStore.tabs.length > 0}
+        <TabBar
+          tabs={$editorStore.tabs}
+          activeTabId={$editorStore.activeTabId}
+          on:switchTab={(e) => editorStore.switchTab(e.detail.tabId)}
+          on:closeTab={(e) => editorStore.closeTab(e.detail.tabId)}
+          on:newTab={() => editorStore.createFile()}
+        />
+      {/if}
       {#if diffViewVisible}
         <DiffView
           original={diffOriginal}
           modified={diffModified}
           originalLabel={diffOriginalLabel}
           modifiedLabel={diffModifiedLabel}
-          on:close={() => diffViewVisible = false}
+          language={diffLanguage}
+          on:close={() => (diffViewVisible = false)}
         />
       {:else}
         <Editor bind:this={editorRef} />
@@ -274,16 +442,10 @@
     </div>
   </div>
 
-  <StatusBar {menuVisible} />
+  <StatusBar {menuVisible} on:openSCM={openSourceControl} />
   <NotificationToast />
-  <CommandPalette
-    bind:visible={commandPaletteVisible}
-    on:execute={handleCommandExecute}
-  />
-  <SettingsPanel
-    bind:visible={settingsVisible}
-    on:close={() => settingsVisible = false}
-  />
+  <CommandPalette bind:visible={commandPaletteVisible} on:execute={handleCommandExecute} />
+  <SettingsPanel bind:visible={settingsVisible} on:close={() => (settingsVisible = false)} />
   {#if $pluginsStore.pendingPermission}
     <PluginPermissionDialog
       plugin={$pluginsStore.pendingPermission}
@@ -302,7 +464,8 @@
     background: var(--window-bg);
     backdrop-filter: blur(var(--window-blur));
     border-radius: var(--window-border-radius, 12px);
-    border: var(--window-border-width, 1px) solid var(--window-border-color, rgba(255, 255, 255, 0.1));
+    border: var(--window-border-width, 1px) solid
+      var(--window-border-color, rgba(255, 255, 255, 0.1));
     overflow: hidden;
   }
 

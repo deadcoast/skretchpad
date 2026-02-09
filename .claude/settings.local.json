@@ -45,7 +45,11 @@
       "mcp__plugin_serena_serena__check_onboarding_performed",
       "mcp__plugin_serena_serena__get_symbols_overview",
       "mcp__plugin_serena_serena__find_symbol",
-      "mcp__plugin_serena_serena__think_about_collected_information"
+      "mcp__plugin_serena_serena__think_about_collected_information",
+      "Bash(git commit:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git rm:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

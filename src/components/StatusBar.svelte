@@ -1,11 +1,17 @@
 <!-- src/lib/components/StatusBar.svelte -->
 
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import { pluginsStore, sortedStatusBarItems } from '$lib/stores/plugins';
   import { editorStore, activeFile } from '$lib/stores/editor';
+  import { gitStore, currentBranch, syncStatus } from '$lib/stores/git';
   import { icons } from '../lib/icons/index';
 
   export let menuVisible: boolean = true;
+
+  const dispatch = createEventDispatcher<{
+    openSCM: void;
+  }>();
 
   // Local component state
   let showPluginMenu = false;
@@ -29,6 +35,7 @@
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handleStatusBarItemClick(item: any) {
     if (item.onClick) {
       item.onClick();
@@ -54,8 +61,26 @@
       </div>
     {/if}
 
+    <!-- Git branch -->
+    {#if $gitStore.isRepo}
+      <button
+        class="status-item status-item--clickable"
+        title="Source Control"
+        on:click={() => dispatch('openSCM')}
+      >
+        <span class="status-item__icon">{@html icons.gitBranch}</span>
+        <span class="status-item__text">{$currentBranch}</span>
+        {#if $syncStatus.ahead > 0}
+          <span class="status-item__text status-item__sync">{$syncStatus.ahead}</span>
+        {/if}
+        {#if $syncStatus.behind > 0}
+          <span class="status-item__text status-item__sync">{$syncStatus.behind}</span>
+        {/if}
+      </button>
+    {/if}
+
     <!-- Plugin status bar items (left-aligned) -->
-    {#each pluginItems.filter(item => item.priority >= 100) as item (item.id)}
+    {#each pluginItems.filter((item) => item.priority >= 100) as item (item.id)}
       <button
         class="status-item status-item--clickable"
         style:color={item.color}
@@ -70,7 +95,7 @@
   <!-- Right section -->
   <div class="status-bar__right">
     <!-- Plugin status bar items (right-aligned) -->
-    {#each pluginItems.filter(item => item.priority < 100) as item (item.id)}
+    {#each pluginItems.filter((item) => item.priority < 100) as item (item.id)}
       <button
         class="status-item status-item--clickable"
         style:color={item.color}
@@ -125,7 +150,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-noninteractive-element-interactions -->
     <div class="plugin-menu__content" role="document" on:click|stopPropagation>
       <h3 class="plugin-menu__title">Plugins</h3>
-      
+
       <div class="plugin-list">
         {#each Array.from($pluginsStore.plugins.values()) as plugin (plugin.id)}
           <div class="plugin-item" class:plugin-item--active={plugin.state === 'active'}>
@@ -133,7 +158,7 @@
               <span class="plugin-item__name">{plugin.name}</span>
               <span class="plugin-item__version">{plugin.version}</span>
             </div>
-            
+
             <div class="plugin-item__state">
               <span class="plugin-item__state-indicator" data-state={plugin.state} />
               <span class="plugin-item__state-text">{plugin.state}</span>
@@ -145,25 +170,16 @@
 
             <div class="plugin-item__actions">
               {#if plugin.state === 'active'}
-                <button
-                  class="plugin-action"
-                  on:click={() => pluginsStore.deactivate(plugin.id)}
-                >
+                <button class="plugin-action" on:click={() => pluginsStore.deactivate(plugin.id)}>
                   Deactivate
                 </button>
               {:else if plugin.state === 'loaded'}
-                <button
-                  class="plugin-action"
-                  on:click={() => pluginsStore.activate(plugin.id)}
-                >
+                <button class="plugin-action" on:click={() => pluginsStore.activate(plugin.id)}>
                   Activate
                 </button>
               {/if}
-              
-              <button
-                class="plugin-action"
-                on:click={() => pluginsStore.reload(plugin.id)}
-              >
+
+              <button class="plugin-action" on:click={() => pluginsStore.reload(plugin.id)}>
                 Reload
               </button>
             </div>
@@ -186,7 +202,10 @@
     padding: 0 8px;
     border-top: 1px solid var(--window-border-color);
     user-select: none;
-    transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+    transition:
+      background 200ms ease,
+      color 200ms ease,
+      border-color 200ms ease;
   }
 
   .status-bar--minimal {
@@ -246,6 +265,11 @@
     color: var(--color-warning, #f1fa8c);
     font-size: 16px;
     line-height: 1;
+  }
+
+  .status-item__sync {
+    font-size: 11px;
+    opacity: 0.8;
   }
 
   .plugin-menu {

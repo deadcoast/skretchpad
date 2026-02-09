@@ -54,6 +54,8 @@ export interface DiffEditorOptions {
   modified: string;
   readOnly?: boolean;
   theme?: Theme;
+  language?: string;
+  mode?: 'side-by-side' | 'unified';
 }
 
 export interface LanguageInfo {
@@ -627,7 +629,13 @@ export async function createDiffEditor(
   parent: HTMLElement,
   options: DiffEditorOptions
 ): Promise<{ mergeView: MergeView; destroy: () => void }> {
-  const { original, modified, theme } = options;
+  const { original, modified, theme, language: langName, mode = 'side-by-side' } = options;
+
+  // Load language support if specified
+  let langSupport: LanguageSupport | null = null;
+  if (langName) {
+    langSupport = await languageRegistry.loadLanguage(langName);
+  }
 
   const diffExtensions: Extension[] = [
     EditorView.editable.of(false),
@@ -638,8 +646,33 @@ export async function createDiffEditor(
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     createThemeExtension(theme),
     lineNumbers(),
+    ...(langSupport ? [langSupport] : []),
   ];
 
+  if (mode === 'unified') {
+    // Unified mode: single editor with unifiedMergeView extension
+    const { unifiedMergeView } = await import('@codemirror/merge');
+    const unifiedExt = unifiedMergeView({
+      original: original,
+      mergeControls: false,
+    });
+
+    const state = EditorState.create({
+      doc: modified,
+      extensions: [...diffExtensions, unifiedExt],
+    });
+
+    const view = new EditorView({ state, parent });
+
+    // Return a compatible shape (mergeView as the EditorView)
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mergeView: view as any,
+      destroy: () => view.destroy(),
+    };
+  }
+
+  // Side-by-side mode: MergeView
   const mergeView = new MergeView({
     a: {
       doc: original,

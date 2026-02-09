@@ -83,7 +83,7 @@ function createEditorStore() {
   const debouncedSave = debounce(async (path: string, content: string) => {
     try {
       await invoke('save_file', { path, content });
-      
+
       // Mark file as not dirty
       update((state) => ({
         ...state,
@@ -130,7 +130,7 @@ function createEditorStore() {
           onChange: (viewUpdate: ViewUpdate) => {
             const content = getEditorContent(viewUpdate.view);
             const state = get({ subscribe });
-            
+
             if (state.activeTabId) {
               // Mark file as dirty
               update((s) => ({
@@ -239,10 +239,7 @@ function createEditorStore() {
 
           return {
             ...state,
-            tabs: [
-              ...state.tabs.map((t) => ({ ...t, active: false })),
-              tab,
-            ],
+            tabs: [...state.tabs.map((t) => ({ ...t, active: false })), tab],
             activeTabId: tab.id,
             isLoading: false,
           };
@@ -292,10 +289,7 @@ function createEditorStore() {
 
       update((state) => ({
         ...state,
-        tabs: [
-          ...state.tabs.map((t) => ({ ...t, active: false })),
-          tab,
-        ],
+        tabs: [...state.tabs.map((t) => ({ ...t, active: false })), tab],
         activeTabId: tab.id,
       }));
 
@@ -462,7 +456,7 @@ function createEditorStore() {
 
       update((s) => {
         const newTabs = s.tabs.filter((t) => t.id !== tabId);
-        
+
         // If closing active tab, activate another tab
         let newActiveTabId = s.activeTabId;
         if (s.activeTabId === tabId) {
@@ -530,10 +524,7 @@ function createEditorStore() {
       // Load new tab content
       const newTab = state.tabs.find((t) => t.id === tabId);
       if (newTab) {
-        await editorStore.updateEditorContent(
-          newTab.file.content,
-          newTab.file.language || null
-        );
+        await editorStore.updateEditorContent(newTab.file.content, newTab.file.language || null);
 
         // Restore editor state if available
         if (newTab.file.snapshot && state.editorView) {
@@ -573,7 +564,7 @@ function createEditorStore() {
      */
     async closeAll(): Promise<void> {
       const state = get({ subscribe });
-      
+
       for (const tab of state.tabs) {
         await editorStore.closeTab(tab.id);
       }
@@ -584,7 +575,7 @@ function createEditorStore() {
      */
     async saveAll(): Promise<void> {
       const state = get({ subscribe });
-      
+
       for (const tab of state.tabs) {
         if (tab.file.isDirty && tab.file.path) {
           await editorStore.switchTab(tab.id);
@@ -637,6 +628,45 @@ function createEditorStore() {
      */
     getRecentActions(): EditorAction[] {
       return [...recentActions];
+    },
+
+    /**
+     * Reorder tabs (for drag-and-drop)
+     */
+    reorderTabs(fromIndex: number, toIndex: number): void {
+      update((state) => {
+        const tabs = [...state.tabs];
+        if (fromIndex < 0 || fromIndex >= tabs.length || toIndex < 0 || toIndex >= tabs.length) {
+          return state;
+        }
+        const [moved] = tabs.splice(fromIndex, 1);
+        tabs.splice(toIndex, 0, moved);
+        return { ...state, tabs };
+      });
+    },
+
+    /**
+     * Close all tabs except the specified one
+     */
+    async closeOtherTabs(tabId: string): Promise<void> {
+      const state = get({ subscribe });
+      const otherTabs = state.tabs.filter((t) => t.id !== tabId);
+      for (const tab of otherTabs) {
+        await editorStore.closeTab(tab.id);
+      }
+    },
+
+    /**
+     * Close all tabs to the right of the specified one
+     */
+    async closeTabsToRight(tabId: string): Promise<void> {
+      const state = get({ subscribe });
+      const index = state.tabs.findIndex((t) => t.id === tabId);
+      if (index === -1) return;
+      const tabsToClose = state.tabs.slice(index + 1);
+      for (const tab of tabsToClose) {
+        await editorStore.closeTab(tab.id);
+      }
     },
 
     /**
@@ -698,10 +728,7 @@ export const hasUnsavedChanges = derived(editorStore, ($editor) =>
 /**
  * Open file count
  */
-export const openFileCount = derived(
-  editorStore,
-  ($editor) => $editor.tabs.length
-);
+export const openFileCount = derived(editorStore, ($editor) => $editor.tabs.length);
 
 /**
  * Active tab
