@@ -8,7 +8,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::AppHandle;
 use tokio::sync::RwLock;
 
@@ -17,6 +17,7 @@ pub struct PluginSandbox {
     capabilities: PluginCapabilities,
     worker: Arc<PluginWorker>,
     resource_limits: ResourceLimits,
+    operation_tracker: std::sync::Mutex<OperationTracker>,
 }
 
 #[derive(Debug, Clone)]
@@ -24,6 +25,64 @@ pub struct ResourceLimits {
     pub max_memory: usize,      // Bytes
     pub max_cpu_time: Duration, // Per-operation timeout
     pub max_operations: u64,    // Operations per second
+}
+
+#[derive(Debug, Clone)]
+struct OperationTracker {
+    window_started: Instant,
+    operations_in_window: u64,
+    last_operation: SystemTime,
+    memory_used: usize,
+}
+
+impl OperationTracker {
+    fn new() -> Self {
+        Self {
+            window_started: Instant::now(),
+            operations_in_window: 0,
+            last_operation: SystemTime::UNIX_EPOCH,
+            memory_used: 0,
+        }
+    }
+
+    fn record_operation(
+        &mut self,
+        limits: &ResourceLimits,
+        memory_used: usize,
+    ) -> Result<ResourceStats, PluginError> {
+        if self.window_started.elapsed() >= Duration::from_secs(1) {
+            self.window_started = Instant::now();
+            self.operations_in_window = 0;
+        }
+
+        self.operations_in_window = self.operations_in_window.saturating_add(1);
+        self.last_operation = SystemTime::now();
+        self.memory_used = memory_used;
+
+        let stats = self.snapshot();
+        validate_resource_limits(limits, &stats)?;
+        Ok(stats)
+    }
+
+    fn set_memory_usage(
+        &mut self,
+        limits: &ResourceLimits,
+        memory_used: usize,
+    ) -> Result<ResourceStats, PluginError> {
+        self.memory_used = memory_used;
+        self.last_operation = SystemTime::now();
+        let stats = self.snapshot();
+        validate_resource_limits(limits, &stats)?;
+        Ok(stats)
+    }
+
+    fn snapshot(&self) -> ResourceStats {
+        ResourceStats {
+            memory_used: self.memory_used,
+            operations_count: self.operations_in_window,
+            last_operation: self.last_operation,
+        }
+    }
 }
 
 impl PluginSandbox {
@@ -51,6 +110,7 @@ impl PluginSandbox {
                 max_cpu_time: Duration::from_secs(5),
                 max_operations: 100,
             },
+            operation_tracker: std::sync::Mutex::new(OperationTracker::new()),
         })
     }
 
@@ -68,6 +128,8 @@ impl PluginSandbox {
     ) -> Result<serde_json::Value, PluginError> {
         let args_json = serde_json::to_string(&serde_json::Value::Array(args))
             .map_err(|e| PluginError::SerializationError(e.to_string()))?;
+        let memory_before = self.worker.get_memory_usage().await?;
+        self.record_resource_usage(memory_before)?;
         let args_value: serde_json::Value = serde_json::from_str(&args_json)
             .map_err(|e| PluginError::SerializationError(e.to_string()))?;
 
@@ -81,11 +143,15 @@ impl PluginSandbox {
             duration: self.resource_limits.max_cpu_time,
         })?;
 
+        let memory_after = self.worker.get_memory_usage().await?;
+        self.update_memory_usage(memory_after)?;
         result
     }
 
     /// Execute JavaScript code in the sandbox
     pub async fn execute(&self, code: String) -> Result<serde_json::Value, PluginError> {
+        let memory_before = self.worker.get_memory_usage().await?;
+        self.record_resource_usage(memory_before)?;
         let result =
             tokio::time::timeout(self.resource_limits.max_cpu_time, self.worker.execute(code))
                 .await
@@ -93,6 +159,8 @@ impl PluginSandbox {
                     duration: self.resource_limits.max_cpu_time,
                 })?;
 
+        let memory_after = self.worker.get_memory_usage().await?;
+        self.update_memory_usage(memory_after)?;
         result
     }
 
@@ -113,29 +181,20 @@ impl PluginSandbox {
 
     /// Get current resource usage statistics
     pub fn get_resource_stats(&self) -> ResourceStats {
-        ResourceStats {
-            memory_used: 0,
-            operations_count: 0,
-            last_operation: SystemTime::now(),
-        }
+        self.operation_tracker
+            .lock()
+            .map(|tracker| tracker.snapshot())
+            .unwrap_or(ResourceStats {
+                memory_used: 0,
+                operations_count: 0,
+                last_operation: SystemTime::UNIX_EPOCH,
+            })
     }
 
     /// Check if plugin is within resource limits
     pub fn check_resource_limits(&self) -> Result<(), PluginError> {
         let stats = self.get_resource_stats();
-        if stats.memory_used > self.resource_limits.max_memory {
-            return Err(PluginError::MemoryLimitExceeded {
-                used: stats.memory_used,
-                limit: self.resource_limits.max_memory,
-            });
-        }
-        if stats.operations_count > self.resource_limits.max_operations {
-            return Err(PluginError::RateLimitExceeded {
-                current: stats.operations_count,
-                limit: self.resource_limits.max_operations,
-            });
-        }
-        Ok(())
+        validate_resource_limits(&self.resource_limits, &stats)
     }
 
     /// Clean up resources
@@ -148,6 +207,24 @@ impl PluginSandbox {
 
         Ok(())
     }
+
+    fn record_resource_usage(&self, memory_used: usize) -> Result<(), PluginError> {
+        let mut tracker = self
+            .operation_tracker
+            .lock()
+            .map_err(|_| PluginError::WorkerDisconnected)?;
+        tracker.record_operation(&self.resource_limits, memory_used)?;
+        Ok(())
+    }
+
+    fn update_memory_usage(&self, memory_used: usize) -> Result<(), PluginError> {
+        let mut tracker = self
+            .operation_tracker
+            .lock()
+            .map_err(|_| PluginError::WorkerDisconnected)?;
+        tracker.set_memory_usage(&self.resource_limits, memory_used)?;
+        Ok(())
+    }
 }
 
 /// Resource usage statistics
@@ -156,6 +233,25 @@ pub struct ResourceStats {
     pub memory_used: usize,
     pub operations_count: u64,
     pub last_operation: SystemTime,
+}
+
+fn validate_resource_limits(
+    limits: &ResourceLimits,
+    stats: &ResourceStats,
+) -> Result<(), PluginError> {
+    if stats.memory_used > limits.max_memory {
+        return Err(PluginError::MemoryLimitExceeded {
+            used: stats.memory_used,
+            limit: limits.max_memory,
+        });
+    }
+    if stats.operations_count > limits.max_operations {
+        return Err(PluginError::RateLimitExceeded {
+            current: stats.operations_count,
+            limit: limits.max_operations,
+        });
+    }
+    Ok(())
 }
 
 /// Registry for managing multiple plugin sandboxes (thread-safe via interior mutability)
@@ -323,7 +419,6 @@ mod tests {
 
     #[test]
     fn test_check_resource_limits_within_limits() {
-        // get_resource_stats currently returns 0/0, so any positive limits should pass
         let limits = ResourceLimits {
             max_memory: 50 * 1024 * 1024,
             max_cpu_time: Duration::from_secs(5),
@@ -334,9 +429,45 @@ mod tests {
             operations_count: 0,
             last_operation: SystemTime::now(),
         };
-        // Verify the comparison logic: 0 < limits should be Ok
-        assert!(stats.memory_used <= limits.max_memory);
-        assert!(stats.operations_count <= limits.max_operations);
+        assert!(validate_resource_limits(&limits, &stats).is_ok());
+    }
+
+    #[test]
+    fn test_check_resource_limits_rate_limit_exceeded() {
+        let limits = ResourceLimits {
+            max_memory: 50 * 1024 * 1024,
+            max_cpu_time: Duration::from_secs(5),
+            max_operations: 2,
+        };
+        let stats = ResourceStats {
+            memory_used: 0,
+            operations_count: 3,
+            last_operation: SystemTime::now(),
+        };
+        let err = validate_resource_limits(&limits, &stats).unwrap_err();
+        assert!(matches!(err, PluginError::RateLimitExceeded { .. }));
+    }
+
+    #[test]
+    fn test_operation_tracker_records_and_limits() {
+        let limits = ResourceLimits {
+            max_memory: 10,
+            max_cpu_time: Duration::from_secs(5),
+            max_operations: 2,
+        };
+        let mut tracker = OperationTracker::new();
+        assert!(tracker.record_operation(&limits, 3).is_ok());
+        assert!(tracker.record_operation(&limits, 4).is_ok());
+
+        let rate_err = tracker.record_operation(&limits, 5).unwrap_err();
+        assert!(matches!(rate_err, PluginError::RateLimitExceeded { .. }));
+
+        tracker.window_started = Instant::now() - Duration::from_secs(2);
+        let memory_err = tracker.record_operation(&limits, 11).unwrap_err();
+        assert!(matches!(
+            memory_err,
+            PluginError::MemoryLimitExceeded { .. }
+        ));
     }
 
     #[test]

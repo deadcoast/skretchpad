@@ -21,7 +21,7 @@ use plugin_system::{
     manager::PluginManager,
     ops::EditorStateHandle,
     sandbox::SandboxRegistry,
-    trust::TrustVerifier,
+    trust::{build_plugin_signature_payload, TrustVerifier},
     worker::WorkerRegistry,
 };
 use std::collections::HashMap;
@@ -76,8 +76,14 @@ async fn activate_plugin(
         if let Some(info) = manager.loader().get(&plugin_id) {
             if info.manifest.trust.requires_signature() {
                 if let Some(ref sig) = info.manifest.signature {
+                    let payload = build_plugin_signature_payload(
+                        &plugin_id,
+                        &info.path,
+                        &info.manifest,
+                        sig.timestamp,
+                    )?;
                     let v = verifier.read().await;
-                    if !v.verify_signature(sig) {
+                    if !v.verify_signature(sig, &payload) {
                         return Err(format!(
                             "Plugin '{}' requires a trusted signature but verification failed",
                             plugin_id
@@ -388,8 +394,7 @@ async fn add_trusted_key(
     verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
 ) -> Result<(), String> {
     let mut v = verifier.write().await;
-    v.add_trusted_key(key);
-    Ok(())
+    v.add_trusted_key(key)
 }
 
 #[tauri::command]

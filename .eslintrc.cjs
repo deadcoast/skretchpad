@@ -25,6 +25,21 @@ module.exports = {
           parser: '@typescript-eslint/parser',
         },
       },
+      {
+        files: ['plugins/**/*.js', 'src-tauri/js/**/*.js'],
+        env: {
+          browser: false,
+          node: true,
+          es2022: true,
+        },
+        globals: {
+          Deno: 'readonly',
+          onActivate: 'readonly',
+          onDeactivate: 'readonly',
+          registerHook: 'readonly',
+          skretchpad: 'readonly',
+        },
+      },
     ],
     rules: {
       '@typescript-eslint/no-unused-vars': [

@@ -26,6 +26,10 @@ pub enum WorkerMessage {
         args: serde_json::Value,
         response_tx: oneshot::Sender<WorkerResponse>,
     },
+    /// Read current VM memory usage from V8 heap stats.
+    GetMemoryUsage {
+        response_tx: oneshot::Sender<WorkerResponse>,
+    },
     /// Shutdown the worker
     Shutdown,
 }
@@ -121,6 +125,10 @@ impl PluginWorker {
                             Self::call_hook_sync(&mut runtime, &hook, &args, &worker_limits);
                         let _ = response_tx.send(result);
                     }
+                    WorkerMessage::GetMemoryUsage { response_tx } => {
+                        let result = Self::get_memory_usage_sync(&mut runtime);
+                        let _ = response_tx.send(result);
+                    }
                     WorkerMessage::Shutdown => {
                         break;
                     }
@@ -184,6 +192,24 @@ impl PluginWorker {
 
         match response {
             WorkerResponse::Success(value) => Ok(value),
+            WorkerResponse::Error(err) => Err(PluginError::ExecutionError(err)),
+        }
+    }
+
+    /// Read current V8 memory usage from the worker runtime.
+    pub async fn get_memory_usage(&self) -> Result<usize, PluginError> {
+        let (tx, rx) = oneshot::channel();
+
+        let msg = WorkerMessage::GetMemoryUsage { response_tx: tx };
+        self.sender
+            .send(msg)
+            .map_err(|_| PluginError::WorkerDisconnected)?;
+
+        let response = rx.await.map_err(|_| PluginError::WorkerDisconnected)?;
+        match response {
+            WorkerResponse::Success(value) => value.as_u64().map(|v| v as usize).ok_or_else(|| {
+                PluginError::ExecutionError("Invalid memory usage payload".to_string())
+            }),
             WorkerResponse::Error(err) => Err(PluginError::ExecutionError(err)),
         }
     }
@@ -286,6 +312,16 @@ impl PluginWorker {
             }
             Err(e) => WorkerResponse::Error(format!("Hook execution error: {}", e)),
         }
+    }
+
+    fn get_memory_usage_sync(runtime: &mut deno_core::JsRuntime) -> WorkerResponse {
+        let scope = &mut runtime.handle_scope();
+        let mut stats = deno_core::v8::HeapStatistics::default();
+        scope.get_heap_statistics(&mut stats);
+        let used = stats
+            .used_heap_size()
+            .saturating_add(stats.external_memory());
+        WorkerResponse::Success(serde_json::Value::from(used as u64))
     }
 
     /// Get worker id

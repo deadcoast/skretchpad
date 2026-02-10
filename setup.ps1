@@ -7,7 +7,7 @@
     a fully operational development environment for the Skretchpad editor.
 .NOTES
     Version: 2.1.0
-    Project: Skretchpad v0.0.11
+    Project: Skretchpad v0.1.0
     Stack:   Tauri 2.0 + Svelte 4 + CodeMirror 6 + Rust + deno_core V8
 #>
 

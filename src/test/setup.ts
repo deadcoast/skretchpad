@@ -46,3 +46,10 @@ if (!window.performance) {
     value: {},
   });
 }
+
+if (typeof window.performance.now !== 'function') {
+  Object.defineProperty(window.performance, 'now', {
+    writable: true,
+    value: vi.fn(() => Date.now()),
+  });
+}

@@ -1,6 +1,10 @@
 // src-tauri/src/plugin_system/trust.rs
 
+use base64::Engine;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::path::Path;
 use std::time::SystemTime;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -56,11 +60,69 @@ impl PluginSignature {
         if self.public_key.trim().is_empty() {
             return false;
         }
-        if self.signature.len() < 64 {
+        if self.signature.len() != 64 {
             return false;
         }
         self.timestamp <= SystemTime::now()
     }
+}
+
+#[derive(Serialize)]
+struct SignaturePayload<'a> {
+    version: u8,
+    plugin_id: &'a str,
+    name: &'a str,
+    plugin_version: &'a str,
+    main: &'a str,
+    source: &'a str,
+    trust: &'a TrustLevel,
+    timestamp_secs: u64,
+    plugin_toml_sha256: String,
+    entrypoint_sha256: String,
+}
+
+pub fn build_plugin_signature_payload(
+    plugin_id: &str,
+    plugin_root: &Path,
+    manifest: &crate::plugin_system::loader::PluginManifest,
+    timestamp: SystemTime,
+) -> Result<Vec<u8>, String> {
+    let plugin_toml_path = plugin_root.join("plugin.toml");
+    let entrypoint_path = plugin_root.join(&manifest.main);
+
+    let plugin_toml_bytes = std::fs::read(&plugin_toml_path).map_err(|e| {
+        format!(
+            "Failed to read plugin manifest for signature payload '{}': {}",
+            plugin_toml_path.display(),
+            e
+        )
+    })?;
+    let entrypoint_bytes = std::fs::read(&entrypoint_path).map_err(|e| {
+        format!(
+            "Failed to read plugin entrypoint for signature payload '{}': {}",
+            entrypoint_path.display(),
+            e
+        )
+    })?;
+
+    let payload = SignaturePayload {
+        version: 1,
+        plugin_id,
+        name: &manifest.name,
+        plugin_version: &manifest.version,
+        main: &manifest.main,
+        source: &manifest.source,
+        trust: &manifest.trust,
+        timestamp_secs: timestamp
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .map_err(|e| format!("Invalid signature timestamp: {}", e))?
+            .as_secs(),
+        plugin_toml_sha256: hex_sha256(&plugin_toml_bytes),
+        entrypoint_sha256: hex_sha256(&entrypoint_bytes),
+    };
+
+    serde_json::to_vec(&payload)
+        .map_err(|e| format!("Failed to serialize signature payload: {}", e))
 }
 
 pub struct TrustVerifier {
@@ -77,24 +139,81 @@ impl TrustVerifier {
         Self { trusted_keys }
     }
 
-    pub fn verify_signature(&self, signature: &PluginSignature) -> bool {
+    pub fn verify_signature(&self, signature: &PluginSignature, payload: &[u8]) -> bool {
         if !self.trusted_keys.contains(&signature.public_key) {
             return false;
         }
         if !signature.is_valid() {
             return false;
         }
-        // Fail closed until cryptographic signature verification is implemented.
-        false
+
+        let public_key_bytes = match decode_public_key(&signature.public_key) {
+            Some(bytes) => bytes,
+            None => return false,
+        };
+
+        let verifying_key = match VerifyingKey::from_bytes(&public_key_bytes) {
+            Ok(key) => key,
+            Err(_) => return false,
+        };
+
+        let signature_bytes: [u8; 64] = match signature.signature.clone().try_into() {
+            Ok(bytes) => bytes,
+            Err(_) => return false,
+        };
+
+        let parsed_signature = Signature::from_bytes(&signature_bytes);
+        verifying_key.verify(payload, &parsed_signature).is_ok()
     }
 
-    pub fn add_trusted_key(&mut self, key: String) {
+    pub fn add_trusted_key(&mut self, key: String) -> Result<(), String> {
+        if decode_public_key(&key).is_none() {
+            return Err(
+                "Trusted key must be a valid Ed25519 public key (base64 or hex)".to_string(),
+            );
+        }
         self.trusted_keys.insert(key);
+        Ok(())
     }
 
     pub fn remove_trusted_key(&mut self, key: &str) -> bool {
         self.trusted_keys.remove(key)
     }
+}
+
+fn hex_sha256(input: &[u8]) -> String {
+    let digest = Sha256::digest(input);
+    digest.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
+fn decode_public_key(input: &str) -> Option<[u8; 32]> {
+    let key = input.trim();
+    if key.is_empty() {
+        return None;
+    }
+
+    let hex_candidate = key.strip_prefix("0x").unwrap_or(key);
+    if hex_candidate.len() == 64 {
+        if let Some(bytes) = decode_hex_32(hex_candidate) {
+            return Some(bytes);
+        }
+    }
+
+    let decoded = base64::engine::general_purpose::STANDARD.decode(key).ok()?;
+    decoded.try_into().ok()
+}
+
+fn decode_hex_32(hex: &str) -> Option<[u8; 32]> {
+    if hex.len() != 64 {
+        return None;
+    }
+    let mut out = [0u8; 32];
+    for (i, chunk) in hex.as_bytes().chunks_exact(2).enumerate() {
+        let as_str = std::str::from_utf8(chunk).ok()?;
+        let byte = u8::from_str_radix(as_str, 16).ok()?;
+        out[i] = byte;
+    }
+    Some(out)
 }
 
 // ============================================================================
@@ -104,6 +223,9 @@ impl TrustVerifier {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::plugin_system::capabilities::PluginCapabilities;
+    use ed25519_dalek::{Signer, SigningKey};
+    use tempfile::TempDir;
 
     #[test]
     fn test_trust_level_serde_kebab_case() {
@@ -193,11 +315,80 @@ mod tests {
 
     #[test]
     fn test_trust_verifier() {
-        let verifier = TrustVerifier::new();
-        let sig = PluginSignature::new("skretchpad-official".to_string(), vec![1; 64]);
-        assert!(!verifier.verify_signature(&sig));
+        let mut verifier = TrustVerifier::new();
+        let signing_key = SigningKey::from_bytes(&[7u8; 32]);
+        let verifying_key = signing_key.verifying_key();
+        let public_key_b64 =
+            base64::engine::general_purpose::STANDARD.encode(verifying_key.to_bytes());
+        verifier.add_trusted_key(public_key_b64.clone()).unwrap();
 
-        let bad_sig = PluginSignature::new("unknown-key".to_string(), vec![1; 64]);
-        assert!(!verifier.verify_signature(&bad_sig));
+        let payload = br#"{"scope":"test"}"#;
+        let signature = signing_key.sign(payload);
+        let sig = PluginSignature::new(public_key_b64.clone(), signature.to_bytes().to_vec());
+        assert!(verifier.verify_signature(&sig, payload));
+
+        let tampered_payload = br#"{"scope":"tampered"}"#;
+        assert!(!verifier.verify_signature(&sig, tampered_payload));
+
+        let bad_sig =
+            PluginSignature::new("unknown-key".to_string(), signature.to_bytes().to_vec());
+        assert!(!verifier.verify_signature(&bad_sig, payload));
+    }
+
+    #[test]
+    fn test_build_plugin_signature_payload_binds_manifest_and_entrypoint() {
+        let tmp = TempDir::new().unwrap();
+        let plugin_dir = tmp.path().join("signed-plugin");
+        std::fs::create_dir_all(&plugin_dir).unwrap();
+        std::fs::write(
+            plugin_dir.join("plugin.toml"),
+            r#"
+name = "signed-plugin"
+version = "1.2.3"
+main = "main.js"
+source = "https://example.com/signed-plugin"
+trust = "verified"
+"#,
+        )
+        .unwrap();
+        std::fs::write(plugin_dir.join("main.js"), "console.log('v1');").unwrap();
+
+        let manifest = crate::plugin_system::loader::PluginManifest {
+            name: "signed-plugin".to_string(),
+            version: "1.2.3".to_string(),
+            description: String::new(),
+            author: String::new(),
+            license: String::new(),
+            main: "main.js".to_string(),
+            capabilities: PluginCapabilities::default(),
+            permissions: None,
+            ui: None,
+            dependencies: vec![],
+            source: "https://example.com/signed-plugin".to_string(),
+            signature: None,
+            trust: TrustLevel::Verified,
+            hooks: None,
+            commands: None,
+        };
+
+        let payload_a = build_plugin_signature_payload(
+            "signed-plugin",
+            &plugin_dir,
+            &manifest,
+            SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(123),
+        )
+        .unwrap();
+
+        std::fs::write(plugin_dir.join("main.js"), "console.log('v2');").unwrap();
+
+        let payload_b = build_plugin_signature_payload(
+            "signed-plugin",
+            &plugin_dir,
+            &manifest,
+            SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(123),
+        )
+        .unwrap();
+
+        assert_ne!(payload_a, payload_b);
     }
 }
