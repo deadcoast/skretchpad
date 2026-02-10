@@ -16,7 +16,7 @@ afterEach(() => {
 describe('settings store', () => {
   it('has correct default values', () => {
     const settings = get(settingsStore);
-    expect(settings.appearance.theme).toBe('glass-dark');
+    expect(settings.appearance.theme).toBe('milkytext');
     expect(settings.appearance.fontSize).toBe(14);
     expect(settings.editor.tabSize).toBe(2);
     expect(settings.editor.wordWrap).toBe(false);
@@ -31,7 +31,7 @@ describe('settings store', () => {
     settingsStore.update('appearance', { fontSize: 16 });
     const settings = get(settingsStore);
     expect(settings.appearance.fontSize).toBe(16);
-    expect(settings.appearance.theme).toBe('glass-dark');
+    expect(settings.appearance.theme).toBe('milkytext');
   });
 
   it('nested settings merge correctly', () => {
@@ -107,7 +107,7 @@ describe('settings store', () => {
 
     await settingsStore.load();
     const settings = get(settingsStore);
-    expect(settings.appearance.theme).toBe('glass-dark');
+    expect(settings.appearance.theme).toBe('milkytext');
   });
 
   it('multiple updates in sequence', () => {

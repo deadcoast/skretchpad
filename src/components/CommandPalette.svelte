@@ -165,6 +165,7 @@
     max-width: 90vw;
     max-height: 60vh;
     background: var(--chrome-bg);
+    color: var(--text-primary, #e4e4e4);
     border: 1px solid var(--window-border-color);
     border-radius: 12px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);

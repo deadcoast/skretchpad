@@ -73,7 +73,16 @@
   });
 
   async function initializeApp() {
-    // Theme and keybinding stores auto-initialize on import
+    // Sync theme from settings → themeStore
+    // Settings stores the file stem (e.g. 'milkytext'), switchTheme expects display name (e.g. 'MilkyText')
+    const savedStem = $settingsStore.appearance.theme;
+    if (savedStem && $themeStore.available.length > 0) {
+      const info = $themeStore.available.find((t) => t.file.replace(/\.toml$/, '') === savedStem);
+      if (info && $themeStore.current?.metadata?.name !== info.name) {
+        await themeStore.switchTheme(info.name);
+      }
+    }
+
     if ($themeStore.current) {
       console.log('Theme loaded:', $themeStore.current.metadata.name);
     }
@@ -572,6 +581,7 @@
     padding: 0;
     overflow: hidden;
     background: transparent;
+    color: var(--text-primary, #e4e4e4);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 

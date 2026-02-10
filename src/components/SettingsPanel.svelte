@@ -70,9 +70,12 @@
 
   function handleThemeChange(e: Event) {
     const select = e.target as HTMLSelectElement;
-    const name = select.value;
-    settingsStore.update('appearance', { theme: name });
-    themeStore.switchTheme(name);
+    const displayName = select.value;
+    // Store the file stem in settings (e.g. 'milkytext' not 'MilkyText')
+    const info = $themeStore.available.find((t) => t.name === displayName);
+    const stem = info ? info.file.replace(/\.toml$/, '') : displayName;
+    settingsStore.update('appearance', { theme: stem });
+    themeStore.switchTheme(displayName);
   }
 
   function handleKeybindingChange(e: Event) {
@@ -289,6 +292,7 @@
     width: 520px;
     max-height: 80vh;
     background: var(--chrome-bg, rgba(30, 30, 30, 0.95));
+    color: var(--text-primary, #e4e4e4);
     border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);

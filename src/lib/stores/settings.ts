@@ -28,7 +28,7 @@ export interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = {
   appearance: {
-    theme: 'glass-dark',
+    theme: 'milkytext',
     fontSize: 14,
     fontFamily: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace",
   },

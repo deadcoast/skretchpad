@@ -302,6 +302,7 @@
 
   .plugin-menu__content {
     background: var(--chrome-bg);
+    color: var(--text-primary, #e4e4e4);
     border: 1px solid var(--window-border-color);
     border-radius: 8px 8px 0 0;
     padding: 16px;
@@ -387,6 +388,7 @@
   .plugin-action {
     padding: 4px 12px;
     background: var(--button-bg);
+    color: var(--text-primary, #e4e4e4);
     border: 1px solid var(--input-border);
     border-radius: 4px;
     font-size: 11px;

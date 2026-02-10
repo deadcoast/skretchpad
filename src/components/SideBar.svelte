@@ -134,6 +134,7 @@
     width: 0;
     min-width: 0;
     background: var(--chrome-bg);
+    color: var(--text-primary, #e4e4e4);
     border-right: none;
     overflow: hidden;
     transition:

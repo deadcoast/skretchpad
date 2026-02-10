@@ -140,6 +140,7 @@
   .permission-dialog {
     width: 440px;
     background: var(--chrome-bg, rgba(30, 30, 30, 0.97));
+    color: var(--text-primary, #e4e4e4);
     border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
