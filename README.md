@@ -221,11 +221,11 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 
 | Document                                                      | Description                 |
 |---------------------------------------------------------------|-----------------------------|
-| [Architecture Overview](docs/architecture/1_overview.md)      | System design and data flow |
+| [Architecture Overview](docs/architecture/02_overview.md)      | System design and data flow |
 | [Tech Stack](docs/architecture/core/01_techstack.md)                | Dependencies and rationale  |
 | [Technical Details](docs/architecture/core/02_technical-details.md) | Implementation specifics    |
 | [Configuration](docs/architecture/core/03_configs.md)               | Build and runtime config    |
-| [Directory Tree](docs/architecture/0_directory-tree.md)       | Full project structure      |
+| [Directory Tree](docs/architecture/01_directory-tree.md)       | Full project structure      |
 | [Features](docs/architecture/core/04_features.md)                     | Feature specifications      |
 | [Keyboard Shortcuts](docs/settings/keyboard_shortcuts.md)              | Complete shortcut reference |
 | [Status](docs/reports/STATUS_2026-02-10.md)                                      | Current development status  |

@@ -62,17 +62,17 @@
 
 | Store                  | Source                                    | Type                        | Purpose                              |
 |------------------------|-------------------------------------------|-----------------------------|--------------------------------------|
-| `pluginsStore`         | [`$lib/stores/plugins`](13_plugins.ts.md) | `PluginStore`               | Plugin registry and state management |
-| `sortedStatusBarItems` | [`$lib/stores/plugins`](13_plugins.ts.md) | `Readable<StatusBarItem[]>` | Sorted plugin status bar items       |
-| `editorStore`          | [`$lib/stores/editor`](12_editor.ts.md)   | `EditorStore`               | Editor state (cursor, selection)     |
-| `activeFile`           | [`$lib/stores/editor`](12_editor.ts.md)   | `Readable<FileInfo?>`       | Active file metadata                 |
+| `pluginsStore`         | [`$lib/stores/plugins`](14_plugins.ts.md) | `PluginStore`               | Plugin registry and state management |
+| `sortedStatusBarItems` | [`$lib/stores/plugins`](14_plugins.ts.md) | `Readable<StatusBarItem[]>` | Sorted plugin status bar items       |
+| `editorStore`          | [`$lib/stores/editor`](13_editor.ts.md)   | `EditorStore`               | Editor state (cursor, selection)     |
+| `activeFile`           | [`$lib/stores/editor`](13_editor.ts.md)   | `Readable<FileInfo?>`       | Active file metadata                 |
 
 ### Utility Imports
 
 | Function         | Source                         | Purpose                               |
 |------------------|--------------------------------|---------------------------------------|
-| `formatShortcut` | [`$lib/utils/ui`](15_ui.ts.md) | Format keyboard shortcuts for display |
-| `isMac`          | [`$lib/utils/ui`](15_ui.ts.md) | Detect macOS platform                 |
+| `formatShortcut` | [`$lib/utils/ui`](16_ui.ts.md) | Format keyboard shortcuts for display |
+| `isMac`          | [`$lib/utils/ui`](16_ui.ts.md) | Detect macOS platform                 |
 
 ---
 
@@ -379,27 +379,27 @@ $: pluginItems = $sortedStatusBarItems;
 
 ### Core Documentation
 
-- **[Project Overview](../1_overview.md)** - High-level architecture and design goals
+- **[Project Overview](../02_overview.md)** - High-level architecture and design goals
 - **[Tech Stack](../core/01_techstack.md)** - Technologies and frameworks used
 - **[Technical Details](../core/02_technical-details.md)** - In-depth implementation details
 
 ### Component Documentation
 
 - **[App.svelte Documentation](0_App.svelte.md)** - Parent root component
-- **[Chrome.svelte Documentation](17_Chrome.svelte.md)** - Title bar component
-- **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
+- **[Chrome.svelte Documentation](18_Chrome.svelte.md)** - Title bar component
+- **[Editor.svelte Documentation](04_Editor.svelte.md)** - Main editor component
 
 ### Store Documentation
 
-- **[plugins.ts Documentation](13_plugins.ts.md)** - Plugin store implementation
-- **[editor.ts Documentation](12_editor.ts.md)** - Editor state store
-- **[ui.ts Documentation](15_ui.ts.md)** - UI utility functions
+- **[plugins.ts Documentation](14_plugins.ts.md)** - Plugin store implementation
+- **[editor.ts Documentation](13_editor.ts.md)** - Editor state store
+- **[ui.ts Documentation](16_ui.ts.md)** - UI utility functions
 
 ### Plugin System
 
-- **[plugin-api.ts Documentation](8_plugin-api.ts.md)** - Plugin API types and interfaces
-- **[manager.rs Documentation](10_manager.rs.md)** - Backend plugin manager
-- **[api.rs Documentation](3_api.rs.md)** - Tauri plugin commands
+- **[plugin-api.ts Documentation](09_plugin-api.ts.md)** - Plugin API types and interfaces
+- **[manager.rs Documentation](11_manager.rs.md)** - Backend plugin manager
+- **[api.rs Documentation](05_api.rs.md)** - Tauri plugin commands
 
 ### Project Status
 

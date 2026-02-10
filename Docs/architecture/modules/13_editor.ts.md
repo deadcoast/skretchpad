@@ -442,14 +442,14 @@ if ($hasUnsavedChanges) {
 
 ### Dependencies
 
-- **[editor-loader.ts](5_editor-loader.ts.md)** - CodeMirror setup functions
-- **[theme.ts](6_theme.ts.md)** - Theme store
-- **[debounce.ts](14_debounce.ts.md)** - Debounce utility for auto-save
+- **[editor-loader.ts](07_editor-loader.ts.md)** - CodeMirror setup functions
+- **[theme.ts](08_theme.ts.md)** - Theme store
+- **[debounce.ts](15_debounce.ts.md)** - Debounce utility for auto-save
 
 ### Components Using This Store
 
-- **[Editor.svelte](2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte](16_StatusBar.svelte.md)** - Displays cursor position, selection
+- **[Editor.svelte](04_Editor.svelte.md)** - Main editor component
+- **[StatusBar.svelte](17_StatusBar.svelte.md)** - Displays cursor position, selection
 
 ### Backend Commands
 

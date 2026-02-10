@@ -334,27 +334,27 @@ function applyGlassTheme() {
 
 ### Core Documentation
 
-- **[Project Overview](../1_overview.md)** - High-level architecture and design goals
+- **[Project Overview](../02_overview.md)** - High-level architecture and design goals
 - **[Tech Stack](../core/01_techstack.md)** - Technologies and frameworks used
 - **[Technical Details](../core/02_technical-details.md)** - In-depth implementation details
 - **[Configuration](../core/03_configs.md)** - Configuration file formats and options
 
 ### Component Documentation
 
-- **[Chrome.svelte Documentation](17_Chrome.svelte.md)** - Title bar component (to be created)
-- **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte Documentation](16_StatusBar.svelte.md)** - Status bar component (to be created)
+- **[Chrome.svelte Documentation](18_Chrome.svelte.md)** - Title bar component (to be created)
+- **[Editor.svelte Documentation](04_Editor.svelte.md)** - Main editor component
+- **[StatusBar.svelte Documentation](17_StatusBar.svelte.md)** - Status bar component (to be created)
 
 ### Related Modules
 
 - **[Theme Engine (theme_engine.rs)](../../../src-tauri/src/theme_engine.rs)** - Backend theme loading
-- **[Main TypeScript (main.ts)](4_main.ts.md)** - Frontend entry point
+- **[Main TypeScript (main.ts)](06_main.ts.md)** - Frontend entry point
 
 ### Project Status
 
 - **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Module development progress tracker
 - **[TODO.md](../../TODO.md)** - Implementation tasks and issue resolution
-- **[Directory Tree](../0_directory-tree.md)** - Complete project structure
+- **[Directory Tree](../01_directory-tree.md)** - Complete project structure
 
 ---
 
@@ -484,6 +484,6 @@ While `main.ts` doesn't directly reference Tauri, the Svelte app it bootstraps u
 - `@tauri-apps/api/core` - `invoke()` for backend commands
 - `@tauri-apps/api/event` - `listen()` for event subscriptions
 
-See [`Editor.svelte`](2_Editor.svelte.md) for Tauri integration examples.
+See [`Editor.svelte`](04_Editor.svelte.md) for Tauri integration examples.
 
 ---

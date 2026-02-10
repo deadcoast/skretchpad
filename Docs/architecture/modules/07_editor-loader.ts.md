@@ -656,14 +656,14 @@ const newContent = getEditorContent(modified);
 
 ### Components Using This Module
 
-- **[Editor.svelte](2_Editor.svelte.md)** - Main editor component, uses all APIs
+- **[Editor.svelte](04_Editor.svelte.md)** - Main editor component, uses all APIs
 - **[App.svelte](0_App.svelte.md)** - Initializes editor on mount
 
 ### Related Stores
 
-- **[editor.ts](12_editor.ts.md)** - Editor state store
-- **[theme.ts](6_theme.ts.md)** - Theme store
-- **[keybindings.ts](7_keybindings.ts.md)** - Keybinding store
+- **[editor.ts](13_editor.ts.md)** - Editor state store
+- **[theme.ts](08_theme.ts.md)** - Theme store
+- **[keybindings.ts](20_keybindings.ts.md)** - Keybinding store
 
 ### Backend Integration
 
