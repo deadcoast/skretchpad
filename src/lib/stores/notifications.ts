@@ -83,14 +83,22 @@ function createNotificationStore() {
     dismiss,
     clear,
     // Convenience methods
-    info: (msg: string, opts?: { duration?: number; action?: { label: string; callback: () => void } }) =>
-      add(msg, { ...opts, type: 'info' }),
-    success: (msg: string, opts?: { duration?: number; action?: { label: string; callback: () => void } }) =>
-      add(msg, { ...opts, type: 'success' }),
-    warning: (msg: string, opts?: { duration?: number; action?: { label: string; callback: () => void } }) =>
-      add(msg, { ...opts, type: 'warning' }),
-    error: (msg: string, opts?: { duration?: number; action?: { label: string; callback: () => void } }) =>
-      add(msg, { ...opts, type: 'error' }),
+    info: (
+      msg: string,
+      opts?: { duration?: number; action?: { label: string; callback: () => void } }
+    ) => add(msg, { ...opts, type: 'info' }),
+    success: (
+      msg: string,
+      opts?: { duration?: number; action?: { label: string; callback: () => void } }
+    ) => add(msg, { ...opts, type: 'success' }),
+    warning: (
+      msg: string,
+      opts?: { duration?: number; action?: { label: string; callback: () => void } }
+    ) => add(msg, { ...opts, type: 'warning' }),
+    error: (
+      msg: string,
+      opts?: { duration?: number; action?: { label: string; callback: () => void } }
+    ) => add(msg, { ...opts, type: 'error' }),
   };
 }
 

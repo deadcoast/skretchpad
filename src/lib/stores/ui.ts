@@ -236,10 +236,15 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } | nul
  * Convert RGB to hex
  */
 export function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map((x) => {
-    const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+  return (
+    '#' +
+    [r, g, b]
+      .map((x) => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      })
+      .join('')
+  );
 }
 
 /**
@@ -281,9 +286,7 @@ export function getLuminance(color: string): number {
   const { r, g, b } = parsed;
   const [rs, gs, bs] = [r, g, b].map((c) => {
     const normalized = c / 255;
-    return normalized <= 0.03928
-      ? normalized / 12.92
-      : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    return normalized <= 0.03928 ? normalized / 12.92 : Math.pow((normalized + 0.055) / 1.055, 2.4);
   });
 
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
@@ -487,7 +490,7 @@ export function getModifierKey(): string {
  */
 export function formatShortcut(shortcut: string): string {
   const isMac = navigator.platform.toLowerCase().includes('mac');
-  
+
   return shortcut
     .replace(/Ctrl/g, isMac ? '⌘' : 'Ctrl')
     .replace(/Alt/g, isMac ? '⌥' : 'Alt')
@@ -518,10 +521,7 @@ export interface NotificationOptions {
 /**
  * Show notification via the notification store
  */
-export function showNotification(
-  message: string,
-  options: NotificationOptions = {}
-): void {
+export function showNotification(message: string, options: NotificationOptions = {}): void {
   // Dynamic import to avoid circular dependencies
   import('./notifications').then(({ notifications }) => {
     notifications.add(message, {
@@ -562,11 +562,11 @@ export function isLinux(): boolean {
  */
 export function getPlatform(): 'mac' | 'windows' | 'linux' | 'unknown' {
   const platform = navigator.platform.toLowerCase();
-  
+
   if (platform.includes('mac')) return 'mac';
   if (platform.includes('win')) return 'windows';
   if (platform.includes('linux')) return 'linux';
-  
+
   return 'unknown';
 }
 
@@ -593,12 +593,7 @@ export async function retry<T>(
     factor?: number;
   } = {}
 ): Promise<T> {
-  const {
-    maxAttempts = 3,
-    initialDelay = 1000,
-    maxDelay = 10000,
-    factor = 2,
-  } = options;
+  const { maxAttempts = 3, initialDelay = 1000, maxDelay = 10000, factor = 2 } = options;
 
   let lastError: Error;
   let delay = initialDelay;
@@ -608,7 +603,7 @@ export async function retry<T>(
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt < maxAttempts - 1) {
         await sleep(Math.min(delay, maxDelay));
         delay *= factor;

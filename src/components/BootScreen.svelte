@@ -41,9 +41,7 @@
   // Plugin lines will be injected dynamically
   let pluginLines: BootLine[] = [];
 
-  const finalLines: BootLine[] = [
-    { text: 'All systems nominal.', type: 'ready', delay: 300 },
-  ];
+  const finalLines: BootLine[] = [{ text: 'All systems nominal.', type: 'ready', delay: 300 }];
 
   onMount(async () => {
     // Show banner first
@@ -70,7 +68,7 @@
 
     // Build plugin lines from discovered data
     if (pluginData.length > 0) {
-      pluginLines = pluginData.map(p => ({
+      pluginLines = pluginData.map((p) => ({
         text: `  ${p.name} ${p.version} (${p.trust})  [${p.state === 'active' ? 'ACTIVE' : p.state.toUpperCase()}]`,
         type: 'plugin' as const,
         delay: 120,
@@ -112,7 +110,7 @@
   }
 
   function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // Cursor blink
@@ -200,7 +198,9 @@
   .banner {
     opacity: 0;
     transform: translateY(-4px);
-    transition: opacity 300ms ease-out, transform 300ms ease-out;
+    transition:
+      opacity 300ms ease-out,
+      transform 300ms ease-out;
     margin-bottom: 4px;
   }
 
@@ -213,7 +213,7 @@
     font-family: var(--font-mono, 'Consolas', 'Courier New', monospace);
     font-size: 13px;
     line-height: 1.3;
-    color: var(--palette-cyan, #75FFCF);
+    color: var(--palette-cyan, #75ffcf);
     white-space: pre;
     letter-spacing: 0.5px;
   }
@@ -222,7 +222,7 @@
   .version {
     font-family: var(--font-mono, 'Consolas', 'Courier New', monospace);
     font-size: 11px;
-    color: var(--palette-brightBlack, #636E83);
+    color: var(--palette-brightBlack, #636e83);
     margin-bottom: 16px;
     padding-left: 2px;
     opacity: 0;
@@ -262,31 +262,31 @@
   }
 
   .prefix {
-    color: var(--palette-brightBlack, #636E83);
+    color: var(--palette-brightBlack, #636e83);
     width: 12px;
     flex-shrink: 0;
     text-align: center;
   }
 
   .prefix.dot {
-    color: var(--palette-green, #E6FF75);
+    color: var(--palette-green, #e6ff75);
   }
 
   .prefix.plug {
-    color: var(--palette-purple, #FF75C6);
+    color: var(--palette-purple, #ff75c6);
   }
 
   .prefix.ready {
-    color: var(--palette-cyan, #75FFCF);
+    color: var(--palette-cyan, #75ffcf);
   }
 
   .log-text {
-    color: var(--palette-foreground, #FFFFFF);
+    color: var(--palette-foreground, #ffffff);
   }
 
   /* Line type colors */
   .log-line--system .log-text {
-    color: var(--palette-yellow, #FBD58E);
+    color: var(--palette-yellow, #fbd58e);
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -294,19 +294,19 @@
   }
 
   .log-line--ok .log-text {
-    color: var(--palette-brightWhite, #E5E5E5);
+    color: var(--palette-brightWhite, #e5e5e5);
   }
 
   .log-line--info .log-text {
-    color: var(--palette-brightBlack, #636E83);
+    color: var(--palette-brightBlack, #636e83);
   }
 
   .log-line--plugin .log-text {
-    color: var(--palette-white, #FFCCD5);
+    color: var(--palette-white, #ffccd5);
   }
 
   .log-line--ready .log-text {
-    color: var(--palette-cyan, #75FFCF);
+    color: var(--palette-cyan, #75ffcf);
     font-weight: 600;
   }
 
@@ -320,7 +320,7 @@
   .cursor {
     font-family: var(--font-mono, 'Consolas', 'Courier New', monospace);
     font-size: 14px;
-    color: var(--palette-cursor, #FFCCD5);
+    color: var(--palette-cursor, #ffccd5);
     transition: opacity 80ms;
   }
 

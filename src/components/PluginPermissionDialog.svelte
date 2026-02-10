@@ -1,34 +1,39 @@
 <!-- src/components/PluginPermissionDialog.svelte -->
 <script lang="ts">
-    import type { PluginStatus } from '$lib/stores/plugins';
-    import { icons } from '../lib/icons/index';
+  import type { PluginStatus } from '$lib/stores/plugins';
+  import { icons } from '../lib/icons/index';
 
-    export let plugin: PluginStatus;
-    export let onApprove: () => void;
-    export let onDeny: () => void;
+  export let plugin: PluginStatus;
+  export let onApprove: () => void;
+  export let onDeny: () => void;
 
-    const riskLevels: Record<string, string> = {
-      filesystem: 'high',
-      network: 'critical',
-      commands: 'critical',
-      ui: 'low',
-    };
+  const riskLevels: Record<string, string> = {
+    filesystem: 'high',
+    network: 'critical',
+    commands: 'critical',
+    ui: 'low',
+  };
 
-    function getRiskBadge(capability: string): { color: string; label: string } {
-      const level = riskLevels[capability] || 'low';
-      if (level === 'critical') return { color: '#ff4444', label: 'CRITICAL' };
-      if (level === 'high') return { color: '#ff9800', label: 'HIGH' };
-      return { color: '#ffc107', label: 'MEDIUM' };
-    }
+  function getRiskBadge(capability: string): { color: string; label: string } {
+    const level = riskLevels[capability] || 'low';
+    if (level === 'critical') return { color: '#ff4444', label: 'CRITICAL' };
+    if (level === 'high') return { color: '#ff9800', label: 'HIGH' };
+    return { color: '#ffc107', label: 'MEDIUM' };
+  }
 
-    function handleKeydown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onDeny();
-    }
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') onDeny();
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="permission-dialog-title">
+<div
+  class="dialog-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="permission-dialog-title"
+>
   <div class="permission-dialog">
     <div class="dialog-header">
       <div class="shield-icon">{@html icons.shield}</div>
@@ -73,7 +78,9 @@
           <span class="risk-badge" style="background: {badge.color}">{badge.label}</span>
           <div class="permission-info">
             <strong>Command Execution</strong>
-            <code class="permission-detail">{plugin.capabilities.commands.allowlist.join(', ')}</code>
+            <code class="permission-detail"
+              >{plugin.capabilities.commands.allowlist.join(', ')}</code
+            >
           </div>
         </div>
       {/if}
@@ -89,7 +96,9 @@
                 plugin.capabilities.ui.status_bar && 'Status Bar',
                 plugin.capabilities.ui.sidebar && 'Sidebar',
                 plugin.capabilities.ui.notifications && 'Notifications',
-              ].filter(Boolean).join(', ')}
+              ]
+                .filter(Boolean)
+                .join(', ')}
             </span>
           </div>
         </div>
@@ -120,8 +129,12 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .permission-dialog {
@@ -136,8 +149,14 @@
   }
 
   @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
   .dialog-header {
