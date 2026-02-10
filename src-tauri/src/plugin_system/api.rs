@@ -3,6 +3,7 @@
 use crate::plugin_system::{
     capabilities::{FilesystemCapability, NetworkCapability, PluginCapabilities},
     manager::PluginManager,
+    ops::EditorStateHandle,
     sandbox::SandboxRegistry,
 };
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
-use tauri::{AppHandle, Emitter, Listener, Manager, State, WebviewWindow};
+use tauri::{Emitter, State, WebviewWindow};
 use tokio::sync::RwLock;
 
 // ============================================================================
@@ -85,7 +86,13 @@ impl AuditLogger {
 
 /// Registry for active file watchers, keyed by watch_id
 pub struct FileWatcherRegistry {
-    watchers: tokio::sync::Mutex<HashMap<String, notify::RecommendedWatcher>>,
+    watchers: tokio::sync::Mutex<HashMap<String, OwnedWatcher>>,
+}
+
+struct OwnedWatcher {
+    plugin_id: String,
+    #[allow(dead_code)]
+    watcher: notify::RecommendedWatcher,
 }
 
 impl FileWatcherRegistry {
@@ -95,12 +102,24 @@ impl FileWatcherRegistry {
         }
     }
 
-    pub async fn register(&self, id: String, watcher: notify::RecommendedWatcher) {
-        self.watchers.lock().await.insert(id, watcher);
+    pub async fn register(
+        &self,
+        id: String,
+        plugin_id: String,
+        watcher: notify::RecommendedWatcher,
+    ) {
+        self.watchers
+            .lock()
+            .await
+            .insert(id, OwnedWatcher { plugin_id, watcher });
     }
 
-    pub async fn unregister(&self, id: &str) -> bool {
-        self.watchers.lock().await.remove(id).is_some()
+    pub async fn unregister(&self, id: &str, plugin_id: &str) -> bool {
+        let mut watchers = self.watchers.lock().await;
+        match watchers.get(id) {
+            Some(owned) if owned.plugin_id == plugin_id => watchers.remove(id).is_some(),
+            _ => false,
+        }
     }
 
     pub async fn count(&self) -> usize {
@@ -181,6 +200,13 @@ async fn get_plugin_capabilities(
         .ok_or_else(|| ApiError::PluginNotFound {
             plugin_id: plugin_id.to_string(),
         })
+}
+
+async fn get_workspace_root(
+    manager: &State<'_, Arc<RwLock<PluginManager>>>,
+) -> Result<PathBuf, ApiError> {
+    let manager = manager.read().await;
+    Ok(manager.workspace_root().to_path_buf())
 }
 
 /// Validate filesystem read permission
@@ -277,6 +303,11 @@ fn validate_network(capabilities: &PluginCapabilities, url: &str) -> Result<(), 
 
 /// Validate command execution permission
 fn validate_command(capabilities: &PluginCapabilities, command: &str) -> Result<(), ApiError> {
+    if command.contains('/') || command.contains('\\') || command.contains(':') {
+        return Err(ApiError::CommandNotAllowed {
+            command: command.to_string(),
+        });
+    }
     if capabilities.commands.allowlist.contains(command) {
         Ok(())
     } else {
@@ -321,7 +352,6 @@ pub async fn plugin_read_file(
     params: ReadFileParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
     audit: State<'_, Arc<AuditLogger>>,
-    app: AppHandle,
 ) -> Result<String, ApiError> {
     let start_time = SystemTime::now();
     let path = PathBuf::from(&params.path)
@@ -330,11 +360,7 @@ pub async fn plugin_read_file(
             path: params.path.clone(),
         })?;
 
-    // Get workspace root
-    let workspace_root = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
+    let workspace_root = get_workspace_root(&manager).await?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -372,7 +398,6 @@ pub async fn plugin_write_file(
     params: WriteFileParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
     audit: State<'_, Arc<AuditLogger>>,
-    app: AppHandle,
 ) -> Result<(), ApiError> {
     let start_time = SystemTime::now();
 
@@ -406,11 +431,7 @@ pub async fn plugin_write_file(
         })?)
     };
 
-    // Get workspace root
-    let workspace_root = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
+    let workspace_root = get_workspace_root(&manager).await?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -456,7 +477,6 @@ pub async fn plugin_list_directory(
     params: ListDirectoryParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
     audit: State<'_, Arc<AuditLogger>>,
-    app: AppHandle,
 ) -> Result<Vec<DirectoryEntry>, ApiError> {
     let start_time = SystemTime::now();
     let path = PathBuf::from(&params.path)
@@ -465,11 +485,7 @@ pub async fn plugin_list_directory(
             path: params.path.clone(),
         })?;
 
-    // Get workspace root
-    let workspace_root = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
+    let workspace_root = get_workspace_root(&manager).await?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -525,7 +541,6 @@ pub async fn plugin_watch_path(
     manager: State<'_, Arc<RwLock<PluginManager>>>,
     watcher_registry: State<'_, Arc<FileWatcherRegistry>>,
     audit: State<'_, Arc<AuditLogger>>,
-    app: AppHandle,
     window: WebviewWindow,
 ) -> Result<String, ApiError> {
     let path = PathBuf::from(&params.path)
@@ -534,11 +549,7 @@ pub async fn plugin_watch_path(
             path: params.path.clone(),
         })?;
 
-    // Get workspace root
-    let workspace_root = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| ApiError::InternalError(format!("Failed to get workspace root: {}", e)))?;
+    let workspace_root = get_workspace_root(&manager).await?;
 
     // Get capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
@@ -563,7 +574,9 @@ pub async fn plugin_watch_path(
     let window_clone = window.clone();
 
     // Store watcher in registry so it persists and can be cleaned up
-    watcher_registry.register(watch_id.clone(), watcher).await;
+    watcher_registry
+        .register(watch_id.clone(), params.plugin_id.clone(), watcher)
+        .await;
 
     // Spawn event relay task
     tokio::spawn(async move {
@@ -606,7 +619,9 @@ pub async fn plugin_unwatch_path(
     watcher_registry: State<'_, Arc<FileWatcherRegistry>>,
     audit: State<'_, Arc<AuditLogger>>,
 ) -> Result<(), ApiError> {
-    let removed = watcher_registry.unregister(&params.watch_id).await;
+    let removed = watcher_registry
+        .unregister(&params.watch_id, &params.plugin_id)
+        .await;
 
     audit
         .log(AuditEvent {
@@ -769,23 +784,33 @@ pub async fn plugin_execute_command(
         })
         .collect();
 
+    if capabilities.commands.require_confirmation {
+        return Err(ApiError::PermissionDenied {
+            operation: "command execution".to_string(),
+            capability: "user confirmation".to_string(),
+        });
+    }
+
+    let workspace_root = get_workspace_root(&manager).await?;
+
     // Execute command
     let mut cmd = tokio::process::Command::new(&params.command);
     cmd.args(&sanitized_args);
+    cmd.kill_on_drop(true);
 
     if let Some(cwd) = params.cwd {
-        cmd.current_dir(cwd);
+        let cwd_path = PathBuf::from(cwd)
+            .canonicalize()
+            .map_err(|_| ApiError::InvalidPath {
+                path: "cwd".to_string(),
+            })?;
+        validate_fs_read(&capabilities, &cwd_path, &workspace_root)?;
+        cmd.current_dir(cwd_path);
     }
 
-    // Require confirmation if specified
-    if capabilities.commands.require_confirmation {
-        // This would trigger a UI dialog
-        // For now, we'll skip this in the implementation
-    }
-
-    let output = cmd
-        .output()
+    let output = tokio::time::timeout(std::time::Duration::from_secs(30), cmd.output())
         .await
+        .map_err(|_| ApiError::CommandError("Command timed out after 30s".to_string()))?
         .map_err(|e| ApiError::CommandError(e.to_string()))?;
 
     let result = CommandOutput {
@@ -1006,37 +1031,16 @@ pub struct GetEditorContentParams {
 pub async fn plugin_get_editor_content(
     params: GetEditorContentParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: WebviewWindow,
+    editor_state: State<'_, EditorStateHandle>,
 ) -> Result<String, ApiError> {
     // Get and validate capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
     validate_ui(&capabilities, "webview")?;
 
-    // Request content from frontend via event round-trip
-    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
-    let tx = std::sync::Arc::new(std::sync::Mutex::new(Some(tx)));
-
-    let response_event = "plugin:editor:get_content_response";
-    let tx_clone = tx.clone();
-    window.once(response_event, move |event| {
-        let payload = event.payload().to_string();
-        if let Some(tx) = tx_clone.lock().unwrap().take() {
-            let _ = tx.send(payload);
-        }
-    });
-
-    window
-        .emit("plugin:editor:get_content", ())
-        .map_err(|e| ApiError::InternalError(e.to_string()))?;
-
-    let content = tokio::time::timeout(std::time::Duration::from_secs(5), rx)
-        .await
-        .map_err(|_| ApiError::InternalError("Timeout waiting for editor content".to_string()))?
-        .map_err(|_| ApiError::InternalError("Failed to receive editor content".to_string()))?;
-
-    // Strip surrounding quotes if JSON-encoded string
-    let content = serde_json::from_str::<String>(&content).unwrap_or(content);
-    Ok(content)
+    let state = editor_state
+        .lock()
+        .map_err(|e| ApiError::InternalError(format!("Failed to lock editor state: {}", e)))?;
+    Ok(state.content.clone())
 }
 
 #[derive(Debug, Deserialize)]
@@ -1084,37 +1088,21 @@ pub struct FileInfo {
 pub async fn plugin_get_active_file(
     params: GetActiveFileParams,
     manager: State<'_, Arc<RwLock<PluginManager>>>,
-    window: WebviewWindow,
+    editor_state: State<'_, EditorStateHandle>,
 ) -> Result<Option<FileInfo>, ApiError> {
     // Get and validate capabilities
     let capabilities = get_plugin_capabilities(&params.plugin_id, &manager).await?;
     validate_ui(&capabilities, "webview")?;
 
-    // Request from frontend via event round-trip
-    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
-    let tx = std::sync::Arc::new(std::sync::Mutex::new(Some(tx)));
+    let state = editor_state
+        .lock()
+        .map_err(|e| ApiError::InternalError(format!("Failed to lock editor state: {}", e)))?;
 
-    let response_event = "plugin:editor:get_active_file_response";
-    let tx_clone = tx.clone();
-    window.once(response_event, move |event| {
-        let payload = event.payload().to_string();
-        if let Some(tx) = tx_clone.lock().unwrap().take() {
-            let _ = tx.send(payload);
-        }
-    });
-
-    window
-        .emit("plugin:editor:get_active_file", ())
-        .map_err(|e| ApiError::InternalError(e.to_string()))?;
-
-    let response = tokio::time::timeout(std::time::Duration::from_secs(5), rx)
-        .await
-        .map_err(|_| ApiError::InternalError("Timeout waiting for active file info".to_string()))?
-        .map_err(|_| ApiError::InternalError("Failed to receive active file info".to_string()))?;
-
-    let file_info: Option<FileInfo> = serde_json::from_str(&response)
-        .map_err(|e| ApiError::InternalError(format!("Failed to parse active file info: {}", e)))?;
-    Ok(file_info)
+    Ok(state.active_file.clone().map(|path| FileInfo {
+        path,
+        language: None,
+        is_dirty: false,
+    }))
 }
 
 // ============================================================================
@@ -1493,6 +1481,18 @@ mod tests {
             ..Default::default()
         };
         assert!(validate_command(&capabilities, "rm").is_err());
+    }
+
+    #[test]
+    fn test_validate_command_denies_path_like_binary() {
+        let capabilities = PluginCapabilities {
+            commands: CommandCapability {
+                allowlist: vec!["git".to_string()].into_iter().collect(),
+                require_confirmation: false,
+            },
+            ..Default::default()
+        };
+        assert!(validate_command(&capabilities, "/usr/bin/git").is_err());
     }
 
     // ============================================================================

@@ -67,6 +67,7 @@
     File: [
       { label: 'New File', id: 'file.new', shortcut: 'Ctrl+N' },
       { label: 'Open File...', id: 'file.open', shortcut: 'Ctrl+O' },
+      { label: 'Open Folder...', id: 'file.openFolder', shortcut: 'Ctrl+Shift+O' },
       { label: '', id: '', separator: true },
       { label: 'Save', id: 'file.save', shortcut: 'Ctrl+S' },
       { label: 'Save As...', id: 'file.saveAs', shortcut: 'Ctrl+Shift+S' },

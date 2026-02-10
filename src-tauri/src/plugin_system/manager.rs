@@ -88,6 +88,16 @@ pub struct PluginStatus {
     pub loaded_at: Option<u64>,
     pub auto_approve: bool,
     pub capability_tier: String,
+    pub commands: Vec<PluginCommandStatus>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PluginCommandStatus {
+    pub id: String,
+    pub plugin_id: String,
+    pub label: String,
+    pub keybinding: Option<String>,
+    pub category: Option<String>,
 }
 
 // ============================================================================
@@ -224,11 +234,31 @@ impl PluginManager {
             // Load and execute the plugin's entry point script
             // This registers hooks (onActivate, onDeactivate, registerHook)
             let entry_point = &plugin_info.manifest.main;
+            let plugin_root = plugin_info.path.canonicalize().map_err(|e| {
+                ManagerError::Internal(format!(
+                    "Failed to canonicalize plugin root '{}': {}",
+                    plugin_info.path.display(),
+                    e
+                ))
+            })?;
             let entry_path = plugin_info.path.join(entry_point);
-            let script = std::fs::read_to_string(&entry_path).map_err(|e| {
+            let canonical_entry = entry_path.canonicalize().map_err(|e| {
                 ManagerError::Internal(format!(
                     "Failed to read plugin entry point '{}': {}",
                     entry_path.display(),
+                    e
+                ))
+            })?;
+            if !canonical_entry.starts_with(&plugin_root) {
+                return Err(ManagerError::Internal(format!(
+                    "Plugin entry point escapes plugin directory: '{}'",
+                    entry_point
+                )));
+            }
+            let script = std::fs::read_to_string(&canonical_entry).map_err(|e| {
+                ManagerError::Internal(format!(
+                    "Failed to read plugin entry point '{}': {}",
+                    canonical_entry.display(),
                     e
                 ))
             })?;
@@ -366,6 +396,7 @@ impl PluginManager {
             loaded_at,
             auto_approve: plugin_info.manifest.trust.auto_grant_permissions(),
             capability_tier: capability_tier.to_string(),
+            commands: parse_manifest_commands(&plugin_info.manifest.commands, plugin_id),
         })
     }
 
@@ -391,6 +422,17 @@ impl PluginManager {
         self.loader
             .get(plugin_id)
             .map(|info| info.manifest.capabilities.clone())
+    }
+
+    /// Set plugin capabilities after dynamic permission grants.
+    pub fn set_plugin_capabilities(
+        &mut self,
+        plugin_id: &str,
+        capabilities: PluginCapabilities,
+    ) -> Result<()> {
+        self.loader
+            .set_capabilities(plugin_id, capabilities)
+            .map_err(ManagerError::Loader)
     }
 
     /// Register event listener for a plugin
@@ -507,6 +549,48 @@ impl PluginManager {
     pub fn sandbox_registry(&self) -> &Arc<SandboxRegistry> {
         &self.sandbox_registry
     }
+
+    /// Get workspace root for capability-bound APIs.
+    pub fn workspace_root(&self) -> &std::path::Path {
+        &self.workspace_root
+    }
+}
+
+fn parse_manifest_commands(
+    commands: &Option<toml::Value>,
+    plugin_id: &str,
+) -> Vec<PluginCommandStatus> {
+    let Some(toml::Value::Table(table)) = commands else {
+        return Vec::new();
+    };
+
+    table
+        .iter()
+        .map(|(id, config)| {
+            let label = config
+                .get("label")
+                .and_then(|v| v.as_str())
+                .unwrap_or(id)
+                .to_string();
+            let keybinding = config
+                .get("key")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            let category = config
+                .get("category")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+                .or_else(|| id.split('.').next().map(|s| s.to_string()));
+
+            PluginCommandStatus {
+                id: id.to_string(),
+                plugin_id: plugin_id.to_string(),
+                label,
+                keybinding,
+                category,
+            }
+        })
+        .collect()
 }
 
 // ============================================================================
@@ -696,6 +780,7 @@ mod tests {
             loaded_at: Some(1700000000000),
             auto_approve: false,
             capability_tier: "sandboxed".to_string(),
+            commands: vec![],
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"id\":\"test\""));
@@ -720,6 +805,7 @@ mod tests {
             loaded_at: None,
             auto_approve: false,
             capability_tier: "sandboxed".to_string(),
+            commands: vec![],
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"state\":\"error\""));
@@ -741,6 +827,7 @@ mod tests {
             loaded_at: Some(1700000000000),
             auto_approve: true,
             capability_tier: "full".to_string(),
+            commands: vec![],
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"trust\":\"first-party\""));
@@ -763,6 +850,7 @@ mod tests {
             loaded_at: Some(1700000000000),
             auto_approve: false,
             capability_tier: "read-only".to_string(),
+            commands: vec![],
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"trust\":\"verified\""));
@@ -849,6 +937,7 @@ mod tests {
             loaded_at: None,
             auto_approve: false,
             capability_tier: "sandboxed".to_string(),
+            commands: vec![],
         };
         let json = serde_json::to_string(&status).unwrap();
         assert!(json.contains("\"trust\":\"local\""));

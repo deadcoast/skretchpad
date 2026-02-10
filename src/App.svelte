@@ -14,6 +14,7 @@
   import DiffView from './features/diff/DiffView.svelte';
   import BootScreen from './components/BootScreen.svelte';
   import { onMount, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
   import { pluginsStore } from './lib/stores/plugins';
@@ -24,6 +25,8 @@
   import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
   import { invoke } from '@tauri-apps/api/core';
   import { detectLanguage } from './lib/editor-loader';
+  import { setExplorerRoot } from './lib/stores/explorer';
+  import { coercePathString } from './lib/utils/path';
 
   let booting = true;
   let menuVisible = true;
@@ -73,15 +76,8 @@
   });
 
   async function initializeApp() {
-    // Sync theme from settings → themeStore
-    // Settings stores the file stem (e.g. 'milkytext'), switchTheme expects display name (e.g. 'MilkyText')
-    const savedStem = $settingsStore.appearance.theme;
-    if (savedStem && $themeStore.available.length > 0) {
-      const info = $themeStore.available.find((t) => t.file.replace(/\.toml$/, '') === savedStem);
-      if (info && $themeStore.current?.metadata?.name !== info.name) {
-        await themeStore.switchTheme(info.name);
-      }
-    }
+    // Sync theme from settings -> themeStore after theme metadata is fully loaded.
+    await syncThemeFromSettings();
 
     if ($themeStore.current) {
       console.log('Theme loaded:', $themeStore.current.metadata.name);
@@ -106,6 +102,33 @@
     registerBuiltinCommands();
 
     console.log('App initialized successfully');
+  }
+
+  async function syncThemeFromSettings() {
+    const savedStem = $settingsStore.appearance.theme;
+    if (!savedStem) return;
+
+    let state = get(themeStore);
+    if (state.loading) {
+      await new Promise<void>((resolve) => {
+        const un = themeStore.subscribe((next) => {
+          if (!next.loading) {
+            un();
+            resolve();
+          }
+        });
+      });
+      state = get(themeStore);
+    }
+
+    if (state.available.length === 0) {
+      return;
+    }
+
+    const info = state.available.find((t) => t.file.replace(/\.toml$/, '') === savedStem);
+    if (info && state.current?.metadata?.name !== info.name) {
+      await themeStore.switchTheme(info.name);
+    }
   }
 
   function registerBuiltinCommands() {
@@ -150,6 +173,12 @@
         category: 'Editor',
       },
       { id: 'file.open', label: 'Open File', keybinding: 'Ctrl+O', category: 'File' },
+      {
+        id: 'file.openFolder',
+        label: 'Open Folder...',
+        keybinding: 'Ctrl+Shift+O',
+        category: 'File',
+      },
       { id: 'file.new', label: 'New File', keybinding: 'Ctrl+N', category: 'File' },
       { id: 'file.save', label: 'Save File', keybinding: 'Ctrl+S', category: 'File' },
       { id: 'file.saveAs', label: 'Save As...', keybinding: 'Ctrl+Shift+S', category: 'File' },
@@ -230,6 +259,9 @@
       case 'file.new':
         editorStore.createFile();
         break;
+      case 'file.openFolder':
+        handleOpenFolder();
+        break;
       case 'file.save':
         editorRef?.save();
         break;
@@ -278,8 +310,23 @@
       case 'view.openSettings':
         settingsVisible = true;
         break;
-      default:
-        console.log('Unhandled command:', commandId);
+      default: {
+        const pluginCommand = pluginsStore
+          .getCommands()
+          .find((cmd) => cmd.id === commandId && cmd.plugin_id !== 'builtin');
+
+        if (pluginCommand) {
+          invoke('plugin_execute_hook', {
+            pluginId: pluginCommand.plugin_id,
+            hookName: `command:${pluginCommand.id}`,
+            data: { commandId: pluginCommand.id },
+          }).catch((err: unknown) => {
+            console.error(`Failed to execute plugin command ${pluginCommand.id}:`, err);
+          });
+        } else {
+          console.log('Unhandled command:', commandId);
+        }
+      }
     }
   }
 
@@ -290,11 +337,27 @@
         multiple: false,
         filters: [{ name: 'All Files', extensions: ['*'] }],
       });
-      if (selected) {
-        await editorStore.openFile(selected as string);
+      const selectedPath = coercePathString(selected);
+      if (selectedPath) {
+        await editorStore.openFile(selectedPath);
       }
     } catch (err) {
       console.error('Failed to open file:', err);
+    }
+  }
+
+  async function handleOpenFolder() {
+    try {
+      const selected = await showOpenDialog({
+        title: 'Open Folder',
+        directory: true,
+        multiple: false,
+      });
+      if (selected && typeof selected === 'string') {
+        setExplorerRoot(selected.replace(/\\/g, '/'));
+      }
+    } catch (err) {
+      console.error('Failed to open folder:', err);
     }
   }
 
@@ -305,19 +368,21 @@
         multiple: false,
         filters: [{ name: 'All Files', extensions: ['*'] }],
       });
-      if (!file1) return;
+      const file1Path = coercePathString(file1);
+      if (!file1Path) return;
 
       const file2 = await showOpenDialog({
         title: 'Select Modified File',
         multiple: false,
         filters: [{ name: 'All Files', extensions: ['*'] }],
       });
-      if (!file2) return;
+      const file2Path = coercePathString(file2);
+      if (!file2Path) return;
 
-      diffOriginal = await invoke<string>('read_file', { path: file1 as string });
-      diffModified = await invoke<string>('read_file', { path: file2 as string });
-      diffOriginalLabel = (file1 as string).split(/[/\\]/).pop() || 'Original';
-      diffModifiedLabel = (file2 as string).split(/[/\\]/).pop() || 'Modified';
+      diffOriginal = await invoke<string>('read_file', { path: file1Path });
+      diffModified = await invoke<string>('read_file', { path: file2Path });
+      diffOriginalLabel = file1Path.split(/[/\\]/).pop() || 'Original';
+      diffModifiedLabel = file2Path.split(/[/\\]/).pop() || 'Modified';
       diffViewVisible = true;
     } catch (err) {
       console.error('Failed to open diff view:', err);
@@ -580,7 +645,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: transparent;
+    background: var(--window-bg, #030304);
     color: var(--text-primary, #e4e4e4);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }

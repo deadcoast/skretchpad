@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::path::Path;
 
 // ============================================================================
 // FILESYSTEM CAPABILITIES
@@ -32,25 +33,31 @@ pub enum FilesystemCapability {
 impl FilesystemCapability {
     /// Check if capability allows reading from a path
     pub fn can_read(&self, path: &str, workspace_root: &str) -> bool {
+        let candidate = Path::new(path);
+        let workspace = Path::new(workspace_root);
         match self {
             FilesystemCapability::None => false,
             FilesystemCapability::WorkspaceRead | FilesystemCapability::WorkspaceReadWrite => {
-                path.starts_with(workspace_root)
+                candidate.starts_with(workspace)
             }
-            FilesystemCapability::Scoped { read, .. } => {
-                read.iter().any(|allowed| path.starts_with(allowed))
-            }
+            FilesystemCapability::Scoped { read, .. } => read
+                .iter()
+                .map(Path::new)
+                .any(|allowed| candidate.starts_with(allowed)),
         }
     }
 
     /// Check if capability allows writing to a path
     pub fn can_write(&self, path: &str, workspace_root: &str) -> bool {
+        let candidate = Path::new(path);
+        let workspace = Path::new(workspace_root);
         match self {
             FilesystemCapability::None | FilesystemCapability::WorkspaceRead => false,
-            FilesystemCapability::WorkspaceReadWrite => path.starts_with(workspace_root),
-            FilesystemCapability::Scoped { write, .. } => {
-                write.iter().any(|allowed| path.starts_with(allowed))
-            }
+            FilesystemCapability::WorkspaceReadWrite => candidate.starts_with(workspace),
+            FilesystemCapability::Scoped { write, .. } => write
+                .iter()
+                .map(Path::new)
+                .any(|allowed| candidate.starts_with(allowed)),
         }
     }
 }
@@ -388,6 +395,7 @@ mod tests {
         let cap = FilesystemCapability::WorkspaceRead;
         assert!(cap.can_read("/workspace/file.txt", "/workspace"));
         assert!(!cap.can_read("/other/file.txt", "/workspace"));
+        assert!(!cap.can_read("/workspace2/file.txt", "/workspace"));
         assert!(!cap.can_write("/workspace/file.txt", "/workspace"));
     }
 
@@ -408,8 +416,10 @@ mod tests {
 
         assert!(cap.can_read("/workspace/read/file.txt", "/workspace"));
         assert!(!cap.can_read("/workspace/other/file.txt", "/workspace"));
+        assert!(!cap.can_read("/workspace/readme/file.txt", "/workspace"));
         assert!(cap.can_write("/workspace/write/file.txt", "/workspace"));
         assert!(!cap.can_write("/workspace/read/file.txt", "/workspace"));
+        assert!(!cap.can_write("/workspace/writer/file.txt", "/workspace"));
     }
 
     #[test]

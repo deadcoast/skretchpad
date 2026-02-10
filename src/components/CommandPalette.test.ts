@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import CommandPalette from './CommandPalette.svelte';
+import { pluginsStore } from '../lib/stores/plugins';
 
 describe('CommandPalette', () => {
   it('does not render when visible is false', () => {
@@ -54,5 +55,20 @@ describe('CommandPalette', () => {
     if (empty) {
       expect(empty.textContent).toContain('No commands found');
     }
+  });
+
+  it('renders plugin commands from store', () => {
+    pluginsStore.registerCommand({
+      id: 'git.status',
+      plugin_id: 'git',
+      label: 'Git Status',
+      category: 'Git',
+    });
+
+    const { container } = render(CommandPalette, { props: { visible: true } });
+    expect(container.textContent).toContain('Git Status');
+    expect(container.textContent).toContain('git.status');
+
+    pluginsStore.unregisterCommand('git.status');
   });
 });

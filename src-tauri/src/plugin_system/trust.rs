@@ -26,7 +26,7 @@ impl TrustLevel {
     }
 
     pub fn requires_signature(&self) -> bool {
-        matches!(self, TrustLevel::Verified | TrustLevel::FirstParty)
+        matches!(self, TrustLevel::Verified)
     }
 
     pub fn is_trusted(&self) -> bool {
@@ -42,6 +42,7 @@ pub struct PluginSignature {
 }
 
 impl PluginSignature {
+    #[allow(dead_code)]
     pub fn new(public_key: String, signature: Vec<u8>) -> Self {
         Self {
             public_key,
@@ -51,8 +52,14 @@ impl PluginSignature {
     }
 
     pub fn is_valid(&self) -> bool {
-        // Basic validation - in a real implementation, this would verify the signature
-        !self.public_key.is_empty() && !self.signature.is_empty()
+        // Structural checks only; cryptographic verification is handled by TrustVerifier.
+        if self.public_key.trim().is_empty() {
+            return false;
+        }
+        if self.signature.len() < 64 {
+            return false;
+        }
+        self.timestamp <= SystemTime::now()
     }
 }
 
@@ -71,12 +78,14 @@ impl TrustVerifier {
     }
 
     pub fn verify_signature(&self, signature: &PluginSignature) -> bool {
-        // In a real implementation, this would:
-        // 1. Verify the signature against the public key
-        // 2. Check if the public key is in our trusted keys
-        // 3. Verify the timestamp is recent enough
-
-        self.trusted_keys.contains(&signature.public_key) && signature.is_valid()
+        if !self.trusted_keys.contains(&signature.public_key) {
+            return false;
+        }
+        if !signature.is_valid() {
+            return false;
+        }
+        // Fail closed until cryptographic signature verification is implemented.
+        false
     }
 
     pub fn add_trusted_key(&mut self, key: String) {
@@ -175,12 +184,20 @@ mod tests {
     }
 
     #[test]
+    fn test_requires_signature_only_for_verified() {
+        assert!(!TrustLevel::FirstParty.requires_signature());
+        assert!(TrustLevel::Verified.requires_signature());
+        assert!(!TrustLevel::Community.requires_signature());
+        assert!(!TrustLevel::Local.requires_signature());
+    }
+
+    #[test]
     fn test_trust_verifier() {
         let verifier = TrustVerifier::new();
-        let sig = PluginSignature::new("skretchpad-official".to_string(), vec![1, 2, 3]);
-        assert!(verifier.verify_signature(&sig));
+        let sig = PluginSignature::new("skretchpad-official".to_string(), vec![1; 64]);
+        assert!(!verifier.verify_signature(&sig));
 
-        let bad_sig = PluginSignature::new("unknown-key".to_string(), vec![1, 2, 3]);
+        let bad_sig = PluginSignature::new("unknown-key".to_string(), vec![1; 64]);
         assert!(!verifier.verify_signature(&bad_sig));
     }
 }

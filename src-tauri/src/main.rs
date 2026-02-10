@@ -83,6 +83,11 @@ async fn activate_plugin(
                             plugin_id
                         ));
                     }
+                } else {
+                    return Err(format!(
+                        "Plugin '{}' requires a signature but none was provided",
+                        plugin_id
+                    ));
                 }
             }
         } else {
@@ -241,7 +246,7 @@ async fn grant_plugin_capability(
     ui_preset: Option<String>,
     state: State<'_, Arc<RwLock<PluginManager>>>,
 ) -> Result<serde_json::Value, String> {
-    let manager = state.read().await;
+    let mut manager = state.write().await;
     let mut caps = manager
         .get_plugin_capabilities(&plugin_id)
         .ok_or_else(|| format!("Plugin not found: {}", plugin_id))?;
@@ -280,6 +285,10 @@ async fn grant_plugin_capability(
         .get_plugin_capabilities(&plugin_id)
         .unwrap_or_default();
     let merged = existing.merge(&caps);
+
+    manager
+        .set_plugin_capabilities(&plugin_id, merged.clone())
+        .map_err(|e| e.to_string())?;
 
     // Compute tier for response
     let tier = if merged.is_subset_of(&PluginCapabilities::none()) {
@@ -599,6 +608,52 @@ struct FileMetadata {
     is_dir: bool,
 }
 
+#[derive(serde::Serialize)]
+struct DirectoryEntry {
+    name: String,
+    path: String,
+    is_dir: bool,
+    is_symlink: bool,
+    size: u64,
+}
+
+#[tauri::command]
+async fn list_directory(path: String) -> Result<Vec<DirectoryEntry>, String> {
+    let mut entries = Vec::new();
+    let mut read_dir = tokio::fs::read_dir(&path)
+        .await
+        .map_err(|e| format!("Failed to read directory '{}': {}", path, e))?;
+
+    while let Some(entry) = read_dir.next_entry().await.map_err(|e| e.to_string())? {
+        let path = entry.path();
+        let symlink_meta = tokio::fs::symlink_metadata(&path)
+            .await
+            .map_err(|e| e.to_string())?;
+        let is_symlink = symlink_meta.file_type().is_symlink();
+        let (is_dir, size) = match entry.metadata().await {
+            Ok(target_meta) => (target_meta.is_dir(), target_meta.len()),
+            Err(_) => (false, symlink_meta.len()),
+        };
+        let name = entry.file_name().to_string_lossy().to_string();
+        entries.push(DirectoryEntry {
+            name,
+            path: path.to_string_lossy().replace('\\', "/"),
+            is_dir,
+            is_symlink,
+            size,
+        });
+    }
+
+    // Sort: directories first, then alphabetically
+    entries.sort_by(|a, b| {
+        b.is_dir
+            .cmp(&a.is_dir)
+            .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+    });
+
+    Ok(entries)
+}
+
 #[tauri::command]
 async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
     let metadata = tokio::fs::metadata(&path)
@@ -814,6 +869,7 @@ fn main() {
             write_file,
             save_file,
             get_file_metadata,
+            list_directory,
             emit_editor_event,
             // Plugin management
             discover_plugins,

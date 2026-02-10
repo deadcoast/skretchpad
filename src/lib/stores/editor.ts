@@ -20,6 +20,7 @@ import {
 } from '../editor-loader';
 import { themeStore } from './theme';
 import { debounce } from '../utils/debounce';
+import { coercePathString, getDisplayNameFromPath } from '../utils/path';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -189,7 +190,16 @@ function createEditorStore() {
     /**
      * Open a file in a new tab
      */
-    async openFile(path: string): Promise<void> {
+    async openFile(pathInput: string | { path: string }): Promise<void> {
+      const path = coercePathString(pathInput);
+      if (!path) {
+        update((state) => ({
+          ...state,
+          error: 'Failed to open file: invalid file path payload',
+        }));
+        return;
+      }
+
       update((state) => ({ ...state, isLoading: true, error: null }));
 
       try {
@@ -207,8 +217,8 @@ function createEditorStore() {
         // Read file content
         const content = await invoke<string>('read_file', { path });
 
-        // Get file name
-        const name = path.split('/').pop() || 'Untitled';
+        // Get file name (handle both / and \ separators)
+        const name = getDisplayNameFromPath(path);
 
         // Detect language
         const language = detectLanguage(name);
@@ -255,10 +265,10 @@ function createEditorStore() {
           timestamp: Date.now(),
         });
 
-        // Emit event for plugins
+        // Emit path for external listeners.
         await invoke('emit_editor_event', {
           event: 'file:open',
-          data: { path, name },
+          data: path,
         });
       } catch (error) {
         console.error('Failed to open file:', error);
@@ -392,7 +402,7 @@ function createEditorStore() {
         }
 
         const content = getEditorContent(state.editorView);
-        const name = path.split('/').pop() || 'Untitled';
+        const name = getDisplayNameFromPath(path);
 
         await invoke('save_file', { path, content });
 

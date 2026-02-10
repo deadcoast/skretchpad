@@ -47,3 +47,30 @@ registerHook('on_file_save', function () {
 registerHook('on_file_open', function () {
   // Could show git blame info in the future
 });
+
+registerHook('command:git.status', function () {
+  try {
+    var result = skretchpad.commands.execute('git', ['status', '--short', '--branch']);
+    var summary = result && result.stdout ? result.stdout.split('\n')[0] : 'status unavailable';
+    skretchpad.ui.showNotification(summary || 'status unavailable', 'info');
+  } catch (e) {
+    skretchpad.ui.showNotification('Unable to run git status', 'warning');
+  }
+});
+
+registerHook('command:git.diff', function () {
+  try {
+    var result = skretchpad.commands.execute('git', ['diff', '--stat']);
+    var summary = result && result.stdout ? result.stdout.split('\n')[0] : 'no diff output';
+    skretchpad.ui.showNotification(summary || 'no diff output', 'info');
+  } catch (e) {
+    skretchpad.ui.showNotification('Unable to run git diff', 'warning');
+  }
+});
+
+registerHook('command:git.commit', function () {
+  skretchpad.ui.showNotification(
+    'Quick commit requires message input. Use Source Control panel to commit.',
+    'info'
+  );
+});

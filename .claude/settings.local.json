@@ -69,7 +69,10 @@
       "Bash(npm --version:*)",
       "Bash(npx prettier:*)",
       "Bash(gh run watch:*)",
-      "Bash(npm run test:coverage:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(magick:*)",
+      "Bash(npm run lint)",
+      "mcp__plugin_serena_serena__search_for_pattern"
     ],
     "deny": [],
     "ask": []

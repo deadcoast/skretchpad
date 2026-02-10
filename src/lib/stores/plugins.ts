@@ -49,6 +49,7 @@ export interface PluginStatus {
   loaded_at?: number;
   auto_approve: boolean;
   capability_tier: string;
+  commands?: PluginCommand[];
 }
 
 export interface PluginCommand {
@@ -233,6 +234,11 @@ function createPluginsStore() {
         await invoke('unload_plugin', { pluginId });
         update((state) => {
           state.plugins.delete(pluginId);
+          for (const [commandId, command] of state.commands.entries()) {
+            if (command.plugin_id === pluginId) {
+              state.commands.delete(commandId);
+            }
+          }
           return { ...state };
         });
       } catch (error) {
@@ -265,6 +271,18 @@ function createPluginsStore() {
 
         update((state) => {
           state.plugins.set(pluginId, status);
+          // Reconcile command registry for this plugin from backend status payload.
+          for (const [commandId, command] of state.commands.entries()) {
+            if (command.plugin_id === pluginId) {
+              state.commands.delete(commandId);
+            }
+          }
+          for (const command of status.commands || []) {
+            state.commands.set(command.id, {
+              ...command,
+              plugin_id: command.plugin_id || pluginId,
+            });
+          }
           return { ...state };
         });
       } catch (error) {
@@ -281,10 +299,17 @@ function createPluginsStore() {
 
         update((state) => {
           const plugins = new Map<string, PluginStatus>();
+          const commands = new Map<string, PluginCommand>();
           for (const status of statuses) {
             plugins.set(status.id, status);
+            for (const command of status.commands || []) {
+              commands.set(command.id, {
+                ...command,
+                plugin_id: command.plugin_id || status.id,
+              });
+            }
           }
-          return { ...state, plugins };
+          return { ...state, plugins, commands };
         });
       } catch (error) {
         console.error('Failed to get plugin statuses:', error);

@@ -40,6 +40,7 @@
   import { pluginsStore } from '../lib/stores/plugins';
   import { keybindingStore } from '../lib/stores/keybindings';
   import { settingsStore } from '../lib/stores/settings';
+  import { coercePathString } from '../lib/utils/path';
 
   // Props
   export let initialPath: string | null = null;
@@ -133,8 +134,14 @@
 
   async function setupEventListeners() {
     // Listen for file open requests from outside
-    const fileOpenUnsub = await listen<string>('file:open', async (event) => {
-      await openFile(event.payload);
+    const fileOpenUnsub = await listen<string | { path: string }>('file:open', async (event) => {
+      const payload = event.payload as unknown;
+      const filePath = coercePathString(payload);
+      if (!filePath) {
+        console.error('Invalid file:open payload:', payload);
+        return;
+      }
+      await openFile(filePath);
     });
     unsubscribers.push(fileOpenUnsub);
 

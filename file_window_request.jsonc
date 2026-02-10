@@ -1,0 +1,25 @@
+{
+    "parent_categories":[
+        {
+            "colors":{
+                "blue": "documentation",
+                "gray": "hidden",
+                "green": "[reserved]linter-correct",
+                "yellow": "[reserved]linter-warning",
+                "red": "[reserved]linter-error",
+                "purple": "development",
+                "orange": "config"
+            },
+            "font": true,
+            "documentation": true,
+            "development": true,
+            "config": true,
+            "extension_category":{
+                "documentation":[".txt", ".docx", ".md"],
+                "development":[".js", ".ts", ".jsx", ".tsx", ".py", ".rs", ".json", ".yaml", ".yml", ".toml", ".xml", ".sql", ".html", ".css"],
+                "font":[".ttf", ".otf", ".woff", ".woff2", ".eot", ".svg", ".fnt"],
+                "config":[".markdownlintrc.json", ".markdownlint.json", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "setup.ps1", "serena.project.yml", "package.json", "tauri.conf.json", "vite.config.ts", "svelte.config.js", "tsconfig.json", ".eslintrc.cjs", ".prettierrc"]
+            }
+        }
+    ]
+}

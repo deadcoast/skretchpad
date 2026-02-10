@@ -167,7 +167,13 @@ impl PluginLoader {
         } else if manifest.source.starts_with("file://") {
             TrustLevel::Local
         } else {
-            TrustLevel::Community
+            match manifest.trust {
+                // Prevent third-party manifests from self-asserting first-party trust.
+                TrustLevel::FirstParty => TrustLevel::Community,
+                TrustLevel::Verified => TrustLevel::Verified,
+                TrustLevel::Community => TrustLevel::Community,
+                TrustLevel::Local => TrustLevel::Local,
+            }
         };
 
         // Build PluginCapabilities from raw TOML permissions + ui sections
@@ -300,7 +306,7 @@ impl PluginLoader {
 
         let manifest = self.load_manifest(plugin_id)?;
 
-        // Validate signature if present, or create stub for first-party
+        // Validate signature format if present.
         if let Some(ref sig) = manifest.signature {
             if !sig.is_valid() {
                 return Err(LoaderError::InvalidManifest(format!(
@@ -309,17 +315,6 @@ impl PluginLoader {
                 ))
                 .into());
             }
-        } else if self.is_first_party(plugin_id) {
-            // First-party plugins get a stub signature for trust verification
-            let stub = crate::plugin_system::trust::PluginSignature::new(
-                "skretchpad-official".to_string(),
-                vec![0xDE, 0xAD],
-            );
-            println!(
-                "[loader] Created stub signature for first-party plugin: {} (valid={})",
-                plugin_id,
-                stub.is_valid()
-            );
         }
 
         let plugin_path = self.plugins_dir.join(plugin_id);
@@ -342,6 +337,19 @@ impl PluginLoader {
         self.plugins
             .get(plugin_id)
             .ok_or_else(|| LoaderError::PluginNotFound(plugin_id.to_string()))
+    }
+
+    pub fn set_capabilities(
+        &mut self,
+        plugin_id: &str,
+        capabilities: crate::plugin_system::capabilities::PluginCapabilities,
+    ) -> Result<(), LoaderError> {
+        let info = self
+            .plugins
+            .get_mut(plugin_id)
+            .ok_or_else(|| LoaderError::PluginNotFound(plugin_id.to_string()))?;
+        info.manifest.capabilities = capabilities;
+        Ok(())
     }
 
     pub fn get_all(&self) -> &HashMap<String, PluginInfo> {
@@ -686,6 +694,25 @@ author = "someone"
         let loader = PluginLoader::new(tmp.path().to_path_buf());
         let manifest = loader.load_manifest("third-party").unwrap();
         assert_eq!(manifest.trust, TrustLevel::Community);
+    }
+
+    #[test]
+    fn test_trust_level_verified_preserved_for_non_first_party() {
+        let tmp = TempDir::new().unwrap();
+        write_plugin(
+            tmp.path(),
+            "verified-plugin",
+            r#"
+name = "verified-plugin"
+version = "1.0.0"
+author = "someone"
+trust = "verified"
+"#,
+        );
+
+        let loader = PluginLoader::new(tmp.path().to_path_buf());
+        let manifest = loader.load_manifest("verified-plugin").unwrap();
+        assert_eq!(manifest.trust, TrustLevel::Verified);
     }
 
     #[test]

@@ -6,6 +6,7 @@
   import { totalChanges } from '$lib/stores/git';
   import { icons } from '../lib/icons/index';
   import SourceControlPanel from './SourceControlPanel.svelte';
+  import FileExplorer from './FileExplorer.svelte';
 
   export let visible = true;
   export let activeSidebarPanel: string = 'explorer';
@@ -79,11 +80,8 @@
   <div class="sidebar__content">
     {#if activeSidebarPanel === 'explorer'}
       <div class="sidebar__panel">
-        <div class="sidebar__panel-header">
-          <h3 class="sidebar__panel-title">Explorer</h3>
-        </div>
-        <div class="sidebar__panel-placeholder">
-          <p>File Explorer (coming soon)</p>
+        <div class="sidebar__panel-body">
+          <FileExplorer />
         </div>
       </div>
     {:else if activeSidebarPanel === 'scm'}
