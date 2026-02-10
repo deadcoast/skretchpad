@@ -41,6 +41,8 @@ Object.defineProperty(navigator, 'platform', {
 
 // Mock performance.now for animation tests
 if (!window.performance) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).performance = {};
+  Object.defineProperty(window, 'performance', {
+    writable: true,
+    value: {},
+  });
 }

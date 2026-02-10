@@ -33,6 +33,8 @@
   let sidebarVisible = false;
   let activeSidebarPanel = 'explorer';
   let editorRef: Editor;
+  // Used via bind:this in template for split pane editor instance
+  // @ts-expect-error: bound in template via bind:this
   let splitEditorRef: Editor;
   let minimapVisible = true;
   let splitActive = false;
