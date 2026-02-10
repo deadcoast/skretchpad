@@ -1,41 +1,42 @@
 // src/lib/utils/debounce.ts
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyFunction = (...args: any[]) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyAsyncFunction = (...args: any[]) => Promise<any>;
+
 // Debounce function - delays execution until after wait milliseconds, have elapsed since the last time it was invoked
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends AnyFunction>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return function (this: any, ...args: Parameters<T>) {
-    const context = this;
-
+  return function (...args: Parameters<T>) {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
 
     timeoutId = setTimeout(() => {
-      func.apply(context, args);
+      func(...args);
       timeoutId = null;
     }, wait);
   };
 }
 
 //Debounce function with immediate execution option
-export function debounceImmediate<T extends (...args: any[]) => any>(
+export function debounceImmediate<T extends AnyFunction>(
   func: T,
   wait: number,
   immediate = false
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return function (this: any, ...args: Parameters<T>) {
-    const context = this;
-
+  return function (...args: Parameters<T>) {
     const later = () => {
       timeoutId = null;
       if (!immediate) {
-        func.apply(context, args);
+        func(...args);
       }
     };
 
@@ -48,54 +49,47 @@ export function debounceImmediate<T extends (...args: any[]) => any>(
     timeoutId = setTimeout(later, wait);
 
     if (callNow) {
-      func.apply(context, args);
+      func(...args);
     }
   };
 }
 
 // Throttle function - ensures function is called at most once per wait period
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends AnyFunction>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let inThrottle = false;
   let lastArgs: Parameters<T> | null = null;
-  let lastContext: any = null;
 
-  return function (this: any, ...args: Parameters<T>) {
-    const context = this;
-
+  return function (...args: Parameters<T>) {
     if (!inThrottle) {
-      func.apply(context, args);
+      func(...args);
       inThrottle = true;
 
       setTimeout(() => {
         inThrottle = false;
 
         if (lastArgs !== null) {
-          func.apply(lastContext, lastArgs);
+          func(...lastArgs);
           lastArgs = null;
-          lastContext = null;
         }
       }, wait);
     } else {
       lastArgs = args;
-      lastContext = context;
     }
   };
 }
 
 // Async debounce - debounces async functions
-export function debounceAsync<T extends (...args: any[]) => Promise<any>>(
+export function debounceAsync<T extends AnyAsyncFunction>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => Promise<ReturnType<T>> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let pendingPromise: Promise<ReturnType<T>> | null = null;
 
-  return function (this: any, ...args: Parameters<T>): Promise<ReturnType<T>> {
-    const context = this;
-
+  return function (...args: Parameters<T>): Promise<ReturnType<T>> {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
@@ -104,7 +98,7 @@ export function debounceAsync<T extends (...args: any[]) => Promise<any>>(
       pendingPromise = new Promise((resolve, reject) => {
         timeoutId = setTimeout(async () => {
           try {
-            const result = await func.apply(context, args);
+            const result = await func(...args);
             resolve(result);
           } catch (error) {
             reject(error);
@@ -121,17 +115,15 @@ export function debounceAsync<T extends (...args: any[]) => Promise<any>>(
 }
 
 // Leading edge debounce - executes immediately, then debounces subsequent calls
-export function debounceLeading<T extends (...args: any[]) => any>(
+export function debounceLeading<T extends AnyFunction>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return function (this: any, ...args: Parameters<T>) {
-    const context = this;
-
+  return function (...args: Parameters<T>) {
     if (timeoutId === null) {
-      func.apply(context, args);
+      func(...args);
     }
 
     if (timeoutId !== null) {
@@ -145,23 +137,21 @@ export function debounceLeading<T extends (...args: any[]) => any>(
 }
 
 // Debounce with cancel method
-export interface DebouncedFunction<T extends (...args: any[]) => any> {
+export interface DebouncedFunction<T extends AnyFunction> {
   (...args: Parameters<T>): void;
   cancel(): void;
   flush(): void;
 }
 
-export function debounceWithCancel<T extends (...args: any[]) => any>(
+export function debounceWithCancel<T extends AnyFunction>(
   func: T,
   wait: number
 ): DebouncedFunction<T> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let lastArgs: Parameters<T> | null = null;
-  let lastContext: any = null;
 
-  const debounced = function (this: any, ...args: Parameters<T>) {
+  const debounced = function (...args: Parameters<T>) {
     lastArgs = args;
-    lastContext = this;
 
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
@@ -169,9 +159,8 @@ export function debounceWithCancel<T extends (...args: any[]) => any>(
 
     timeoutId = setTimeout(() => {
       if (lastArgs !== null) {
-        func.apply(lastContext, lastArgs);
+        func(...lastArgs);
         lastArgs = null;
-        lastContext = null;
       }
       timeoutId = null;
     }, wait);
@@ -183,7 +172,6 @@ export function debounceWithCancel<T extends (...args: any[]) => any>(
       timeoutId = null;
     }
     lastArgs = null;
-    lastContext = null;
   };
 
   debounced.flush = () => {
@@ -192,9 +180,8 @@ export function debounceWithCancel<T extends (...args: any[]) => any>(
       timeoutId = null;
     }
     if (lastArgs !== null) {
-      func.apply(lastContext, lastArgs);
+      func(...lastArgs);
       lastArgs = null;
-      lastContext = null;
     }
   };
 
@@ -202,7 +189,7 @@ export function debounceWithCancel<T extends (...args: any[]) => any>(
 }
 
 // Debounce with max wait - ensures function is called at least once per maxWait
-export function debounceWithMaxWait<T extends (...args: any[]) => any>(
+export function debounceWithMaxWait<T extends AnyFunction>(
   func: T,
   wait: number,
   maxWait: number
@@ -210,29 +197,26 @@ export function debounceWithMaxWait<T extends (...args: any[]) => any>(
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let maxTimeoutId: ReturnType<typeof setTimeout> | null = null;
   let lastArgs: Parameters<T> | null = null;
-  let lastContext: any = null;
 
   const invoke = () => {
     if (lastArgs !== null) {
-      func.apply(lastContext, lastArgs);
+      func(...lastArgs);
       lastArgs = null;
-      lastContext = null;
     }
-    
+
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
       timeoutId = null;
     }
-    
+
     if (maxTimeoutId !== null) {
       clearTimeout(maxTimeoutId);
       maxTimeoutId = null;
     }
   };
 
-  return function (this: any, ...args: Parameters<T>) {
+  return function (...args: Parameters<T>) {
     lastArgs = args;
-    lastContext = this;
 
     if (timeoutId !== null) {
       clearTimeout(timeoutId);

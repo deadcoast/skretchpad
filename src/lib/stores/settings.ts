@@ -1,7 +1,7 @@
 // src/lib/stores/settings.ts
 // Persistent settings store -- saves/loads via Tauri file commands
 
-import { writable, get } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { invoke } from '@tauri-apps/api/core';
 import { debounce } from '../utils/debounce';
 
@@ -49,13 +49,6 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 // Settings file path (relative to workspace in dev, app data in prod)
 const SETTINGS_FILENAME = 'skretchpad-settings.json';
-
-function getSettingsPath(): string {
-  // In a Tauri app, we store in the user's home directory config path
-  // We'll use a path relative to the workspace for simplicity
-  // The actual path resolution happens in the backend
-  return SETTINGS_FILENAME;
-}
 
 function createSettingsStore() {
   const { subscribe, set, update } = writable<AppSettings>({ ...DEFAULT_SETTINGS });

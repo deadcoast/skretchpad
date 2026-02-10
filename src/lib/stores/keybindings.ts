@@ -15,7 +15,7 @@ export interface Keybinding {
   modifiers: KeyModifier[];
   command: string;
   when?: string; // Context condition
-  args?: Record<string, any>;
+  args?: Record<string, unknown>;
 }
 
 export type Keybindings = Record<string, Keybinding>;
@@ -144,7 +144,7 @@ const DEFAULT_SCHEME: KeybindingScheme = {
       modifiers: ['Ctrl'],
       command: 'search.replace',
     },
-    'F3': {
+    F3: {
       key: 'F3',
       modifiers: [],
       command: 'search.findNext',
@@ -229,43 +229,43 @@ const VIM_SCHEME: KeybindingScheme = {
   author: 'skretchpad',
   bindings: {
     // Normal mode navigation
-    'h': {
+    h: {
       key: 'h',
       modifiers: [],
       command: 'vim.moveLeft',
       when: 'vim.normalMode',
     },
-    'j': {
+    j: {
       key: 'j',
       modifiers: [],
       command: 'vim.moveDown',
       when: 'vim.normalMode',
     },
-    'k': {
+    k: {
       key: 'k',
       modifiers: [],
       command: 'vim.moveUp',
       when: 'vim.normalMode',
     },
-    'l': {
+    l: {
       key: 'l',
       modifiers: [],
       command: 'vim.moveRight',
       when: 'vim.normalMode',
     },
-    'i': {
+    i: {
       key: 'i',
       modifiers: [],
       command: 'vim.insertMode',
       when: 'vim.normalMode',
     },
-    'a': {
+    a: {
       key: 'a',
       modifiers: [],
       command: 'vim.appendMode',
       when: 'vim.normalMode',
     },
-    'Escape': {
+    Escape: {
       key: 'Escape',
       modifiers: [],
       command: 'vim.normalMode',
@@ -422,9 +422,7 @@ function createKeybindingStore() {
       update((state) => ({
         ...state,
         customBindings: {},
-        current: state.currentScheme
-          ? state.currentScheme.bindings
-          : DEFAULT_SCHEME.bindings,
+        current: state.currentScheme ? state.currentScheme.bindings : DEFAULT_SCHEME.bindings,
       }));
     },
 
@@ -622,10 +620,7 @@ export const keybindingArray = derived(keybindingStore, ($kb) =>
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', async (event) => {
     // Don't handle events from input fields
-    if (
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement
-    ) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
       return;
     }
 
