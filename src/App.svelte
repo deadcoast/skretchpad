@@ -33,7 +33,7 @@
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
   let settingsVisible = false;
-  let sidebarVisible = false;
+  let sidebarVisible = true;
   let activeSidebarPanel = 'explorer';
   let editorRef: Editor;
   // Used via bind:this in template for split pane editor instance
@@ -645,14 +645,14 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: var(--window-bg, #030304);
+    background: var(--window-bg, #0a0a0e);
     color: var(--text-primary, #e4e4e4);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   :global(html) {
     overflow: hidden;
-    background: var(--window-bg, #030304);
+    background: var(--window-bg, #0a0a0e);
   }
 
   /* Global scrollbar styling -- thin, dark, overlay */

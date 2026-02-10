@@ -4,7 +4,9 @@
 
 ```json
         {
-            "background": "#030304",
+            "backgroundBase": "#0A0A0E",
+            "backgroundColor":"#0D0E13",
+            "backgroundSubtleLight": "#12131b",
             "black": "#363941",
             "blue": "#8875FF",
             "brightBlack": "#505664",
@@ -26,7 +28,7 @@
             "white": "#FFCCD5",
             "yellow": "#FBD58E"
         }
-    ],
+    ]
 ```
 
 ```toml
@@ -37,14 +39,14 @@ version = "1.0.0"
 base = "light"
 
 [window]
-background.base = "#030304"
+background.base = "#0A0A0E"
 background.blur = 20
 border.radius = 12
 border.width = 1
 border.color = "rgba(0, 0, 0, 0.1)"
 
 [chrome]
-background.color = "#363941"
+background.color = "#0D0E13"
 background.blur = 10
 height = 32
 foreground = "#FFFFFF"

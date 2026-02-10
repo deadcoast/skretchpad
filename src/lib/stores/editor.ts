@@ -689,6 +689,20 @@ function createEditorStore() {
       }));
     },
 
+    updateCursorPosition(position: { line: number; column: number }): void {
+      update((state) => ({
+        ...state,
+        cursorPosition: position,
+      }));
+    },
+
+    updateSelection(text: string): void {
+      update((state) => ({
+        ...state,
+        selection: text,
+      }));
+    },
+
     /**
      * Cleanup editor
      */

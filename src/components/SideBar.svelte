@@ -1,7 +1,7 @@
 <!-- src/lib/components/Sidebar.svelte -->
 
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { pluginsStore, visiblePanels } from '$lib/stores/plugins';
   import { totalChanges } from '$lib/stores/git';
   import { icons } from '../lib/icons/index';
@@ -10,11 +10,32 @@
 
   export let visible = true;
   export let activeSidebarPanel: string = 'explorer';
+  const MIN_WIDTH = 260;
+  const MAX_WIDTH = 560;
+  const DEFAULT_WIDTH = 320;
+  const SIDEBAR_WIDTH_KEY = 'sidebar-width';
 
   const dispatch = createEventDispatcher<{
     openDiff: { path: string; staged: boolean };
     panelChange: { panel: string };
   }>();
+
+  let sidebarEl: HTMLElement | null = null;
+  let sidebarWidth = DEFAULT_WIDTH;
+  let isResizing = false;
+  let dragStartX = 0;
+  let dragStartWidth = DEFAULT_WIDTH;
+
+  onMount(() => {
+    const saved = Number(window.localStorage.getItem(SIDEBAR_WIDTH_KEY));
+    if (Number.isFinite(saved) && saved >= MIN_WIDTH && saved <= MAX_WIDTH) {
+      sidebarWidth = saved;
+    }
+  });
+
+  onDestroy(() => {
+    teardownResizeListeners();
+  });
 
   // Get visible plugin panels
   $: pluginPanels = $visiblePanels.filter((panel) => panel.position === 'sidebar');
@@ -31,9 +52,49 @@
   function handleDiff(e: CustomEvent<{ path: string; staged: boolean }>) {
     dispatch('openDiff', e.detail);
   }
+
+  function beginResize(event: MouseEvent) {
+    if (!visible || !sidebarEl) return;
+    isResizing = true;
+    dragStartX = event.clientX;
+    dragStartWidth = sidebarEl.getBoundingClientRect().width;
+    window.addEventListener('mousemove', onResizeMove);
+    window.addEventListener('mouseup', endResize);
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    event.preventDefault();
+  }
+
+  function onResizeMove(event: MouseEvent) {
+    if (!isResizing) return;
+    const delta = event.clientX - dragStartX;
+    const next = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(dragStartWidth + delta)));
+    sidebarWidth = next;
+  }
+
+  function endResize() {
+    if (!isResizing) return;
+    isResizing = false;
+    window.localStorage.setItem(SIDEBAR_WIDTH_KEY, String(sidebarWidth));
+    teardownResizeListeners();
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+
+  function teardownResizeListeners() {
+    window.removeEventListener('mousemove', onResizeMove);
+    window.removeEventListener('mouseup', endResize);
+  }
 </script>
 
-<aside class="sidebar" class:sidebar--visible={visible} aria-label="Sidebar">
+<aside
+  bind:this={sidebarEl}
+  class="sidebar"
+  class:sidebar--visible={visible}
+  class:sidebar--resizing={isResizing}
+  style="--sidebar-width: {sidebarWidth}px"
+  aria-label="Sidebar"
+>
   <!-- Activity bar: icon strip -->
   <div class="activity-bar">
     <button
@@ -123,6 +184,13 @@
       {/each}
     {/if}
   </div>
+
+  <button
+    type="button"
+    class="sidebar-resizer"
+    aria-label="Resize explorer"
+    on:mousedown={beginResize}
+  />
 </aside>
 
 <style>
@@ -143,9 +211,13 @@
   }
 
   .sidebar--visible {
-    width: 300px;
-    min-width: 300px;
+    width: var(--sidebar-width, 320px);
+    min-width: var(--sidebar-width, 320px);
     border-right: 1px solid var(--window-border-color);
+  }
+
+  .sidebar--resizing {
+    transition: none;
   }
 
   /* Activity bar */
@@ -224,6 +296,23 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+
+  .sidebar-resizer {
+    width: 5px;
+    flex-shrink: 0;
+    cursor: ew-resize;
+    background: transparent;
+    border-left: 1px solid transparent;
+    transition: border-color var(--transition-hover, 100ms);
+  }
+
+  .sidebar-resizer:hover,
+  .sidebar--resizing .sidebar-resizer {
+    border-left-color: var(--color-primary, #ffccd5);
+    box-shadow:
+      inset 2px 0 0 var(--color-primary, #ffccd5),
+      0 0 10px color-mix(in srgb, var(--color-primary, #ffccd5) 38%, transparent);
   }
 
   .sidebar__panel {

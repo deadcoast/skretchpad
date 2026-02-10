@@ -40,6 +40,7 @@
   import { pluginsStore } from '../lib/stores/plugins';
   import { keybindingStore } from '../lib/stores/keybindings';
   import { settingsStore } from '../lib/stores/settings';
+  import { editorStore } from '../lib/stores/editor';
   import { coercePathString } from '../lib/utils/path';
 
   // Props
@@ -495,17 +496,22 @@
     const state = editorView.state;
     const selection = state.selection.main;
     const lineInfo = state.doc.lineAt(selection.head);
+    const selectionText = state.doc.sliceString(selection.from, selection.to);
+    const cursorPosition = {
+      line: lineInfo.number,
+      column: selection.head - lineInfo.from + 1,
+    };
 
     _statusInfo = {
-      cursorPosition: {
-        line: lineInfo.number,
-        column: selection.head - lineInfo.from + 1,
-      },
+      cursorPosition,
       selectionLength: selection.to - selection.from,
       lineCount: state.doc.lines,
       encoding: 'utf-8', // This would come from file metadata
       eolType: detectEOL(state.doc.toString()),
     };
+
+    editorStore.updateCursorPosition(cursorPosition);
+    editorStore.updateSelection(selectionText);
 
     // Push editor state to backend for plugin ops
     syncEditorStateToBackend();

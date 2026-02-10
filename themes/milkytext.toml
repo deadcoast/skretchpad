@@ -5,7 +5,7 @@ version = "1.0.0"
 base = "dark"
 
 [palette]
-background = "#030304"
+background = "#0A0A0E"
 foreground = "#FFFFFF"
 cursor_color = "#FFCCD5"
 selection_background = "rgba(255, 255, 255, 0.15)"
@@ -27,7 +27,7 @@ bright_cyan = "#BAF3DD"
 bright_white = "#FFE6EA"
 
 [window]
-background.base = "#030304"
+background.base = "#0A0A0E"
 background.blur = 20
 border.radius = 12
 border.width = 1
@@ -39,12 +39,12 @@ blur = 40
 offset = [0, 10]
 
 [chrome]
-background.color = "#363941"
+background.color = "#0D0E13"
 background.blur = 10
 height = 32
 foreground = "#FFFFFF"
 border = "rgba(255, 255, 255, 0.06)"
-menu_background = "rgba(54, 57, 65, 0.98)"
+menu_background = "rgba(13, 14, 19, 0.98)"
 menu_hover = "rgba(255, 204, 213, 0.12)"
 menu_foreground = "rgba(255, 255, 255, 0.85)"
 
@@ -87,7 +87,7 @@ link = "#75FFCF"
 meta = "#505664"
 
 [ui]
-status_bar.background = "#363941"
+status_bar.background = "#12131b"
 status_bar.foreground = "#FFFFFF"
 status_bar.height = 24
 primary = "#FFCCD5"

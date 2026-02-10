@@ -171,7 +171,7 @@
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: var(--window-bg, #030304);
+    background: var(--window-bg, #0a0a0e);
     display: flex;
     align-items: center;
     justify-content: center;

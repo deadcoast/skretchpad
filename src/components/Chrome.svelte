@@ -280,7 +280,7 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    color: rgba(0, 0, 0, 0.4);
+    color: color-mix(in srgb, var(--window-bg, #0a0a0e) 75%, transparent);
     transition: color 150ms ease;
   }
 
@@ -290,17 +290,17 @@
   }
 
   .window-controls:hover .control-button {
-    color: rgba(0, 0, 0, 0.8);
+    color: var(--window-bg, #0a0a0e);
   }
 
   .minimize {
-    background: #ffbd2e;
+    background: var(--palette-yellow, #fbd58e);
   }
   .maximize {
-    background: #27ca3f;
+    background: var(--palette-cyan, #75ffcf);
   }
   .close {
-    background: #ff5f56;
+    background: var(--palette-red, #ff758f);
   }
 
   /* Menu bar */
