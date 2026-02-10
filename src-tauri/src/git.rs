@@ -95,20 +95,19 @@ fn parse_porcelain_v2(output: &str) -> GitStatus {
     };
 
     for line in output.lines() {
-        if line.starts_with("# branch.head ") {
-            status.branch = line["# branch.head ".len()..].to_string();
-        } else if line.starts_with("# branch.upstream ") {
-            status.upstream = Some(line["# branch.upstream ".len()..].to_string());
-        } else if line.starts_with("# branch.ab ") {
-            let ab = &line["# branch.ab ".len()..];
+        if let Some(head) = line.strip_prefix("# branch.head ") {
+            status.branch = head.to_string();
+        } else if let Some(upstream) = line.strip_prefix("# branch.upstream ") {
+            status.upstream = Some(upstream.to_string());
+        } else if let Some(ab) = line.strip_prefix("# branch.ab ") {
             let parts: Vec<&str> = ab.split_whitespace().collect();
             if parts.len() >= 2 {
                 status.ahead = parts[0].trim_start_matches('+').parse().unwrap_or(0);
                 status.behind = parts[1].trim_start_matches('-').parse().unwrap_or(0);
             }
-        } else if line.starts_with("? ") {
+        } else if let Some(path) = line.strip_prefix("? ") {
             // Untracked
-            status.untracked.push(line[2..].to_string());
+            status.untracked.push(path.to_string());
         } else if line.starts_with("u ") {
             // Unmerged / conflict
             let parts: Vec<&str> = line.splitn(11, ' ').collect();
