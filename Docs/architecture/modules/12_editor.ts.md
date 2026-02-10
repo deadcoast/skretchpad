@@ -449,7 +449,7 @@ if ($hasUnsavedChanges) {
 ### Components Using This Store
 
 - **[Editor.svelte](2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte](StatusBar.svelte.md)** - Displays cursor position, selection
+- **[StatusBar.svelte](16_StatusBar.svelte.md)** - Displays cursor position, selection
 
 ### Backend Commands
 
@@ -461,8 +461,8 @@ if ($hasUnsavedChanges) {
 
 ### Project Documentation
 
-- **[STATUS.md](../../STATUS.md)** - Development progress
-- **[Technical Details](../3_technical-details.md)** - Implementation patterns
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
+- **[Technical Details](../core/02_technical-details.md)** - Implementation patterns
 
 ---
 

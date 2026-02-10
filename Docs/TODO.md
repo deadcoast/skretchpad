@@ -90,18 +90,19 @@
 - [x] **Format document**: Prettier integration (JS, TS, JSON, HTML, CSS, MD, YAML)
 - [x] **TOML language support**: Via `@codemirror/legacy-modes` StreamLanguage
 - [x] **16 language grammars**: JS, TS, Python, Rust, JSON, MD, HTML, CSS, YAML, XML, SQL, TOML, Go, Java, C/C++, PHP
+- [x] **File Explorer panel**: Currently placeholder, needs tree view with file operations
 
 ---
 
-## Remaining Work
-
-- [ ] **File Explorer panel**: Currently placeholder, needs tree view with file operations
-- [ ] **Split editor state sharing**: Second pane opens independently but doesn't share tab state with main pane
-- [ ] **Frontend wiring for new commands**: 10 new v0.0.11 Tauri commands need UI hooks (except unload_plugin)
-- [ ] **Plugin marketplace/registry**: Discovery and installation of third-party plugins
+## PRIORITY WORK
 - [ ] **Terminal panel**: Integrated terminal emulator
 - [ ] **Search across files**: Project-wide search (Ctrl+Shift+F)
-- [ ] **Vim/Emacs keybinding modes**: Wire keybinding store selections to CodeMirror keymap extensions
+- [ ] **Frontend wiring for new commands**: 10 new v0.1.0 Tauri commands need UI hooks (except unload_plugin)
+
+### REMAINING WORK
+
+- [ ] **Split editor state sharing**: Second pane opens independently but doesn't share tab state with main pane
+- [ ] **Plugin marketplace/registry**: Discovery and installation of third-party plugins
 
 ---
 

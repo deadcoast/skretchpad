@@ -390,8 +390,8 @@ Displays when no file is open with action buttons.
 ### Component Documentation
 
 - **[App.svelte](0_App.svelte.md)** - Root component
-- **[Chrome.svelte](Chrome.svelte.md)** - Title bar
-- **[StatusBar.svelte](StatusBar.svelte.md)** - Status bar with plugin items
+- **[Chrome.svelte](17_Chrome.svelte.md)** - Title bar
+- **[StatusBar.svelte](16_StatusBar.svelte.md)** - Status bar with plugin items
 
 ### Store Documentation
 
@@ -413,9 +413,9 @@ Displays when no file is open with action buttons.
 
 ### Project Status
 
-- **[STATUS.md](../../STATUS.md)** - Development progress
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
 - **[TODO.md](../../TODO.md)** - Implementation tasks
-- **[Technical Details](../3_technical-details.md)** - Implementation details
+- **[Technical Details](../core/02_technical-details.md)** - Implementation details
 
 ---
 

@@ -61,7 +61,7 @@ cd skretchpad
 npm install
 
 # Launch with hot reload
-npx tauri dev
+npm run tauri:dev
 ```
 
 #### Build
@@ -71,19 +71,19 @@ npx tauri dev
 npm run build
 
 # Production desktop binary
-npx tauri build
+npm run tauri:build
 ```
 
 #### Test
 
 ```bash
-# Frontend tests (316 tests, Vitest + jsdom)
+# Frontend tests (Vitest + jsdom)
 npm test
 
 # Frontend with coverage
 npm run test:coverage
 
-# Rust tests (178 tests)
+# Rust tests
 cd src-tauri && cargo test
 
 # All tests
@@ -110,7 +110,7 @@ cd src-tauri && cargo check
 - Permission approval dialog with risk assessment; first-party plugins auto-approve
 - Auto-discovery from `plugins/` directory with hot-reload in dev mode
 - Resource limits: memory, operations, and CPU timeout enforcement
-- Trust verification with signature checking (TrustVerifier)
+- Trust verification with signature checking (verified plugins require signatures)
 - Full lifecycle: activate/deactivate/reload/unload with event emission
 
 ### Editor
@@ -128,6 +128,9 @@ cd src-tauri && cargo check
 - Native window controls (minimize, maximize, close) with drag region
 - Always-on-top pin toggle
 - Multi-tab bar with drag reorder, close other/right
+- File explorer visible by default, with drag-resizable right edge and persisted width
+- File menu support for `Open Folder...` (Ctrl+Shift+O) with live explorer root switching
+- File tree language/category visuals with hidden-file blending for dotfiles and control docs
 - Command palette (Ctrl+Shift+P) with 18+ registered commands
 - Settings panel (Ctrl+,) for appearance, editor, keybindings, files
 - Diff viewer with hunk navigation, unified/side-by-side toggle, language support
@@ -135,6 +138,7 @@ cd src-tauri && cargo check
 - Breadcrumb navigation above editor
 - Minimap code overview sidebar
 - Split editor (Ctrl+\\) with resizable panes
+- Live status bar cursor tracking (`Ln`, `Col`) and selection length sync
 - Notification toast system with action buttons
 - DOMPurify XSS sanitization for plugin content
 - Retro boot sequence on launch with plugin status confirmation
@@ -194,6 +198,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 |----------------|------------------------------|
 | `Ctrl+Shift+P` | Command palette              |
 | `Ctrl+O`       | Open file                    |
+| `Ctrl+Shift+O` | Open folder                  |
 | `Ctrl+N`       | New file                     |
 | `Ctrl+S`       | Save                         |
 | `Ctrl+Shift+S` | Save as                      |
@@ -217,13 +222,13 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 | Document                                                      | Description                 |
 |---------------------------------------------------------------|-----------------------------|
 | [Architecture Overview](docs/architecture/1_overview.md)      | System design and data flow |
-| [Tech Stack](docs/architecture/2_techstack.md)                | Dependencies and rationale  |
-| [Technical Details](docs/architecture/3_technical-details.md) | Implementation specifics    |
-| [Configuration](docs/architecture/4_configs.md)               | Build and runtime config    |
+| [Tech Stack](docs/architecture/core/01_techstack.md)                | Dependencies and rationale  |
+| [Technical Details](docs/architecture/core/02_technical-details.md) | Implementation specifics    |
+| [Configuration](docs/architecture/core/03_configs.md)               | Build and runtime config    |
 | [Directory Tree](docs/architecture/0_directory-tree.md)       | Full project structure      |
-| [Features](docs/architecture/features.md)                     | Feature specifications      |
-| [Keyboard Shortcuts](docs/keyboard_shortcuts.md)              | Complete shortcut reference |
-| [Status](docs/STATUS.md)                                      | Current development status  |
+| [Features](docs/architecture/core/04_features.md)                     | Feature specifications      |
+| [Keyboard Shortcuts](docs/settings/keyboard_shortcuts.md)              | Complete shortcut reference |
+| [Status](docs/reports/STATUS_2026-02-10.md)                                      | Current development status  |
 | [Changelog](docs/CHANGELOG.md)                                | Version history             |
 
 ## Stack
@@ -237,7 +242,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 | Plugins    | deno_core 0.230     | V8 isolate sandbox per plugin       |
 | Build      | Vite 5              | Frontend bundling, HMR              |
 | Styling    | CSS Variables       | Theme-driven, 85+ properties        |
-| Testing    | Vitest + Cargo Test | 494 tests (316 frontend, 178 Rust)  |
+| Testing    | Vitest + Cargo Test | Frontend + backend test suites      |
 | CI/CD      | GitHub Actions      | Lint, test, build (cross-platform)  |
 | Pre-commit | Husky + lint-staged | ESLint, Prettier, cargo fmt         |
 | Dialogs    | tauri-plugin-dialog | Native OS file/save dialogs         |

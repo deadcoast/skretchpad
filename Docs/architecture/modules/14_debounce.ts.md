@@ -351,8 +351,8 @@ handleChange(123, 0);     // ❌ Error: wrong type
 
 ### Project Documentation
 
-- **[Technical Details](../3_technical-details.md)** - Performance optimization patterns
-- **[STATUS.md](../../STATUS.md)** - Development progress
+- **[Technical Details](../core/02_technical-details.md)** - Performance optimization patterns
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
 
 ---
 

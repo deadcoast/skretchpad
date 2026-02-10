@@ -366,18 +366,18 @@ See [`capabilities.rs`](1.1_capabilities.rs.md) for trust level definitions.
 
 - **[plugin-api.ts](8_plugin-api.ts.md)** - TypeScript plugin API
 - **[plugins.ts](13_plugins.ts.md)** - Frontend plugin store
-- **[StatusBar.svelte](StatusBar.svelte.md)** - Plugin UI integration
+- **[StatusBar.svelte](16_StatusBar.svelte.md)** - Plugin UI integration
 
 ### Configuration
 
-- **[Cargo.toml](../4_configs.md#cargo-configuration)** - Rust dependencies
-- **[tauri.conf.json](../4_configs.md#tauri-configuration)** - Tauri configuration
+- **[Cargo.toml](../core/03_configs.md#cargo-configuration)** - Rust dependencies
+- **[tauri.conf.json](../core/03_configs.md#tauri-configuration)** - Tauri configuration
 
 ### Project Status
 
-- **[STATUS.md](../../STATUS.md)** - Development progress
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
 - **[TODO.md](../../TODO.md)** - Implementation tasks
-- **[Technical Details](../3_technical-details.md)** - Implementation deep-dive
+- **[Technical Details](../core/02_technical-details.md)** - Implementation deep-dive
 
 ---
 

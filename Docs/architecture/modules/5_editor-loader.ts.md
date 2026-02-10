@@ -678,8 +678,8 @@ const newContent = getEditorContent(modified);
 
 ### Project Documentation
 
-- **[STATUS.md](../../STATUS.md)** - Development progress
-- **[Technical Details](../3_technical-details.md)** - Editor architecture
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
+- **[Technical Details](../core/02_technical-details.md)** - Editor architecture
 
 ---
 

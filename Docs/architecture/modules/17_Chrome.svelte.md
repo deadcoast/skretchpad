@@ -302,18 +302,18 @@ When `alwaysOnTop` is `true`, the `.pinned` class applies cyan color (`#00d9ff`)
 ### Core Documentation
 
 - **[Project Overview](../1_overview.md)** - High-level architecture and design goals
-- **[Tech Stack](../2_techstack.md)** - Technologies and frameworks used
-- **[Technical Details](../3_technical-details.md)** - In-depth implementation details
+- **[Tech Stack](../core/01_techstack.md)** - Technologies and frameworks used
+- **[Technical Details](../core/02_technical-details.md)** - In-depth implementation details
 
 ### Component Documentation
 
 - **[App.svelte Documentation](0_App.svelte.md)** - Parent root component
 - **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte Documentation](StatusBar.svelte.md)** - Status bar component (to be created)
+- **[StatusBar.svelte Documentation](16_StatusBar.svelte.md)** - Status bar component (to be created)
 
 ### Project Status
 
-- **[STATUS.md](../../STATUS.md)** - Module development progress tracker
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Module development progress tracker
 - **[TODO.md](../../TODO.md)** - Implementation tasks and issue resolution
 
 ---

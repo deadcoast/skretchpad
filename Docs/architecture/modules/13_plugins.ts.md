@@ -456,7 +456,7 @@ export const sortedStatusBarItems = derived(pluginsStore, ($plugins) =>
 
 Status bar items sorted by priority (high to low).
 
-**Used by**: [`StatusBar.svelte`](StatusBar.svelte.md)
+**Used by**: [`StatusBar.svelte`](16_StatusBar.svelte.md)
 
 ---
 
@@ -511,7 +511,7 @@ import { sortedStatusBarItems } from '$lib/stores/plugins';
 {/each}
 ```
 
-**Actual implementation**: [`StatusBar.svelte`](StatusBar.svelte.md)
+**Actual implementation**: [`StatusBar.svelte`](16_StatusBar.svelte.md)
 
 ---
 
@@ -519,7 +519,7 @@ import { sortedStatusBarItems } from '$lib/stores/plugins';
 
 ### Components Using This Store
 
-- **[StatusBar.svelte](StatusBar.svelte.md)** - Displays status bar items and plugin menu
+- **[StatusBar.svelte](16_StatusBar.svelte.md)** - Displays status bar items and plugin menu
 - **[App.svelte](0_App.svelte.md)** - Initializes plugin system on mount
 
 ### Backend Integration
@@ -535,8 +535,8 @@ import { sortedStatusBarItems } from '$lib/stores/plugins';
 
 ### Project Documentation
 
-- **[STATUS.md](../../STATUS.md)** - Development progress
-- **[Technical Details](../3_technical-details.md)** - Plugin system architecture
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
+- **[Technical Details](../core/02_technical-details.md)** - Plugin system architecture
 
 ---
 

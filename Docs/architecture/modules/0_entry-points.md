@@ -1,9 +1,8 @@
-# App.svelte Architecture
+# Entry Point Architecture
 
-> **Source File**: [`src/App.svelte`](../../../src/App.svelte)
+> **Source File**: [`src/App.svelte`](../../../src/App.svelte), [`src/main.ts`](../../../src/main.ts)
 > **Status**: ✅ Implemented
-> **Component Type**: Root Application Container
-> **Lines of Code**: 87
+> **Component Type**: Root Application Container, Frontend Application Bootstrap
 
 ---
 
@@ -24,13 +23,21 @@
 
 `App.svelte` serves as the root application component for Skretchpad. It orchestrates the layout structure, manages top-level UI state (chrome visibility, always-on-top), and applies the initial glass theme to the application.
 
+`main.ts` is the entry point for the Svelte frontend application. It instantiates the root `App.svelte` component and mounts it to the DOM.
+
 ### Key Responsibilities
 
+`App.svelte`:
 - **Layout Management**: Coordinates the three main UI sections (Chrome, Editor, StatusBar)
 - **Theme Initialization**: Applies default liquid glass theme on mount
 - **Chrome Toggle**: Controls visibility of the title bar
 - **Window Pinning**: Manages always-on-top window state (planned)
 - **Global CSS Coordination**: Sets up glass effects and backdrop filters
+
+`main.ts`:
+- **Application Bootstrap**: Creates Svelte app instance
+- **DOM Mounting**: Attaches app to `#app` element in HTML
+- **Export**: Exports app instance for potential external access
 
 ---
 
@@ -50,6 +57,70 @@
 - Centralized UI state for chrome visibility and window pinning
 - Fast initial render with CSS variable-based theming
 - Flexible layout using CSS flexbox
+
+---
+
+## Source Code
+
+```typescript
+import App from './App.svelte';
+
+const app = new App({
+  target: document.getElementById('app')!,
+});
+
+export default app;
+```
+
+**Complete file**: Lines 1-8
+
+---
+
+## Implementation Details
+
+### App Instantiation
+
+```typescript
+const app = new App({
+  target: document.getElementById('app')!,
+});
+```
+
+- **Import**: Imports root [`App.svelte`](0_App.svelte.md) component
+- **Target**: Mounts to `#app` DOM element (defined in `index.html`)
+- **Non-null assertion**: Uses `!` operator assuming element exists
+
+### Export
+
+```typescript
+export default app;
+```
+
+Exports the Svelte app instance, allowing:
+- Hot module replacement (HMR) in development
+- Programmatic access to app instance if needed
+- Vite development server integration
+
+---
+
+## HTML Integration
+
+The `#app` element is defined in the project's HTML file (typically `index.html`):
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skretchpad</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+```
 
 ---
 
@@ -264,15 +335,15 @@ function applyGlassTheme() {
 ### Core Documentation
 
 - **[Project Overview](../1_overview.md)** - High-level architecture and design goals
-- **[Tech Stack](../2_techstack.md)** - Technologies and frameworks used
-- **[Technical Details](../3_technical-details.md)** - In-depth implementation details
-- **[Configuration](../4_configs.md)** - Configuration file formats and options
+- **[Tech Stack](../core/01_techstack.md)** - Technologies and frameworks used
+- **[Technical Details](../core/02_technical-details.md)** - In-depth implementation details
+- **[Configuration](../core/03_configs.md)** - Configuration file formats and options
 
 ### Component Documentation
 
-- **[Chrome.svelte Documentation](Chrome.svelte.md)** - Title bar component (to be created)
+- **[Chrome.svelte Documentation](17_Chrome.svelte.md)** - Title bar component (to be created)
 - **[Editor.svelte Documentation](2_Editor.svelte.md)** - Main editor component
-- **[StatusBar.svelte Documentation](StatusBar.svelte.md)** - Status bar component (to be created)
+- **[StatusBar.svelte Documentation](16_StatusBar.svelte.md)** - Status bar component (to be created)
 
 ### Related Modules
 
@@ -281,7 +352,7 @@ function applyGlassTheme() {
 
 ### Project Status
 
-- **[STATUS.md](../../STATUS.md)** - Module development progress tracker
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Module development progress tracker
 - **[TODO.md](../../TODO.md)** - Implementation tasks and issue resolution
 - **[Directory Tree](../0_directory-tree.md)** - Complete project structure
 
@@ -328,6 +399,28 @@ function applyGlassTheme() {
 </style>
 ```
 
+## Build Process
+
+### Development
+
+```bash
+npm run dev
+```
+
+- Vite dev server loads `main.ts`
+- Hot Module Replacement (HMR) enabled
+- Svelte compiler processes `App.svelte`
+
+### Production
+
+```bash
+npm run build
+```
+
+- Vite bundles `main.ts` and all dependencies
+- Svelte compiler optimizes components
+- Output to `dist/` directory
+
 ---
 
 ## Future Enhancements
@@ -357,6 +450,40 @@ function applyGlassTheme() {
 
 ---
 
-**Last Updated**: 2025-10-28
-**Documentation Version**: 1.0.0
-**Component Version**: 0.1.0
+## Related Documentation
+
+### Component Documentation
+
+- **[App.svelte](0_App.svelte.md)** - Root application component
+
+### Configuration
+
+- **[vite.config.ts](../core/03_configs.md#vite-configuration)** - Vite bundler configuration
+- **[svelte.config.js](../core/03_configs.md#svelte-configuration)** - Svelte compiler configuration
+- **[tsconfig.json](../core/03_configs.md#typescript-configuration)** - TypeScript configuration
+
+### Project Status
+
+- **[Tech Stack](../core/01_techstack.md)** - Frontend technologies (Svelte, Vite, TypeScript)
+- **[STATUS.md](../../reports/STATUS_2026-02-10.md)** - Development progress
+
+---
+
+## Notes
+
+### Simple by Design
+
+This file is intentionally minimal. All application logic resides in:
+- **Components**: [`src/components/`](../../../src/components)
+- **Stores**: [`src/lib/stores/`](../../../src/lib/stores)
+- **Utilities**: [`src/lib/`](../../../src/lib)
+
+### Tauri Integration
+
+While `main.ts` doesn't directly reference Tauri, the Svelte app it bootstraps uses Tauri APIs via:
+- `@tauri-apps/api/core` - `invoke()` for backend commands
+- `@tauri-apps/api/event` - `listen()` for event subscriptions
+
+See [`Editor.svelte`](2_Editor.svelte.md) for Tauri integration examples.
+
+---
