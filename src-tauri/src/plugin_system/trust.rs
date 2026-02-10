@@ -4,6 +4,7 @@ use base64::Engine;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::HashSet;
 use std::path::Path;
 use std::time::SystemTime;
 
@@ -126,17 +127,14 @@ pub fn build_plugin_signature_payload(
 }
 
 pub struct TrustVerifier {
-    trusted_keys: std::collections::HashSet<String>,
+    trusted_keys: HashSet<String>,
 }
 
 impl TrustVerifier {
     pub fn new() -> Self {
-        let mut trusted_keys = std::collections::HashSet::new();
-        // Add trusted public keys here
-        // For now, we'll add a placeholder
-        trusted_keys.insert("skretchpad-official".to_string());
-
-        Self { trusted_keys }
+        Self {
+            trusted_keys: HashSet::new(),
+        }
     }
 
     pub fn verify_signature(&self, signature: &PluginSignature, payload: &[u8]) -> bool {
@@ -178,6 +176,51 @@ impl TrustVerifier {
 
     pub fn remove_trusted_key(&mut self, key: &str) -> bool {
         self.trusted_keys.remove(key)
+    }
+
+    pub fn trusted_keys(&self) -> Vec<String> {
+        let mut keys: Vec<String> = self.trusted_keys.iter().cloned().collect();
+        keys.sort();
+        keys
+    }
+
+    pub fn load_from_file(&mut self, path: &Path) -> Result<(), String> {
+        if !path.exists() {
+            return Ok(());
+        }
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| format!("Failed to read trusted keys '{}': {}", path.display(), e))?;
+        let keys: Vec<String> = serde_json::from_str(&content)
+            .map_err(|e| format!("Failed to parse trusted keys '{}': {}", path.display(), e))?;
+
+        let mut validated = HashSet::new();
+        for key in keys {
+            if decode_public_key(&key).is_none() {
+                return Err(format!(
+                    "Trusted key file '{}' contains an invalid Ed25519 key",
+                    path.display()
+                ));
+            }
+            validated.insert(key);
+        }
+        self.trusted_keys = validated;
+        Ok(())
+    }
+
+    pub fn save_to_file(&self, path: &Path) -> Result<(), String> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| {
+                format!(
+                    "Failed to create trusted key directory '{}': {}",
+                    parent.display(),
+                    e
+                )
+            })?;
+        }
+        let content = serde_json::to_string_pretty(&self.trusted_keys())
+            .map_err(|e| format!("Failed to serialize trusted keys: {}", e))?;
+        std::fs::write(path, content)
+            .map_err(|e| format!("Failed to write trusted keys '{}': {}", path.display(), e))
     }
 }
 
@@ -390,5 +433,21 @@ trust = "verified"
         .unwrap();
 
         assert_ne!(payload_a, payload_b);
+    }
+
+    #[test]
+    fn test_trusted_keys_save_and_load_roundtrip() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("trusted_keys.json");
+        let mut verifier = TrustVerifier::new();
+        let signing_key = SigningKey::from_bytes(&[9u8; 32]);
+        let key = base64::engine::general_purpose::STANDARD
+            .encode(signing_key.verifying_key().to_bytes());
+        verifier.add_trusted_key(key.clone()).unwrap();
+        verifier.save_to_file(&path).unwrap();
+
+        let mut loaded = TrustVerifier::new();
+        loaded.load_from_file(&path).unwrap();
+        assert_eq!(loaded.trusted_keys(), vec![key]);
     }
 }

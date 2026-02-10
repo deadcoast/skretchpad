@@ -25,6 +25,7 @@ use plugin_system::{
     worker::WorkerRegistry,
 };
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::RwLock;
@@ -391,19 +392,42 @@ async fn register_plugin_worker(
 #[tauri::command]
 async fn add_trusted_key(
     key: String,
+    app: AppHandle,
     verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
 ) -> Result<(), String> {
     let mut v = verifier.write().await;
-    v.add_trusted_key(key)
+    v.add_trusted_key(key)?;
+    let path = trusted_keys_file(&app)?;
+    v.save_to_file(&path)
 }
 
 #[tauri::command]
 async fn remove_trusted_key(
     key: String,
+    app: AppHandle,
     verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
 ) -> Result<bool, String> {
     let mut v = verifier.write().await;
-    Ok(v.remove_trusted_key(&key))
+    let removed = v.remove_trusted_key(&key);
+    let path = trusted_keys_file(&app)?;
+    v.save_to_file(&path)?;
+    Ok(removed)
+}
+
+#[tauri::command]
+async fn list_trusted_keys(
+    verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
+) -> Result<Vec<String>, String> {
+    let v = verifier.read().await;
+    Ok(v.trusted_keys())
+}
+
+fn trusted_keys_file(app: &AppHandle) -> Result<PathBuf, String> {
+    let app_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to resolve app data directory: {}", e))?;
+    Ok(app_dir.join("trusted_keys.json"))
 }
 
 // ============================================================================
@@ -731,7 +755,17 @@ fn main() {
             let audit_logger = Arc::new(AuditLogger::new(10000));
             let watcher_registry = Arc::new(FileWatcherRegistry::new());
             let hot_reload_registry = Arc::new(HotReloadRegistry::new());
-            let trust_verifier = Arc::new(RwLock::new(TrustVerifier::new()));
+            let mut tv = TrustVerifier::new();
+            if let Ok(path) = trusted_keys_file(app.handle()) {
+                if let Err(e) = tv.load_from_file(&path) {
+                    eprintln!(
+                        "Failed to load trusted keys from '{}': {}",
+                        path.display(),
+                        e
+                    );
+                }
+            }
+            let trust_verifier = Arc::new(RwLock::new(tv));
             let worker_registry = Arc::new(RwLock::new(WorkerRegistry::new()));
 
             // Store state
@@ -895,6 +929,7 @@ fn main() {
             grant_plugin_capability,
             add_trusted_key,
             remove_trusted_key,
+            list_trusted_keys,
             get_worker_info,
             register_plugin_worker,
             // Filesystem operations
