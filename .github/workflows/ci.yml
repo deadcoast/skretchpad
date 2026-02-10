@@ -36,6 +36,9 @@ jobs:
       - name: Svelte check
         run: npm run check
 
+      - name: Docs integrity check
+        run: npm run docs:check
+
   # ============================================================================
   # Rust Linting
   # ============================================================================

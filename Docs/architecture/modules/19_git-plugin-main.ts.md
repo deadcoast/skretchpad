@@ -1,48 +1,24 @@
-# Git Plugin - main.ts Architecture
+# git plugin main.js
 
-> **Source File**: [`plugins/git/main.ts`](../../../plugins/git/main.ts)
-> **Status**: 📋 Planned
-> **Component Type**: Git Plugin Implementation
-> **Lines of Code**: ~900 (estimated)
+> Source file: `plugins/git/main.js`
+> Last updated: v0.1.0 (2026-02-10)
+> Status: Implemented (minimal runtime plugin)
 
----
+## Purpose
 
-*This file was previously named `4_main.ts.md` but has been renamed to avoid confusion with the frontend entry point `src/main.ts`.*
+Current local git plugin entrypoint loaded by plugin runtime.
 
----
+## Current Behavior
 
-## Overview
+- Registers hook handlers through plugin runtime API.
+- Integrates with available plugin bridge commands/events.
+- Serves as minimal first-party plugin baseline, not a full TypeScript Git client implementation.
 
-This document describes the planned Git plugin for Skretchpad - a complete Git client implementation in TypeScript that will provide Git integration directly in the editor.
+## Notes
 
-## Planned Features
+- This document supersedes older planning references to `plugins/git/main.ts`.
 
-- Git status tracking (porcelain v2 format parsing)
-- Diff parsing with hunk extraction
-- Branch management (list, checkout, create, delete)
-- Commit workflow (stage, unstage, commit, push, pull)
-- Conflict detection and resolution UI
-- File watching for .git directory changes
-- Real-time status bar updates
-- Multiple UI components (status panel, diff viewer, branch manager)
-- Command execution with error handling
-- State management for repository context
+## References
 
-## Integration Points
-
-- Plugin API (fs, commands, ui, events)
-- Editor integration
-- Status bar
-- Sidebar panels
-- Command palette
-- File watcher
-- Git CLI
-
-## Estimated Implementation
-
-**Lines of Code**: 600-900 lines (plus 300+ in Svelte components)
-
----
-
-**Documentation Version**: 1.0.0
-**Plugin Status**: Planned
+- `Docs/architecture/modules/14_plugins.ts.md`
+- `Docs/architecture/modules/05_api.rs.md`

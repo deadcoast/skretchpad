@@ -1,5 +1,9 @@
 # Comprehensive Deep Dive: `skretchpad` Architecture
 
+> Last updated: v0.1.0 (2026-02-10)
+> Note: This document includes architectural rationale and historical design analysis.
+> For strict current-state validation, use `Docs/reports/STATUS_2026-02-10.md` and module docs under `Docs/architecture/modules/`.
+
 ## 1. Monaco vs CodeMirror: Technical Analysis
 
 ### Performance Characteristics

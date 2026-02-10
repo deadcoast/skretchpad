@@ -1,26 +1,30 @@
 # Keyboard Shortcuts
 
-| Shortcut       | Action          |
-|----------------|-----------------|
-| Ctrl+Shift+P   | Command Palette |
-| Ctrl+O         | Open File       |
-| Ctrl+N         | New File        |
-| Ctrl+S         | Save            |
-| Ctrl+Shift+S   | Save As         |
-| Ctrl+W         | Close File      |
-| Ctrl+,         | Settings        |
-| Ctrl+Z         | Undo            |
-| Ctrl+Shift+Z   | Redo            |
-| Ctrl+/         | Toggle Comment  |
-| Ctrl+Shift+D   | Duplicate Line  |
-| Ctrl+Shift+K   | Delete Line     |
-| Alt+Up         | Move Lines Up   |
-| Alt+Down       | Move Lines Down |
-| Ctrl+F         | Find            |
-| Ctrl+H         | Replace         |
-| F3             | Find Next       |
-| Shift+F3       | Find Previous   |
-| Ctrl+Shift+F   | Find in Files   |
-| Ctrl+Shift+H   | Replace in Files|
-| Ctrl+G         | Go to Line      |
-| Ctrl+Shift+G   | Go to Symbol    |
+This page lists shortcuts verified from current runtime wiring in `src/App.svelte`.
+
+## Global Shortcuts (Implemented)
+
+| Shortcut       | Action                     |
+|----------------|----------------------------|
+| `Ctrl+Shift+P` | Toggle command palette     |
+| `Ctrl+Shift+H` | Toggle chrome/minimal mode |
+| `Ctrl+Shift+G` | Open source control panel  |
+| `Ctrl+B`       | Toggle sidebar             |
+| `Ctrl+O`       | Open file                  |
+| `Ctrl+N`       | New file                   |
+| `Ctrl+S`       | Save file                  |
+| `Ctrl+Shift+S` | Save file as               |
+| `Ctrl+W`       | Close file                 |
+| `Ctrl+\`       | Toggle split editor        |
+| `Ctrl+,`       | Toggle settings            |
+
+## Menu Actions
+
+| Menu Path                | Action      |
+|--------------------------|-------------|
+| `File -> Open Folder...` | Open folder |
+
+## Notes
+
+- Additional bindings are defined in `src/configs/keybindings.toml` and `src/lib/stores/keybindings.ts`.
+- Not every configured binding is globally wired yet; this file documents only behavior currently active in the app shell.

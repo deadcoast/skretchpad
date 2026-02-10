@@ -129,7 +129,7 @@ cd src-tauri && cargo check
 - Always-on-top pin toggle
 - Multi-tab bar with drag reorder, close other/right
 - File explorer visible by default, with drag-resizable right edge and persisted width
-- File menu support for `Open Folder...` (Ctrl+Shift+O) with live explorer root switching
+- File menu support for `Open Folder...` with live explorer root switching
 - File tree language/category visuals with hidden-file blending for dotfiles and control docs
 - Command palette (Ctrl+Shift+P) with 18+ registered commands
 - Settings panel (Ctrl+,) for appearance, editor, keybindings, files
@@ -198,7 +198,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 |----------------|------------------------------|
 | `Ctrl+Shift+P` | Command palette              |
 | `Ctrl+O`       | Open file                    |
-| `Ctrl+Shift+O` | Open folder                  |
+| `File -> Open Folder...` | Open folder        |
 | `Ctrl+N`       | New file                     |
 | `Ctrl+S`       | Save                         |
 | `Ctrl+Shift+S` | Save as                      |
@@ -221,15 +221,15 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 
 | Document                                                      | Description                 |
 |---------------------------------------------------------------|-----------------------------|
-| [Architecture Overview](docs/architecture/02_overview.md)      | System design and data flow |
-| [Tech Stack](docs/architecture/core/01_techstack.md)                | Dependencies and rationale  |
-| [Technical Details](docs/architecture/core/02_technical-details.md) | Implementation specifics    |
-| [Configuration](docs/architecture/core/03_configs.md)               | Build and runtime config    |
-| [Directory Tree](docs/architecture/01_directory-tree.md)       | Full project structure      |
-| [Features](docs/architecture/core/04_features.md)                     | Feature specifications      |
-| [Keyboard Shortcuts](docs/settings/keyboard_shortcuts.md)              | Complete shortcut reference |
-| [Status](docs/reports/STATUS_2026-02-10.md)                                      | Current development status  |
-| [Changelog](docs/CHANGELOG.md)                                | Version history             |
+| [Architecture Overview](Docs/architecture/02_overview.md)      | System design and data flow |
+| [Tech Stack](Docs/architecture/core/01_techstack.md)           | Dependencies and rationale  |
+| [Technical Details](Docs/architecture/core/02_technical-details.md) | Implementation specifics |
+| [Configuration](Docs/architecture/core/03_configs.md)          | Build and runtime config    |
+| [Directory Tree](Docs/architecture/01_directory-tree.md)       | Full project structure      |
+| [Features](Docs/architecture/core/04_features.md)              | Feature specifications      |
+| [Keyboard Shortcuts](Docs/settings/keyboard_shortcuts.md)      | Complete shortcut reference |
+| [Status](Docs/reports/STATUS_2026-02-10.md)                    | Current development status  |
+| [Changelog](Docs/CHANGELOG.md)                                 | Version history             |
 
 ## Stack
 

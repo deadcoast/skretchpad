@@ -1,7 +1,18 @@
-# MOVED: This file has been relocated
+# main.ts
 
-This documentation has been moved to **[`git-plugin-main.ts.md`](19_git-plugin-main.ts.md)**
+> Source file: `src/main.ts`
+> Last updated: v0.1.0 (2026-02-10)
+> Status: Implemented
 
-The previous content documented `plugins/git/main.ts` (Git plugin), which was incorrectly named as if it documented `src/main.ts` (frontend entry point).
+## Purpose
 
-For frontend entry point documentation, see: **[`0_main.ts.md`](01_entry-points.md)**
+Frontend bootstrap entrypoint. Mounts the Svelte application into the DOM.
+
+## Notes
+
+- This file intentionally contains only startup wiring.
+- Core runtime behavior is in `src/App.svelte`.
+
+## References
+
+- `Docs/architecture/modules/01_entry-points.md`

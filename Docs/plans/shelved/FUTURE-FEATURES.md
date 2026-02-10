@@ -1,7 +1,7 @@
 # Skretchpad — Future Features & Roadmap
 
 > Living document tracking essential features, improvements, and upgrades.
-> Current baseline: **v0.0.11** — 56 Tauri commands, 17 Svelte components, 16 languages, 6 themes, 2 plugins, 316 tests passing.
+> Current baseline: **v0.1.0** — 66 Tauri commands, 19 Svelte components, 16 languages, 6 themes, 2 plugins, 327 frontend tests + 181 Rust tests passing.
 
 ---
 
@@ -24,7 +24,7 @@ Fuzzy file finder over the entire workspace. Index file paths on workspace open,
 ### 1.2 Go To Line (`Ctrl+G`)
 Simple numeric input dialog that scrolls CodeMirror to the target line. Keybinding already registered but no UI exists.
 
-### 1.3 Go To Symbol (`Ctrl+Shift+O`)
+### 1.3 Go To Symbol (`Ctrl+Alt+O` suggested)
 List symbols (functions, classes, headings) in the current file via CodeMirror's syntax tree. No LSP required — parse the CM6 tree directly. Opens in CommandPalette with `@` prefix filter.
 
 ### 1.4 Multi-Cursor Editing
@@ -209,7 +209,14 @@ Add a bell icon in the status bar that opens a notification history panel. Curre
 The File/Edit/View menus in Chrome.svelte are basic. Add full dropdown menus with all available commands, keyboard shortcut hints, and separator groups.
 
 ### 8.10 Drag-to-Resize Panels
-The sidebar width (300px) is fixed. Add a drag handle between the sidebar and editor for user-adjustable width. Persist width in settings.
+Implemented in `v0.1.0`:
+- Sidebar drag handle between explorer and editor
+- Persisted width (`sidebar-width`)
+- Hover/resize affordance polish
+
+Remaining follow-up:
+- Optional reset-width action in settings
+- Optional per-workspace width override
 
 ---
 

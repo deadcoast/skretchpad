@@ -13,6 +13,7 @@
         "tauri:dev": "tauri dev",
         "tauri:build": "tauri build",
         "check": "svelte-check --tsconfig ./tsconfig.json",
+        "docs:check": "node scripts/docs-check.mjs",
         "lint": "eslint src --ext .ts,.svelte",
         "format": "prettier --write \"src/**/*.{ts,svelte,css}\"",
         "test": "vitest run",
