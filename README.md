@@ -194,42 +194,42 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 
 ## Keyboard Shortcuts
 
-| Shortcut       | Action                       |
-|----------------|------------------------------|
-| `Ctrl+Shift+P` | Command palette              |
-| `Ctrl+O`       | Open file                    |
-| `File -> Open Folder...` | Open folder        |
-| `Ctrl+N`       | New file                     |
-| `Ctrl+S`       | Save                         |
-| `Ctrl+Shift+S` | Save as                      |
-| `Ctrl+W`       | Close file                   |
-| `Ctrl+,`       | Settings                     |
-| `Ctrl+B`       | Toggle sidebar               |
-| `Ctrl+Shift+H` | Toggle chrome (minimal mode) |
-| `Ctrl+F`       | Find & replace               |
-| `Ctrl+Shift+F` | Format document              |
-| `Ctrl+/`       | Toggle comment               |
-| `Ctrl+Shift+D` | Duplicate line               |
-| `Ctrl+Shift+K` | Delete line                  |
-| `Alt+Up/Down`  | Move lines up/down           |
-| `Ctrl+\`       | Split editor                 |
-| `Ctrl+Shift+G` | Source control panel         |
-| `Ctrl+Z`       | Undo                         |
-| `Ctrl+Shift+Z` | Redo                         |
+| Shortcut           | Action                       |
+|--------------------|------------------------------|
+| `Ctrl+Shift+P`     | Command palette              |
+| `Ctrl+O`           | Open file                    |
+| `File->OpenFolder` | Open folder                  |
+| `Ctrl+N`           | New file                     |
+| `Ctrl+S`           | Save                         |
+| `Ctrl+Shift+S`     | Save as                      |
+| `Ctrl+W`           | Close file                   |
+| `Ctrl+,`           | Settings                     |
+| `Ctrl+B`           | Toggle sidebar               |
+| `Ctrl+Shift+H`     | Toggle chrome (minimal mode) |
+| `Ctrl+F`           | Find & replace               |
+| `Ctrl+Shift+F`     | Format document              |
+| `Ctrl+/`           | Toggle comment               |
+| `Ctrl+Shift+D`     | Duplicate line               |
+| `Ctrl+Shift+K`     | Delete line                  |
+| `Alt+Up/Down`      | Move lines up/down           |
+| `Ctrl+\`           | Split editor                 |
+| `Ctrl+Shift+G`     | Source control panel         |
+| `Ctrl+Z`           | Undo                         |
+| `Ctrl+Shift+Z`     | Redo                         |
 
 ## Documentation
 
-| Document                                                      | Description                 |
-|---------------------------------------------------------------|-----------------------------|
-| [Architecture Overview](Docs/architecture/02_overview.md)      | System design and data flow |
-| [Tech Stack](Docs/architecture/core/01_techstack.md)           | Dependencies and rationale  |
-| [Technical Details](Docs/architecture/core/02_technical-details.md) | Implementation specifics |
-| [Configuration](Docs/architecture/core/03_configs.md)          | Build and runtime config    |
-| [Directory Tree](Docs/architecture/01_directory-tree.md)       | Full project structure      |
-| [Features](Docs/architecture/core/04_features.md)              | Feature specifications      |
-| [Keyboard Shortcuts](Docs/settings/keyboard_shortcuts.md)      | Complete shortcut reference |
-| [Status](Docs/reports/STATUS_2026-02-10.md)                    | Current development status  |
-| [Changelog](Docs/CHANGELOG.md)                                 | Version history             |
+| Document                                                            | Description                 |
+|---------------------------------------------------------------------|-----------------------------|
+| [Architecture Overview](Docs/architecture/02_overview.md)           | System design and data flow |
+| [Tech Stack](Docs/architecture/core/01_techstack.md)                | Dependencies and rationale  |
+| [Technical Details](Docs/architecture/core/02_technical-details.md) | Implementation specifics    |
+| [Configuration](Docs/architecture/core/03_configs.md)               | Build and runtime config    |
+| [Directory Tree](Docs/architecture/01_directory-tree.md)            | Full project structure      |
+| [Features](Docs/architecture/core/04_features.md)                   | Feature specifications      |
+| [Keyboard Shortcuts](Docs/settings/keyboard_shortcuts.md)           | Complete shortcut reference |
+| [Status](Docs/reports/STATUS_2026-02-10.md)                         | Current development status  |
+| [Changelog](Docs/CHANGELOG.md)                                      | Version history             |
 
 ## Stack
 
