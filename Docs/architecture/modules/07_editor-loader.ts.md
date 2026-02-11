@@ -23,5 +23,5 @@ Encapsulates CodeMirror initialization and dynamic reconfiguration used by `Edit
 
 ## References
 
-- `Docs/architecture/modules/04_Editor.svelte.md`
-- `Docs/architecture/modules/08_theme.ts.md`
+- [editor-svelte](Docs/architecture/modules/04_Editor.svelte.md)
+- [theme-ts](Docs/architecture/modules/08_theme.ts.md)

@@ -75,8 +75,8 @@ skretchpad/
 
 ## Architecture Docs Map
 
-- `Docs/architecture/02_overview.md`
-- `Docs/architecture/core/01_techstack.md`
-- `Docs/architecture/core/02_technical-details.md`
-- `Docs/architecture/core/03_configs.md`
-- `Docs/architecture/modules/*.md`
+- [overview](Docs/architecture/02_overview.md)
+- [techstack](Docs/architecture/core/01_techstack.md)
+- [technical-details](Docs/architecture/core/02_technical-details.md)
+- [configs](Docs/architecture/core/03_configs.md)
+- [modules](Docs/architecture/modules/*.md)

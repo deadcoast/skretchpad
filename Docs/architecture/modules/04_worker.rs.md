@@ -1,6 +1,6 @@
 # worker.rs
 
-## 1.1 `src-tauri/src/plugin_system/worker.rs`
+## 1.1 [worker-rs](src-tauri/src/plugin_system/worker.rs)
 
 **NEW MODULE** - Thread-safe JavaScript execution for plugins
 

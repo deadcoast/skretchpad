@@ -17,5 +17,5 @@ Custom title-bar/chrome component for the Tauri window shell.
 
 ## References
 
-- `Docs/architecture/modules/01_entry-points.md`
-- `Docs/architecture/modules/17_StatusBar.svelte.md`
+- [entry-points](Docs/architecture/modules/01_entry-points.md)
+- [statusbar-svelte](Docs/architecture/modules/17_StatusBar.svelte.md)

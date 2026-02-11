@@ -17,5 +17,5 @@ Central editor/file store for tabs, active file, dirty state, and filesystem int
 
 ## References
 
-- `Docs/architecture/modules/04_Editor.svelte.md`
-- `Docs/architecture/modules/17_StatusBar.svelte.md`
+- [editor-svelte](Docs/architecture/modules/04_Editor.svelte.md)
+- [statusbar-svelte](Docs/architecture/modules/17_StatusBar.svelte.md)

@@ -22,5 +22,5 @@ Theme store responsible for discovering, loading, selecting, and applying themes
 
 ## References
 
-- `Docs/architecture/modules/12_main.rs.md`
-- `Docs/architecture/modules/04_Editor.svelte.md`
+- [main-rs](Docs/architecture/modules/12_main.rs.md)
+- [editor-svelte](Docs/architecture/modules/04_Editor.svelte.md)

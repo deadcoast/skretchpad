@@ -17,5 +17,5 @@ Frontend plugin registry/store handling plugin discovery state, activation statu
 
 ## References
 
-- `Docs/architecture/modules/11_manager.rs.md`
-- `Docs/architecture/modules/17_StatusBar.svelte.md`
+- [manager-rs](Docs/architecture/modules/11_manager.rs.md)
+- [statusbar-svelte](Docs/architecture/modules/17_StatusBar.svelte.md)

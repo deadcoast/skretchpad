@@ -164,15 +164,15 @@ src-tauri/src/main.rs
 
 ### COMPLETED
 
-- `sandbox.rs` - Full implementation with tests
+- [sandbox-rs](src-tauri/src/plugin_system/sandbox.rs) - Full implementation with tests
 
 ### MUST CREATE NEXT (in order)
 
-1. `src-tauri/src/plugin_system/capabilities.rs` (300-400 LOC)
-   - Required by: sandbox.rs
-   - Defines: All capability types used in sandbox.rs
+1. [capabilities-rs]`src-tauri/src/plugin_system/capabilities.rs) (300-400 LOC)
+   - Required by: [sandbox-rs](src-tauri/src/plugin_system/sandbox.rs)
+   - Defines: All capability types used in `sandbox.rs`
 
-2. `src-tauri/src/plugin_system/mod.rs` (50-100 LOC)
+2. [mod-rs](src-tauri/src/plugin_system/mod.rs) (50-100 LOC)
 
    ```rust
    pub mod capabilities;
@@ -182,22 +182,22 @@ src-tauri/src/main.rs
    pub mod loader;
    ```
 
-3. `src-tauri/src/plugin_system/loader.rs` (200-300 LOC)
+3. [loader-rs](src-tauri/src/plugin_system/loader.rs) (200-300 LOC)
    - Parses: plugin.toml manifests
    - Validates: Plugin directory structure
    - Returns: PluginManifest instances
 
-4. `src-tauri/src/plugin_system/manager.rs` (400-600 LOC)
+4. [manager-rs](src-tauri/src/plugin_system/manager.r`) (400-600 LOC)
    - Uses: SandboxRegistry
    - Manages: Plugin lifecycle (load/activate/deactivate)
    - Coordinates: Between loader, sandbox, and API
 
-5. `src-tauri/src/plugin_system/api.rs` (800-1200 LOC)
+5. [api-rs](src-tauri/src/plugin_system/api.rs) (800-1200 LOC)
    - Uses: PluginSandbox
    - Uses: PluginManager
    - Implements: All Tauri commands for plugins
 
-6. `src-tauri/src/main.rs` (modifications)
+6. [main-rs](src-tauri/src/main.rs) (modifications)
 
    ```rust
    mod plugin_system;

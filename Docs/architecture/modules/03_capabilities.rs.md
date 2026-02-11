@@ -1,5 +1,7 @@
 # src-tauri/src/plugin_system/capabilities.rs
 
+[capabilities-rs](src-tauri/src/plugin_system/capabilities.rs)
+
 1. FilesystemCapability - Controls file system access (None, WorkspaceRead, WorkspaceReadWrite, Scoped)
 2. NetworkCapability - Controls network access (None, DomainAllowlist, Unrestricted)
 3. CommandCapability - Controls shell command execution with allowlists

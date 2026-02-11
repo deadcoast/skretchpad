@@ -26,10 +26,29 @@
 - Local plugin packages: `2`
 - Frontend component files: `19`
 
+## Features
+
+- **Liquid Glass UI** -- modern glass theme with backdrop blur and transparency
+- **Plugin System** -- sandboxed V8 runtime with capability-based security
+- **Command Palette** -- Ctrl+Shift+P quick access to all commands
+- **Native File I/O** -- open, save, read, write files via native dialogs
+- **Settings Panel** -- Ctrl+, for appearance, editor, keybinding, and file settings
+- **Diff Viewer** -- side-by-side diff with CodeMirror MergeView
+- **Format Document** -- Prettier integration for JS, TS, JSON, HTML, CSS, Markdown, YAML
+- **Syntax Highlighting** -- JavaScript, TypeScript, Python, Rust, JSON, Markdown, HTML, CSS, YAML, XML, SQL, TOML
+- **Editor Commands** -- undo, redo, comment toggle, duplicate/delete/move lines, find & replace
+- **Always on Top** -- pin the window above other applications
+- **Chrome Toggle** -- hide title bar for distraction-free editing
+- **Theme System** -- TOML-based themes with CSS variable injection and hot-reload
+- **Keybinding System** -- configurable shortcuts with Default, Vim, and Emacs schemes
+- **Notification Toasts** -- non-intrusive notifications with action buttons
+
 ## Source-of-Truth Files
 
-- `package.json`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `src/lib/editor-loader.ts`
-- `src-tauri/src/main.rs`
+- [package.json](package.json)
+- [Cargo.toml](src-tauri/Cargo.toml)
+- [tauri.conf.json](src-tauri/tauri.conf.json)
+- [editor-loader.ts](src/lib/editor-loader.ts)
+- [main.rs](src-tauri/src/main.rs)
+
+---

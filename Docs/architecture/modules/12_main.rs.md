@@ -16,6 +16,6 @@ Backend entrypoint for Tauri app setup, managed state initialization, and comman
 
 ## References
 
-- `Docs/reports/STATUS_2026-02-10.md`
-- `Docs/architecture/modules/10_loader.rs.md`
-- `Docs/architecture/modules/11_manager.rs.md`
+- [STATUS_2026-02-10.md](Docs/reports/STATUS_2026-02-10.md)
+- [loader-rs](Docs/architecture/modules/10_loader.rs.md)
+- [manager-rs](Docs/architecture/modules/11_manager.rs.md)

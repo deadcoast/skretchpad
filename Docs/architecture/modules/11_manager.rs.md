@@ -17,5 +17,5 @@ Orchestrates plugin runtime lifecycle and active sandbox state.
 
 ## References
 
-- `Docs/architecture/modules/10_loader.rs.md`
-- `Docs/architecture/modules/12_main.rs.md`
+- [loader-rs](Docs/architecture/modules/10_loader.rs.md)
+- [main-rs](Docs/architecture/modules/12_main.rs.md)

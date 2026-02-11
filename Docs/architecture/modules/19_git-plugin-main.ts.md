@@ -17,9 +17,9 @@ Current local git plugin entrypoint loaded by plugin runtime.
 
 ## Notes
 
-- This document supersedes older planning references to `plugins/git/main.ts`.
+- This document supersedes older planning references to [git-plugin-main.ts](plugins/git/main.ts)
 
 ## References
 
-- `Docs/architecture/modules/14_plugins.ts.md`
-- `Docs/architecture/modules/05_api.rs.md`
+- [plugins-ts](Docs/architecture/modules/14_plugins.ts.md)
+- [api-rs](Docs/architecture/modules/05_api.rs.md)

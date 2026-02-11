@@ -19,19 +19,21 @@ Defines app bootstrap (`main.ts`) and the main desktop shell (`App.svelte`) that
 
 ## Key Integrations
 
-- `src/components/Chrome.svelte`
-- `src/components/SideBar.svelte`
-- `src/components/Editor.svelte`
-- `src/components/StatusBar.svelte`
-- `src/lib/stores/*`
+- [chrome-svelte](src/components/Chrome.svelte)
+- [sidebar-svelte](src/components/SideBar.svelte)
+- [editor-svelte](src/components/Editor.svelte)
+- [statusbar-svelte](src/components/StatusBar.svelte)
+- [stores](src/lib/stores/*)
 - Tauri invoke commands (`read_file`, `list_directory`, plugin and theme commands)
 
 ## Notes
 
-- `App.svelte` is the canonical command-dispatch layer.
-- `main.ts` remains intentionally minimal (Svelte mount only).
+- [app-svelte](App.svelte) is the canonical command-dispatch layer.
+- [main-ts](main.ts) remains intentionally minimal (Svelte mount only).
 
 ## References
 
-- `Docs/reports/STATUS_2026-02-10.md`
-- `Docs/TODO.md`
+- [STATUS_2026-02-10.md](Docs/reports/STATUS_2026-02-10.md)
+- [TODO](Docs/TODO.md)
+
+---

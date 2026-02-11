@@ -24,6 +24,6 @@ Primary CodeMirror container used by the app for file editing, editor state sync
 
 ## References
 
-- `Docs/architecture/modules/07_editor-loader.ts.md`
-- `Docs/architecture/modules/13_editor.ts.md`
-- `Docs/architecture/modules/17_StatusBar.svelte.md`
+- [editor-loader-ts](Docs/architecture/modules/07_editor-loader.ts.md)
+- [editor-ts](Docs/architecture/modules/13_editor.ts.md)
+- [statusbar-svelte](Docs/architecture/modules/17_StatusBar.svelte.md)

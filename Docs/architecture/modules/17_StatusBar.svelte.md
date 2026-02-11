@@ -17,5 +17,5 @@ Bottom status UI for file/editor/plugin state presentation.
 
 ## References
 
-- `Docs/architecture/modules/13_editor.ts.md`
-- `Docs/architecture/modules/14_plugins.ts.md`
+- [editor-ts](Docs/architecture/modules/13_editor.ts.md)
+- [plugins-ts](Docs/architecture/modules/14_plugins.ts.md)

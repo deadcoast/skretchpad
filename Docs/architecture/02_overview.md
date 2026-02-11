@@ -28,11 +28,11 @@ Rust command handlers (main.rs + plugin_system/api.rs + git.rs + theme_engine.rs
 
 ## Major Subsystems
 
-- Editor and file state: `src/components/Editor.svelte`, `src/lib/stores/editor.ts`
-- Theme loading and application: `src/lib/stores/theme.ts`, `src-tauri/src/theme_engine.rs`
-- Plugin lifecycle/trust/capabilities: `src-tauri/src/plugin_system/*`, `src/lib/stores/plugins.ts`
-- Source control and diff: `src/lib/stores/git.ts`, `src/features/diff/DiffView.svelte`
-- Shell/chrome/status: `src/components/Chrome.svelte`, `src/components/StatusBar.svelte`, `src/components/SideBar.svelte`
+- [Editor](src/components/Editor.svelte) | [editor-store](`src/lib/stores/editor.ts`)
+- [application of themes](src/lib/stores/theme.ts) | [Theme loading](src-tauri/src/theme_engine.rs)
+- [Plugin lifecycle](`src/lib/stores/plugins.ts`) | [trust/capabilities](src-tauri/src/plugin_system/*)
+- [source-control](src/lib/stores/git.ts) | [diff-view](src/features/diff/DiffView.svelte)
+- [chrome](`src/components/Chrome.svelte`) | [status](src/components/StatusBar.svelte) | [shell](src/components/SideBar.svelte)
 
 ## Current Baseline (v0.1.0)
 
@@ -44,7 +44,7 @@ Rust command handlers (main.rs + plugin_system/api.rs + git.rs + theme_engine.rs
 
 ## Canonical References
 
-- Release status: `Docs/reports/STATUS_2026-02-10.md`
-- Task tracking: `Docs/TODO.md`
-- Changelog: `Docs/CHANGELOG.md`
-- Directory map: `Docs/architecture/01_directory-tree.md`
+- [Release-status](Docs/reports/STATUS_2026-02-10.md)
+- [Task-tracking](Docs/TODO.md)
+- [Changelog](Docs/CHANGELOG.md)
+- [Directory-map](Docs/architecture/01_directory-tree.md)

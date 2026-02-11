@@ -1,6 +1,6 @@
 # api.rs
 
-## 3. `src-tauri/src/plugin_system/api.rs`
+## 3. [api-rs](src-tauri/src/plugin_system/api.rs)
 
 Why:
 
@@ -300,9 +300,9 @@ thiserror = "1.0"
 
 ### COMPLETED
 
-- `src-tauri/src/plugin_system/api.rs` (1,200 lines) - All plugin commands
-- `src-tauri/src/plugin_system/sandbox.rs` ✅ (from previous)
-- `src-tauri/src/plugin_system/capabilities.rs` ✅ (assumed complete)
+- [api-rs](src-tauri/src/plugin_system/api.rs) (1,200 lines) - All plugin commands
+- [sandbox-rs](src-tauri/src/plugin_system/sandbox.rs) ✅ (from previous)
+- [capabilities-rs](src-tauri/src/plugin_system/capabilities.rs) ✅ (assumed complete)
 
 ### MUST CREATE NEXT
 

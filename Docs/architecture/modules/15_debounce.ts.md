@@ -15,5 +15,5 @@ Collection of debounce/throttle helpers used to control update frequency for UI 
 
 ## References
 
-- `Docs/architecture/modules/04_Editor.svelte.md`
-- `Docs/architecture/modules/13_editor.ts.md`
+- [editor-svelte](Docs/architecture/modules/04_Editor.svelte.md)
+- [editor-ts](Docs/architecture/modules/13_editor.ts.md)

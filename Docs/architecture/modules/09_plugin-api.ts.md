@@ -6,7 +6,7 @@
 
 ## Current State
 
-`src/lib/plugin-api.ts` is present and provides a typed frontend wrapper over the
+`plugin-api.ts` is present and provides a typed frontend wrapper over the
 currently implemented Rust plugin API commands.
 
 Implemented command groups in this module:
@@ -22,9 +22,9 @@ Implemented command groups in this module:
 
 - Treat this file as the typed frontend boundary for plugin command invocation.
 - Keep this module in parity with:
-  - `src-tauri/src/plugin_system/api.rs` (backend command handlers)
-  - `src-tauri/src/main.rs` (`invoke_handler` registrations)
-  - `src-tauri/js/plugin_api.js` (sandbox runtime bridge)
+  - [api-rs](Docs/architecture/modules/05_api.rs.md) `src-tauri/src/plugin_system/api.rs` (backend command handlers)
+  - [main-rs](Docs/architecture/modules/12_main.rs.md) `src-tauri/src/main.rs` (`invoke_handler` registrations)
+  - [plugin-api-js](Docs/architecture/modules/12_main.rs.md) `src-tauri/js/plugin_api.js` (sandbox runtime bridge)
 
 ## Known Limits
 
@@ -33,5 +33,5 @@ Implemented command groups in this module:
 
 ## References
 
-- `Docs/architecture/modules/14_plugins.ts.md`
-- `Docs/architecture/modules/05_api.rs.md`
+- [plugins-ts](Docs/architecture/modules/14_plugins.ts.md)
+- [api-rs](Docs/architecture/modules/05_api.rs.md)

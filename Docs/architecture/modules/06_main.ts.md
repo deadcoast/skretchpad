@@ -11,8 +11,8 @@ Frontend bootstrap entrypoint. Mounts the Svelte application into the DOM.
 ## Notes
 
 - This file intentionally contains only startup wiring.
-- Core runtime behavior is in `src/App.svelte`.
+- Core runtime behavior is in [app-svelte](src/App.svelte).
 
 ## References
 
-- `Docs/architecture/modules/01_entry-points.md`
+- [](Docs/architecture/modules/01_entry-points.md)

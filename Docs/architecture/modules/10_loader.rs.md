@@ -17,5 +17,5 @@ Discovers plugin directories, parses manifests, builds capability/trust metadata
 
 ## References
 
-- `Docs/architecture/modules/11_manager.rs.md`
-- `Docs/architecture/modules/12_main.rs.md`
+- [manager-rs](Docs/architecture/modules/11_manager.rs.md)
+- [main-rs](Docs/architecture/modules/12_main.rs.md)
