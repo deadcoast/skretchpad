@@ -6,17 +6,14 @@ name = "test-coverage"
 [[analyzers]]
 name = "rust"
 
-  [analyzers.meta]
-  msrv = "stable"
+[analyzers.meta]
+msrv = "stable"
 
 [[analyzers]]
 name = "javascript"
 
-  [analyzers.meta]
-  environment = [
-    "vitest",
-    "nodejs"
-  ]
+[analyzers.meta]
+environment = ["vitest", "nodejs"]
 
 [[code_formatters]]
 name = "prettier"
