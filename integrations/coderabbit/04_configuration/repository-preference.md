@@ -1,6 +1,7 @@
 # Repository preferences
 
 > ## Documentation Index
+>
 > Fetch the complete [documentation-index](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further.
 >
@@ -83,6 +84,7 @@ To view or modify your repository settings using the CodeRabbit web interface:
       organization-configuration page](/guides/organization-settings) to this
       repository
     </Note>
+
   </Step>
 
   <Step title="Apply changes">
@@ -95,17 +97,17 @@ To view or modify your repository settings using the CodeRabbit web interface:
 
 The web interface provides two ways to edit your repository settings:
 
-* **UI mode (default)**: Interactive form with dropdowns, checkboxes, and input fields
-* **YAML mode**: Direct YAML editing with syntax highlighting and real-time validation
+- **UI mode (default)**: Interactive form with dropdowns, checkboxes, and input fields
+- **YAML mode**: Direct YAML editing with syntax highlighting and real-time validation
 
 Switch between modes using the **Edit YAML** button at the top of the settings page (which changes to **Return to UI** when in YAML mode).
 Changes made in either mode are reflected when switching between them.
 When using YAML mode:
 
-* Only non-default values are displayed for cleaner configuration
-* Changes are validated in real-time as you type
-* You can copy the entire YAML configuration to your clipboard
-* The YAML structure matches `.coderabbit.yaml` format for easy transfer between web interface and repository files
+- Only non-default values are displayed for cleaner configuration
+- Changes are validated in real-time as you type
+- You can copy the entire YAML configuration to your clipboard
+- The YAML structure matches `.coderabbit.yaml` format for easy transfer between web interface and repository files
 
 > [!NOTE]
 > Validation errors must be resolved before saving changes or switching back to UI mode.

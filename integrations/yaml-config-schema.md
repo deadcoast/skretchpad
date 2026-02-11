@@ -3,6 +3,7 @@
 ## Configuration Overview
 
 > ## Documentation Index
+>
 > Fetch the [complete-documentatio](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further
 
@@ -106,9 +107,9 @@ Besides manual configuration, CodeRabbit automatically builds learnings about yo
 
 Learnings capture patterns like:
 
-* Which types of suggestions your team typically accepts or rejects
-* Coding standards specific to your repositories
-* Review focus areas that matter most to your workflow
+- Which types of suggestions your team typically accepts or rejects
+- Coding standards specific to your repositories
+- Review focus areas that matter most to your workflow
 
 <CardGroup cols={1}>
   <Card title="Learnings" icon="brain" href="/guides/learnings" horizontal="true">
@@ -133,7 +134,7 @@ Configuration inheritance allows you to share common settings across repositorie
 
 Add `inheritance: true` at the root level of your `.coderabbit.yaml` file:
 
-```yaml  theme={null}
+```yaml theme={null}
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 inheritance: true
 reviews:
@@ -186,9 +187,9 @@ Organization UI (inheritance: false)
        ✗ chain stops here
 ```
 
-* Each level with `inheritance: true` merges with its parent
-* The chain stops at the first level where `inheritance:false` or unset
-* Missing configuration levels are skipped automatically
+- Each level with `inheritance: true` merges with its parent
+- The chain stops at the first level where `inheritance:false` or unset
+- Missing configuration levels are skipped automatically
 
 ### Merge behavior by type
 
@@ -204,25 +205,25 @@ This example demonstrates all three merge behaviors.
 
 **Repository configuration** (`.coderabbit.yaml`):
 
-```yaml  theme={null}
+```yaml theme={null}
 inheritance: true
-language: "de-DE"
+language: 'de-DE'
 reviews:
   profile: assertive
   auto_review:
     drafts: false
   path_instructions:
-    - path: "src/**"
-      instructions: "Use strict TypeScript settings"
-    - path: "api/**"
-      instructions: "Validate API contracts"
+    - path: 'src/**'
+      instructions: 'Use strict TypeScript settings'
+    - path: 'api/**'
+      instructions: 'Validate API contracts'
 ```
 
 **Central configuration** (`coderabbit/.coderabbit.yaml`):
 
-```yaml  theme={null}
+```yaml theme={null}
 inheritance: true
-language: "en-US"
+language: 'en-US'
 reviews:
   profile: chill
   request_changes_workflow: true
@@ -231,20 +232,20 @@ reviews:
     enabled: true
     drafts: true
   path_instructions:
-    - path: "src/**"
-      instructions: "Follow our coding standards"
-    - path: "docs/**"
-      instructions: "Check for grammar and clarity"
-    - path: "tests/**"
-      instructions: "Ensure adequate test coverage"
+    - path: 'src/**'
+      instructions: 'Follow our coding standards'
+    - path: 'docs/**'
+      instructions: 'Check for grammar and clarity'
+    - path: 'tests/**'
+      instructions: 'Ensure adequate test coverage'
 chat:
   art: false
 ```
 
 **Merged result**:
 
-```yaml  theme={null}
-language: "de-DE" # scalar: child wins
+```yaml theme={null}
+language: 'de-DE' # scalar: child wins
 reviews:
   profile: assertive # scalar: child wins
   request_changes_workflow: true # object: inherited from central
@@ -253,14 +254,14 @@ reviews:
     enabled: true # object: inherited from central
     drafts: false # scalar: child wins
   path_instructions: # array: child-first, then unique parent items
-    - path: "src/**"
-      instructions: "Use strict TypeScript settings" # from repo
-    - path: "api/**"
-      instructions: "Validate API contracts" # from repo
-    - path: "docs/**"
-      instructions: "Check for grammar and clarity" # from central (unique)
-    - path: "tests/**"
-      instructions: "Ensure adequate test coverage" # from central (unique)
+    - path: 'src/**'
+      instructions: 'Use strict TypeScript settings' # from repo
+    - path: 'api/**'
+      instructions: 'Validate API contracts' # from repo
+    - path: 'docs/**'
+      instructions: 'Check for grammar and clarity' # from central (unique)
+    - path: 'tests/**'
+      instructions: 'Ensure adequate test coverage' # from central (unique)
 chat:
   art: false # object: inherited from central
 ```
@@ -279,28 +280,28 @@ Set up common settings in your central `coderabbit` repository, then enable inhe
 
 **Central configuration** (`organization/coderabbit/.coderabbit.yaml`):
 
-```yaml  theme={null}
+```yaml theme={null}
 inheritance: true
 reviews:
   profile: chill
   request_changes_workflow: true
   high_level_summary: true
   path_instructions:
-    - path: "**/*.test.*"
-      instructions: "Verify test coverage and edge cases"
+    - path: '**/*.test.*'
+      instructions: 'Verify test coverage and edge cases'
 chat:
   art: false
 ```
 
 **Repository configuration** (`organization/my-repo/.coderabbit.yaml`):
 
-```yaml  theme={null}
+```yaml theme={null}
 inheritance: true
 reviews:
   profile: assertive # This repo needs stricter reviews
   path_instructions:
-    - path: "src/api/**"
-      instructions: "Ensure backward compatibility"
+    - path: 'src/api/**'
+      instructions: 'Ensure backward compatibility'
 ```
 
 The repository inherits all central settings but uses an assertive review profile and adds API-specific instructions.
@@ -319,10 +320,10 @@ Each level can enable inheritance to merge with its parent while adding team-spe
 
 ## Related topics
 
-* [Central configuration](/configuration/central-configuration) - Set up organization-wide configuration
-* [YAML configuration](/getting-started/yaml-configuration) - Configuration file reference
-* [Organization settings](/guides/organization-settings) - Managing organization-level settings
-* [Repository settings](/guides/repository-settings) - Configuring individual repositories
+- [Central configuration](/configuration/central-configuration) - Set up organization-wide configuration
+- [YAML configuration](/getting-started/yaml-configuration) - Configuration file reference
+- [Organization settings](/guides/organization-settings) - Managing organization-level settings
+- [Repository settings](/guides/repository-settings) - Configuring individual repositories
 
 ---
 
@@ -335,7 +336,7 @@ In this guide, we will cover the configuration using a YAML file. For reference,
 
 ---
 
->[!TIP]
+> [!TIP]
 > Move existing UI configuration to a YAML file?
 >
 > Use the `@coderabbitai configuration` command on any PR to get the current configuration in a YAML format. You can then copy the configuration to a `.coderabbit.yaml` file in the root of your repository.
@@ -346,10 +347,10 @@ In this guide, we will cover the configuration using a YAML file. For reference,
 
 ```yaml .coderabbit.yaml theme={null}
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-language: "en-US"
+language: 'en-US'
 early_access: false
 reviews:
-  profile: "chill"
+  profile: 'chill'
   request_changes_workflow: false
   high_level_summary: true
   poem: true
@@ -389,9 +390,9 @@ To use shared configuration, you need to:
 1. Create a `.coderabbit.yaml` file and host it in a location that is publicly accessible (e.g., a web server, a public GitHub Gist).
 2. Create a `.coderabbit.yaml` file in the root of your repository with the following content:
 
-```yaml  theme={null}
+```yaml theme={null}
 remote_config:
-  url: "https://your-config-location/.coderabbit.yaml"
+  url: 'https://your-config-location/.coderabbit.yaml'
 ```
 
 ---
@@ -431,9 +432,9 @@ CodeRabbit checks for configuration in this priority order:
 
 The configuration source appears in the CodeRabbit comment on the pull request:
 
-* **Repository file**: `Path: .coderabbit.yaml`
-* **Central repository**: `Repository: coderabbit/.coderabbit.yaml`
-* **UI settings**: `CodeRabbit UI`
+- **Repository file**: `Path: .coderabbit.yaml`
+- **Central repository**: `Repository: coderabbit/.coderabbit.yaml`
+- **UI settings**: `CodeRabbit UI`
 
 ## Setup
 
@@ -447,11 +448,11 @@ The configuration source appears in the CodeRabbit comment on the pull request:
 
 Create a repository named `coderabbit` in your organization. The location depends on your platform:
 
-* **GitHub**: `organization/coderabbit`
-* **GitLab**: `group/coderabbit` (or `group/subgroup/coderabbit` for nested
-    groups)
-* **Azure DevOps**: `project/coderabbit`
-* **Bitbucket Cloud**: `workspace/coderabbit`
+- **GitHub**: `organization/coderabbit`
+- **GitLab**: `group/coderabbit` (or `group/subgroup/coderabbit` for nested
+  groups)
+- **Azure DevOps**: `project/coderabbit`
+- **Bitbucket Cloud**: `workspace/coderabbit`
 
 ---
 
@@ -461,20 +462,20 @@ Create a repository named `coderabbit` in your organization. The location depend
 Create a `.coderabbit.yaml` file in the repository root with your
 organization's settings:
 
-```yaml  theme={null}
+```yaml theme={null}
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 reviews:
-    in_progress_fortune: false
-    profile: chill
-    request_changes_workflow: true
-    high_level_summary: true
-    poem: false
-    review_status: true
-    auto_review:
-    enabled: true
-    drafts: true
+  in_progress_fortune: false
+  profile: chill
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+  enabled: true
+  drafts: true
 chat:
-    art: false
+  art: false
 ```
 
 ---
@@ -510,14 +511,14 @@ This enables team-specific configurations with automatic fallback to parent grou
 
 ## Platform limitations
 
-* **Azure DevOps**: Each project requires its own `coderabbit` repository - no cross-project configuration sharing
-* **Bitbucket Server**: Central configuration not yet implemented - use individual repository settings
+- **Azure DevOps**: Each project requires its own `coderabbit` repository - no cross-project configuration sharing
+- **Bitbucket Server**: Central configuration not yet implemented - use individual repository settings
 
 ## Repository overrides
 
 Individual repositories can override central configuration by adding their own `.coderabbit.yaml` file.
 
-```yaml  theme={null}
+```yaml theme={null}
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # Repository-specific config
 reviews:
@@ -536,7 +537,7 @@ When a repository has its own configuration file, CodeRabbit uses that instead o
 
 ## Related topics
 
-* [Configuration overview](/guides/configuration-overview) - Understanding CodeRabbit configuration options
-* [Organization settings](/guides/organization-settings) - Managing organization-level settings
-* [Repository settings](/guides/repository-settings) - Configuring individual repositories
-* [Configuration reference](/reference/configuration#reference) - Complete configuration reference
+- [Configuration overview](/guides/configuration-overview) - Understanding CodeRabbit configuration options
+- [Organization settings](/guides/organization-settings) - Managing organization-level settings
+- [Repository settings](/guides/repository-settings) - Configuring individual repositories
+- [Configuration reference](/reference/configuration#reference) - Complete configuration reference

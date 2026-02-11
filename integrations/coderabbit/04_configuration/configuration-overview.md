@@ -1,6 +1,7 @@
 # Configuration Overview
 
 > ## Documentation Index
+>
 > Fetch the complete [documentation-index](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further.
 >
@@ -102,9 +103,9 @@ Besides manual configuration, CodeRabbit automatically builds learnings about yo
 
 Learnings capture patterns like:
 
-* Which types of suggestions your team typically accepts or rejects
-* Coding standards specific to your repositories
-* Review focus areas that matter most to your workflow
+- Which types of suggestions your team typically accepts or rejects
+- Coding standards specific to your repositories
+- Review focus areas that matter most to your workflow
 
 <CardGroup cols={1}>
   <Card title="Learnings" icon="brain" href="/guides/learnings" horizontal="true">

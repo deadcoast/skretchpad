@@ -1,6 +1,7 @@
 # Linters & security analysis tools
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further
 >
@@ -48,6 +49,7 @@ CodeRabbit integrates with 40+ third-party linters and security analysis tools t
         gitleaks:
           enabled: true
     ```
+
   </Tab>
 
   <Tab title="Settings page">
@@ -57,6 +59,7 @@ CodeRabbit integrates with 40+ third-party linters and security analysis tools t
     2. Toggle individual tools on/off
     3. Set **Review → Profile** to `Chill` or `Assertive`
     4. Save changes to apply across all repositories
+
   </Tab>
 </Tabs>
 
@@ -64,8 +67,8 @@ CodeRabbit integrates with 40+ third-party linters and security analysis tools t
 
 CodeRabbit offers two review profiles that control tool strictness:
 
-* `Chill`: Focuses on critical issues and reduces noise from minor style violations
-* `Assertive`: Provides comprehensive feedback including style and best practice suggestions
+- `Chill`: Focuses on critical issues and reduces noise from minor style violations
+- `Assertive`: Provides comprehensive feedback including style and best practice suggestions
 
 Each tool respects your existing configuration files (like `.eslintrc.js` or `pyproject.toml`) for maximum customization.
 
@@ -90,13 +93,13 @@ Many tools provide 1-click fixes that CodeRabbit can apply directly to your pull
 
 Popular languages and their supported tools:
 
-* **JavaScript/TypeScript**: Biome, ESLint, oxlint
-* **Python**: Ruff, Pylint, Flake8
-* **Go**: golangci-lint
-* **Rust**: Clippy
-* **Ruby**: RuboCop, Brakeman
-* **Swift**: SwiftLint
-* **PHP**: PHPStan, PHPMD, PHPCS
+- **JavaScript/TypeScript**: Biome, ESLint, oxlint
+- **Python**: Ruff, Pylint, Flake8
+- **Go**: golangci-lint
+- **Rust**: Clippy
+- **Ruby**: RuboCop, Brakeman
+- **Swift**: SwiftLint
+- **PHP**: PHPStan, PHPMD, PHPCS
 
 For the complete list of 40+ supported tools, see [supported tools](/tools/list).
 

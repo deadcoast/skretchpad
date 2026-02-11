@@ -1,6 +1,7 @@
 # Central configuration
 
 > ## Documentation Index
+>
 > Fetch the complete [documentation-index](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further.
 >
@@ -37,9 +38,9 @@ CodeRabbit checks for configuration in this priority order:
 
 The configuration source appears in the CodeRabbit comment on the pull request:
 
-* **Repository file**: `Path: .coderabbit.yaml`
-* **Central repository**: `Repository: coderabbit/.coderabbit.yaml`
-* **UI settings**: `CodeRabbit UI`
+- **Repository file**: `Path: .coderabbit.yaml`
+- **Central repository**: `Repository: coderabbit/.coderabbit.yaml`
+- **UI settings**: `CodeRabbit UI`
 
 ## Setup
 
@@ -58,6 +59,7 @@ The configuration source appears in the CodeRabbit comment on the pull request:
       groups)
     * **Azure DevOps**: `project/coderabbit`
     * **Bitbucket Cloud**: `workspace/coderabbit`
+
   </Step>
 
   <Step title="Add your configuration">
@@ -79,6 +81,7 @@ The configuration source appears in the CodeRabbit comment on the pull request:
     chat:
       art: false
     ```
+
   </Step>
 
   <Step title="Install CodeRabbit">
@@ -109,8 +112,8 @@ This enables team-specific configurations with automatic fallback to parent grou
 
 ## Platform limitations
 
-* **Azure DevOps**: Each project requires its own `coderabbit` repository - no cross-project configuration sharing
-* **Bitbucket Server**: Central configuration not yet implemented - use individual repository settings
+- **Azure DevOps**: Each project requires its own `coderabbit` repository - no cross-project configuration sharing
+- **Bitbucket Server**: Central configuration not yet implemented - use individual repository settings
 
 ## Repository overrides
 
@@ -136,7 +139,7 @@ When a repository has its own configuration file, CodeRabbit uses that instead o
 
 ## Related topics
 
-* [Configuration overview](/guides/configuration-overview) - Understanding CodeRabbit configuration options
-* [Organization settings](/guides/organization-settings) - Managing organization-level settings
-* [Repository settings](/guides/repository-settings) - Configuring individual repositories
-* [Configuration reference](/reference/configuration#reference) - Complete configuration reference
+- [Configuration overview](/guides/configuration-overview) - Understanding CodeRabbit configuration options
+- [Organization settings](/guides/organization-settings) - Managing organization-level settings
+- [Repository settings](/guides/repository-settings) - Configuring individual repositories
+- [Configuration reference](/reference/configuration#reference) - Complete configuration reference

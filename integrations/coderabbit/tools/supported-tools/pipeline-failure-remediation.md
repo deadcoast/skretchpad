@@ -1,6 +1,7 @@
 # Pipeline Failure Remediation
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -18,85 +19,86 @@ With CodeRabbit CI/CD Pipeline Remediation, you have coderabbit automatically re
 
 ### Docker Build Issues
 
-* Missing build dependencies
-* Base image compatibility
-* Multi-stage build optimization
-* Cache utilization improvements
+- Missing build dependencies
+- Base image compatibility
+- Multi-stage build optimization
+- Cache utilization improvements
 
 ### Java Build & Testing
 
-* Maven/Gradle dependency conflicts
-* Compilation errors
-* Test failures
-* Memory allocation issues
+- Maven/Gradle dependency conflicts
+- Compilation errors
+- Test failures
+- Memory allocation issues
 
 ### Kubernetes Deployments
 
-* Service configuration validation
-* Resource allocation optimization
-* Network policy fixes
-* Security context remediation
+- Service configuration validation
+- Resource allocation optimization
+- Network policy fixes
+- Security context remediation
 
 ### NPM Package Management
 
-* Package resolution conflicts
-* Version compatibility issues
-* Security vulnerability patches
-* Build script optimization
+- Package resolution conflicts
+- Version compatibility issues
+- Security vulnerability patches
+- Build script optimization
 
 ### Python Environment
 
-* Package dependency resolution
-* Virtual environment setup
-* Test framework configuration
-* Code style compliance
+- Package dependency resolution
+- Virtual environment setup
+- Test framework configuration
+- Code style compliance
 
 ### Security Scanning
 
-* SAST finding remediation
-* Code injection prevention
-* Security best practices
-* Compliance validation
+- SAST finding remediation
+- Code injection prevention
+- Security best practices
+- Compliance validation
 
 ### Terraform and Infrastructure as Code
 
-* Resource configuration validation
-* State management issues
-* Provider compatibility
-* Security group optimization
+- Resource configuration validation
+- State management issues
+- Provider compatibility
+- Security group optimization
 
 ## Supported Platforms
 
 ### GitHub Actions
 
-* Automatic detection of workflow failures
-* Inline fixes for common build issues
-* Integration with GitHub Checks
-* Support for custom actions and workflows
+- Automatic detection of workflow failures
+- Inline fixes for common build issues
+- Integration with GitHub Checks
+- Support for custom actions and workflows
 
 ### GitLab CI/CD
 
-* GitLab CI/CD Pipeline failure analysis
-* Integration with GitLab Advanced Security
-* Support for DAST (Dynamic Application Security Testing) findings
-* Remediation for SAST (Static Application Security Testing) issues
+- GitLab CI/CD Pipeline failure analysis
+- Integration with GitLab Advanced Security
+- Support for DAST (Dynamic Application Security Testing) findings
+- Remediation for SAST (Static Application Security Testing) issues
+
 ```
 {/* GitLab Security Integration image placeholder */}
 ```
 
 ### CircleCI
 
-* CircleCI Pipeline failure analysis
-* Job-level error analysis
-* Configuration validation
-* Dependency resolution
+- CircleCI Pipeline failure analysis
+- Job-level error analysis
+- Configuration validation
+- Dependency resolution
 
 ### Azure DevOps Pipelines
 
-* Azure DevOps CI/CD Pipeline failure analysis
-* Integration with Azure DevOps Checks
-* Support for custom tasks and pipelines
-* Remediation for build issues
+- Azure DevOps CI/CD Pipeline failure analysis
+- Integration with Azure DevOps Checks
+- Support for custom tasks and pipelines
+- Remediation for build issues
 
 ## Common Use Cases
 
@@ -104,32 +106,32 @@ Our tool handles a wide range of pipeline failures including:
 
 ### Build Failures
 
-* Docker build issues
-* Node.js dependency conflicts
-* Java compilation errors
-* Python package resolution
-* Go module management
+- Docker build issues
+- Node.js dependency conflicts
+- Java compilation errors
+- Python package resolution
+- Go module management
 
 ### Infrastructure as Code
 
-* Kubernetes manifest validation
-* Terraform template errors
-* CloudFormation stack issues
-* Ansible playbook failures
+- Kubernetes manifest validation
+- Terraform template errors
+- CloudFormation stack issues
+- Ansible playbook failures
 
 ### Security Pipeline Integration
 
-* SAST finding remediation
-* DAST vulnerability fixes
-* Dependency scanning
-* Container security
+- SAST finding remediation
+- DAST vulnerability fixes
+- Dependency scanning
+- Container security
 
 ### Testing Failures
 
-* Unit test failures
-* Integration test errors
-* End-to-end test issues
-* Performance test threshold violations
+- Unit test failures
+- Integration test errors
+- End-to-end test issues
+- Performance test threshold violations
 
 ## How It Works
 
@@ -148,7 +150,7 @@ Our tool handles a wide range of pipeline failures including:
 
 ## Links
 
-* [GitHub Actions Configuration](https://docs.github.com/en/actions)
-* [GitLab CI/CD Documentation](https://docs.gitlab.com/ee/ci/)
-* [CircleCI Documentation](https://circleci.com/docs/)
-* [Azure DevOps Pipeline Documentation](https://learn.microsoft.com/en-us/azure/devops/pipelines/get-started/pipelines-get-started?view=azure-devops)
+- [GitHub Actions Configuration](https://docs.github.com/en/actions)
+- [GitLab CI/CD Documentation](https://docs.gitlab.com/ee/ci/)
+- [CircleCI Documentation](https://circleci.com/docs/)
+- [Azure DevOps Pipeline Documentation](https://learn.microsoft.com/en-us/azure/devops/pipelines/get-started/pipelines-get-started?view=azure-devops)

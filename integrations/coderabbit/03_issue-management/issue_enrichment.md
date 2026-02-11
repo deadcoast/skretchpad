@@ -1,6 +1,7 @@
 # Issue Enrichment
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -19,11 +20,11 @@ CodeRabbit Issue Enrichment automatically analyzes your issues and provides cont
 insights to help you work more efficiently. When you create or edit an issue, CodeRabbit
 posts a comment with:
 
-* 🔍 **Duplicate Detection** - Identifies if your issue already exists
-* 🔗 **Similar Issues** - Shows related issues that might have solutions or context
-* 🔗 **Related Pull Requests** - Finds PRs that addressed similar problems
-* 👤 **Suggested Assignees** - Recommends team members based on expertise
-* 🏷️ **Smart Labeling** - Automatically categorizes issues with appropriate labels
+- 🔍 **Duplicate Detection** - Identifies if your issue already exists
+- 🔗 **Similar Issues** - Shows related issues that might have solutions or context
+- 🔗 **Related Pull Requests** - Finds PRs that addressed similar problems
+- 👤 **Suggested Assignees** - Recommends team members based on expertise
+- 🏷️ **Smart Labeling** - Automatically categorizes issues with appropriate labels
 
 <Tip>
   Looking to generate implementation plans from issues? Check out [CodeRabbit
@@ -42,7 +43,7 @@ Issue enrichment is enabled by default on GitHub issues. CodeRabbit will automat
 
 To turn off automatic enrichment, add this to your `.coderabbit.yaml` configuration file:
 
-```yaml  theme={null}
+```yaml theme={null}
 issue_enrichment:
   auto_enrich:
     enabled: false
@@ -57,7 +58,7 @@ base to detect potential duplicates.
 
 **What you'll see:**
 
-```markdown  theme={null}
+```markdown theme={null}
 ## 🔗 Similar Issues
 
 **Possible Duplicates**
@@ -71,7 +72,7 @@ Discover related issues that might provide context, workarounds, or solutions.
 
 **What you'll see:**
 
-```markdown  theme={null}
+```markdown theme={null}
 ## 🔗 Similar Issues
 
 **Related Issues**
@@ -87,7 +88,7 @@ See PRs that addressed similar problems or touched related code.
 
 **What you'll see:**
 
-```markdown  theme={null}
+```markdown theme={null}
 ## 🔗 Related PRs
 
 #123 - Fix authentication bug [merged]
@@ -102,7 +103,7 @@ to related issues and PRs.
 
 **What you'll see:**
 
-```markdown  theme={null}
+```markdown theme={null}
 ## 👤 Suggested Assignees
 
 - [@guritfaq](https://github.com/guritfaq)
@@ -116,7 +117,7 @@ Automatically apply appropriate labels to issues based on their content.
 
 #### Configuration
 
-```yaml  theme={null}
+```yaml theme={null}
 issue_enrichment:
   labeling:
     auto_apply_labels: true

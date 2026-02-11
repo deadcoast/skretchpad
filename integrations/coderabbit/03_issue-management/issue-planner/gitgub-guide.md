@@ -1,6 +1,7 @@
 # Planning on GitHub
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -65,6 +66,7 @@ Automatically generate plans when specific labels are added to issues.
     4. Save your configuration
 
     The web interface provides the same functionality as the YAML configuration, allowing you to manage auto-planning labels without committing configuration files to your repository.
+
   </Tab>
 </Tabs>
 
@@ -93,10 +95,10 @@ Once a Coding Plan is generated, CodeRabbit posts the full plan as a comment on 
 
 Reply to the Coding Plan comment on the issue to:
 
-* Ask questions about the plan or the codebase
-* Request changes to specific tasks or phases
-* Challenge design choices and provide additional context
-* Get clarification on implementation details
+- Ask questions about the plan or the codebase
+- Request changes to specific tasks or phases
+- Challenge design choices and provide additional context
+- Get clarification on implementation details
 
 <Frame caption="Discuss the Coding Plan with CodeRabbit">
   <img src="https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=20700f2bb53bfe8150f9d191505ffde9" alt="Discuss the Coding Plan with CodeRabbit" width="500" data-og-width="1152" data-og-height="740" data-path="assets/images/discuss-plan-github.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?w=280&fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=3df09d7a0315a7797cb386c59531c9ad 280w, https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?w=560&fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=548b61d5a25a93148a987fb09b75d81b 560w, https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?w=840&fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=a50d5e2cac17d0a587ed9a04af2f3732 840w, https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?w=1100&fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=369ba1037b2a03fa1679689193131e2c 1100w, https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?w=1650&fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=947d3d11e18e18835a5aa52ff1090a6d 1650w, https://mintcdn.com/coderabbit/0_UNDuRPehZvImxS/assets/images/discuss-plan-github.png?w=2500&fit=max&auto=format&n=0_UNDuRPehZvImxS&q=85&s=1c19578161e3e68bf6f7963a2b0e7067 2500w" />

@@ -1,6 +1,7 @@
 # Configuration Examples
 
 > ## Documentation Index
+>
 > Fetch the complete [documentation-index](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further.
 >
@@ -10,11 +11,11 @@
 
 These configuration examples are curated from real-world usage and show how to:
 
-* Set up framework-specific review instructions
-* Configure path filters for common project structures
-* Customize review behavior for different file types
-* Apply best practices for your technology stack
-* Handle platform-specific concerns (mobile, web, backend, etc.)
+- Set up framework-specific review instructions
+- Configure path filters for common project structures
+- Customize review behavior for different file types
+- Apply best practices for your technology stack
+- Handle platform-specific concerns (mobile, web, backend, etc.)
 
 ## How to Use These Examples
 
@@ -56,6 +57,6 @@ Want to share your configuration? Check out the [awesome-coderabbit](https://git
 
 ## Next Steps
 
-* Learn more about [YAML configuration](/getting-started/yaml-configuration)
-* Explore the full [configuration reference](/reference/configuration)
-* Understand [configuration inheritance](/configuration/configuration-inheritance)
+- Learn more about [YAML configuration](/getting-started/yaml-configuration)
+- Explore the full [configuration reference](/reference/configuration)
+- Understand [configuration inheritance](/configuration/configuration-inheritance)

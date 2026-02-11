@@ -1,6 +1,7 @@
 # HTMLHint
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -16,9 +17,9 @@ HTMLHint will run checks against `*.html` files.
 
 HTMLHint supports the following config files:
 
-* `.htmlhintrc`
-* `.htmlhintrc.json`
-* `htmlhintrc.json`
+- `.htmlhintrc`
+- `.htmlhintrc.json`
+- `htmlhintrc.json`
 
 CodeRabbit will use the default settings based on the profile selected if no config file is found.
 
@@ -26,17 +27,17 @@ CodeRabbit will use the default settings based on the profile selected if no con
 
 CodeRabbit will skip running HTMLHint when:
 
-* HTMLHint is already running in GitHub workflows.
+- HTMLHint is already running in GitHub workflows.
 
 ## Profile behavior
 
 In **Chill** mode, HTMLHint filters out the following categories:
 
-* `attr-lowercase` - attribute names must be lowercase
-* `attr-value-double-quotes` - attribute values must use double quotes
+- `attr-lowercase` - attribute names must be lowercase
+- `attr-value-double-quotes` - attribute values must use double quotes
 
 In **Assertive** mode, all findings are reported.
 
 ## Links
 
-* [HTMLHint Configuration](https://htmlhint.com/getting-started/)
+- [HTMLHint Configuration](https://htmlhint.com/getting-started/)
