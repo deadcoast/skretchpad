@@ -8,7 +8,7 @@ onActivate(function () {
 
   try {
     var result = skretchpad.commands.execute('git', ['branch', '--show-current']);
-    if (result && result.stdout) {
+    if (result?.stdout) {
       var branch = result.stdout.trim();
       if (branch) {
         skretchpad.ui.setStatusBarItem('git-status', 'git: ' + branch, 'Current branch');

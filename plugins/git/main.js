@@ -10,7 +10,7 @@ onActivate(function () {
   // Try to get current branch via git command
   try {
     var result = skretchpad.commands.execute('git', ['branch', '--show-current']);
-    if (result && result.stdout) {
+    if (result?.stdout) {
       var branch = result.stdout.trim();
       if (branch) {
         skretchpad.ui.setStatusBarItem('git-branch', 'git: ' + branch, 'Current git branch');
@@ -32,7 +32,7 @@ registerHook('on_file_save', function () {
   // Update git status when a file is saved
   try {
     var result = skretchpad.commands.execute('git', ['status', '--porcelain']);
-    if (result && result.stdout) {
+    if (result?.stdout) {
       var lines = result.stdout.split('\n').filter(function (l) { return l.trim(); });
       var changes = lines.length;
       if (changes > 0) {
@@ -51,7 +51,7 @@ registerHook('on_file_open', function () {
 registerHook('command:git.status', function () {
   try {
     var result = skretchpad.commands.execute('git', ['status', '--short', '--branch']);
-    var summary = result && result.stdout ? result.stdout.split('\n')[0] : 'status unavailable';
+    var summary = result?.stdout ? result.stdout.split('\n')[0] : 'status unavailable';
     skretchpad.ui.showNotification(summary || 'status unavailable', 'info');
   } catch (e) {
     skretchpad.ui.showNotification('Unable to run git status', 'warning');
@@ -61,7 +61,7 @@ registerHook('command:git.status', function () {
 registerHook('command:git.diff', function () {
   try {
     var result = skretchpad.commands.execute('git', ['diff', '--stat']);
-    var summary = result && result.stdout ? result.stdout.split('\n')[0] : 'no diff output';
+    var summary = result?.stdout ? result.stdout.split('\n')[0] : 'no diff output';
     skretchpad.ui.showNotification(summary || 'no diff output', 'info');
   } catch (e) {
     skretchpad.ui.showNotification('Unable to run git diff', 'warning');
