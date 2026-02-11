@@ -13,8 +13,8 @@ reviews:
   sequence_diagrams: false
   estimate_code_review_effort: false
   assess_linked_issues: false
-  auto_title_placeholder: "@coderabbitai"
-  auto_title_instructions: "Generate a title that concisely describes the changes made in the PR."
+  auto_title_placeholder: '@coderabbitai'
+  auto_title_instructions: 'Generate a title that concisely describes the changes made in the PR.'
   high_level_summary: false
   high_level_summary_in_walkthrough: false
   auto_apply_labels: false
@@ -22,11 +22,11 @@ reviews:
   in_progress_fortune: false
   poem: false
   enable_prompt_for_ai_agents: false
-  path_filters: ["!dist/**", "src/**"]
+  path_filters: ['!dist/**', 'src/**']
   code_guidelines:
     enabled: false
     filePatterns: []
-  suggested_labels: false   # Enable or disable the suggestion of labels for the PR
+  suggested_labels: false # Enable or disable the suggestion of labels for the PR
   labeling_instructions: [] # Define allowed labels and when to suggest them. When provided, CodeRabbit suggests only from this list (still informed by prior PRs); when empty, suggestions rely entirely on prior PRs
-  auto_assign_reviewers: false  # Automatically assign the suggested reviewers to the PR
-  abort_on_close: true  # Abort the in-progress review if the PR is closed or merged
+  auto_assign_reviewers: false # Automatically assign the suggested reviewers to the PR
+  abort_on_close: true # Abort the in-progress review if the PR is closed or merged

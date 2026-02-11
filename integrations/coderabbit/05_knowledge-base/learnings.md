@@ -1,6 +1,7 @@
 # Learnings
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -10,15 +11,15 @@ For a conceptual overview of CodeRabbit configuration methods, see [Configure Co
 
 ## About CodeRabbit learnings
 
-As your team works with CodeRabbit, it learns your team's code-review preferences based on chat interactions, and adds these preferences to an internal database that it associates with your Git platform organization. We call these internal records *learnings*.
+As your team works with CodeRabbit, it learns your team's code-review preferences based on chat interactions, and adds these preferences to an internal database that it associates with your Git platform organization. We call these internal records _learnings_.
 
 <img src="https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=2538776ab87cff7e07ce7ce10fe38472" alt="CodeRabbit learnings interface" data-og-width="3126" width="3126" data-og-height="1568" height="1568" data-path="images/guides/assets/images/learnings-chat-demo.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?w=280&fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=df241e7f28167a6bbcbb68dbb6641751 280w, https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?w=560&fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=9fe0df940e8a29d5b6ae2024b989fa37 560w, https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?w=840&fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=e3482fbf9f69b2098b549fa52b9ab722 840w, https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?w=1100&fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=d96d2e13a04dfa93c0c2540c5f6920ad 1100w, https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?w=1650&fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=2cdf4a34f37fa76c62c1ee24f0944abd 1650w, https://mintcdn.com/coderabbit/8oAyj_Y4qh62mQR0/images/guides/assets/images/learnings-chat-demo.png?w=2500&fit=max&auto=format&n=8oAyj_Y4qh62mQR0&q=85&s=1ea01aae43b28df12dbd5aefc8e78b5e 2500w" />
 
 CodeRabbit learnings are flexible, natural-language statements about code-review preferences whose purpose can include the following:
 
-* Special instructions about reviewing particular files.
-* Guidance for reviewing all of the files of one repository.
-* Code-review preferences that CodeRabbit must apply across all of your organization's repositories.
+- Special instructions about reviewing particular files.
+- Guidance for reviewing all of the files of one repository.
+- Code-review preferences that CodeRabbit must apply across all of your organization's repositories.
 
 <iframe className="w-full aspect-video rounded-xl" src="https://www.youtube.com/embed/Yu0cmmOYA-U" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
 
@@ -60,15 +61,15 @@ You can import content from any file in your repository as learnings. This is us
 
 To import a file as learnings, mention the file in a pull request comment:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai add a learning using docs/coding-standards.md
 ```
 
 CodeRabbit reads the file contents and creates corresponding learnings. This is useful when:
 
-* Converting existing team documentation into CodeRabbit learnings
-* Bulk-adding multiple preferences at once
-* Importing learnings from an exported CSV file
+- Converting existing team documentation into CodeRabbit learnings
+- Bulk-adding multiple preferences at once
+- Importing learnings from an exported CSV file
 
 <Note>
   If you have AI agent configuration files like `.cursorrules`, `CLAUDE.md`, or
@@ -97,11 +98,12 @@ Don't just tell CodeRabbit what to do, explain the reasoning. The "why" helps Co
   @coderabbitai Don't suggest adding user IDs to error messages.
   ```
 
-  ```md More effective theme={null}
-  @coderabbitai We intentionally keep user IDs out of error messages
-  because they end up in logs that get shipped to third-party monitoring.
-  We track user context separately via our tracing system instead.
-  ```
+```md More effective theme={null}
+@coderabbitai We intentionally keep user IDs out of error messages
+because they end up in logs that get shipped to third-party monitoring.
+We track user context separately via our tracing system instead.
+```
+
 </CodeGroup>
 
 #### Reply to specific comments for maximum context
@@ -170,7 +172,7 @@ To import learnings into a new CodeRabbit account:
 
 4. Use CodeRabbit chat to request the import:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai import file my_learnings.csv as Learnings data for future use
 ```
 
@@ -184,9 +186,9 @@ CodeRabbit has several configuration options that modify the storage and applica
 
 CodeRabbit enables learnings by default. To disable learnings, modify one of the following configuration options:
 
-* To disable all CodeRabbit [knowledge base](/integrations/knowledge-base) features for your organization or repository, which includes learnings, enable [the *Opt out* setting](/reference/configuration#opt-out).
+- To disable all CodeRabbit [knowledge base](/integrations/knowledge-base) features for your organization or repository, which includes learnings, enable [the _Opt out_ setting](/reference/configuration#opt-out).
 
-* To disable all CodeRabbit features that require long-term data retention about your organization's use of CodeRabbit—including learnings—disable [the *Data retention* setting](/reference/configuration#data-retention).
+- To disable all CodeRabbit features that require long-term data retention about your organization's use of CodeRabbit—including learnings—disable [the _Data retention_ setting](/reference/configuration#data-retention).
 
 <Warning>
   Disabling data retention immediately and irrevocably deletes all learnings
@@ -195,40 +197,45 @@ CodeRabbit enables learnings by default. To disable learnings, modify one of the
 
 ### Specify the scope of learnings
 
-[The Learnings configuration setting](/reference/configuration#learnings) lets you specify the *scope* that CodeRabbit applies to all of the learnings it has collected about your organization. You can set this option to one of the following values:
+[The Learnings configuration setting](/reference/configuration#learnings) lets you specify the _scope_ that CodeRabbit applies to all of the learnings it has collected about your organization. You can set this option to one of the following values:
 
-* **`auto`** *(default)*: When reviewing a public repository, CodeRabbit applies only the learnings specific to that repository. When reviewing private repository, CodeRabbit applies all of your organization's learnings. This is the default setting.
-* **`global`**: CodeRabbit applies all of your organization's learnings to all code reviews.
-* **`local`**: CodeRabbit applies only learnings associated with code reviews' respective repositories.
+- **`auto`** _(default)_: When reviewing a public repository, CodeRabbit applies only the learnings specific to that repository. When reviewing private repository, CodeRabbit applies all of your organization's learnings. This is the default setting.
+- **`global`**: CodeRabbit applies all of your organization's learnings to all code reviews.
+- **`local`**: CodeRabbit applies only learnings associated with code reviews' respective repositories.
 
 ### When to use each scope
 
 The default `auto` scope can be suboptimal for organizations with diverse repositories. Consider these scenarios:
 
 > Use 'local' for diverse tech stacks":
+>
 > > If your organization has repositories with different conventions—such as a Python backend and a React frontend—use `local` scope to prevent cross-contamination of learnings.
 > > Without `local` scope, learnings about Python exception handling might incorrectly influence React component reviews, or vice versa.
 
 ```yaml .coderabbit.yaml theme={null}
 knowledge_base:
-    learnings:
-    scope: "local"
+  learnings:
+  scope: 'local'
 ```
+
 > Use 'global' for consistent org-wide standards":
+>
 > > If your organization maintains consistent coding standards across all repositories—such as security practices, documentation requirements, or naming conventions—use `global` scope to apply learnings universally.
 
 ```yaml .coderabbit.yaml theme={null}
 knowledge_base:
-    learnings:
-    scope: "global"
+  learnings:
+  scope: 'global'
 ```
 
 > Use 'auto' for mixed visibility":
+>
 > > The `auto` setting works well when you have both public and private repositories, and you want to:
-> > * Keep public repository learnings isolated
-> > * Share learnings across private repositories
+> >
+> > - Keep public repository learnings isolated
+> > - Share learnings across private repositories
 
-* This is the default behavior and requires no configuration.
+- This is the default behavior and requires no configuration.
 
 ## Troubleshooting
 
@@ -254,9 +261,9 @@ This situation can occur when the model deprioritizes certain learnings due to c
 
 Team conventions evolve, and learnings can become stale. To maintain learnings effectively:
 
-* **Quarterly review.** Set a reminder to review your learnings every quarter. Look for learnings that reference deprecated patterns, old file structures, or outdated team decisions.
-* **Delete contradictory learnings.** If you find learnings that conflict with current practices, delete them to avoid confusing CodeRabbit.
-* **Update rather than accumulate.** When team standards change, update or delete old learnings rather than adding new ones that contradict them. Multiple conflicting learnings on the same topic can produce inconsistent behavior.
+- **Quarterly review.** Set a reminder to review your learnings every quarter. Look for learnings that reference deprecated patterns, old file structures, or outdated team decisions.
+- **Delete contradictory learnings.** If you find learnings that conflict with current practices, delete them to avoid confusing CodeRabbit.
+- **Update rather than accumulate.** When team standards change, update or delete old learnings rather than adding new ones that contradict them. Multiple conflicting learnings on the same topic can produce inconsistent behavior.
 
 To identify outdated learnings:
 
@@ -266,6 +273,6 @@ To identify outdated learnings:
 
 ## What's next
 
-* [Add review instructions](/guides/review-instructions) for formal, path-based rules
-* [Configure the knowledge base](/integrations/knowledge-base) for broader context integration
-* [Set up issue tracking integration](/integrations/issue-trackers) for linked issue context
+- [Add review instructions](/guides/review-instructions) for formal, path-based rules
+- [Configure the knowledge base](/integrations/knowledge-base) for broader context integration
+- [Set up issue tracking integration](/integrations/issue-trackers) for linked issue context

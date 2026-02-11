@@ -1,6 +1,7 @@
 # Configuration reference
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -58,29 +59,29 @@ CodeRabbit's behavior can be customized using a `.coderabbit.yaml` file in your 
 <ResponseField name="language" type="enum">
   Set the language for reviews by using the corresponding ISO language code.
 
-  One of the following: `de`, `de-DE`, `de-AT`, `de-CH`, `en`, `en-US`, `en-AU`, `en-GB`, `en-CA`, `en-NZ`, `en-ZA`, `es`, `es-AR`, `fr`, `fr-CA`, `fr-CH`, `fr-BE`, `nl`, `nl-BE`, `pt-AO`, `pt`, `pt-BR`, `pt-MZ`, `pt-PT`, `ar`, `ast-ES`, `ast`, `be-BY`, `be`, `br-FR`, `br`, `ca-ES`, `ca`, `ca-ES-valencia`, `ca-ES-balear`, `da-DK`, `da`, `de-DE-x-simple-language`, `el-GR`, `el`, `eo`, `fa`, `ga-IE`, `ga`, `gl-ES`, `gl`, `it`, `ja-JP`, `ja`, `km-KH`, `km`, `ko-KR`, `ko`, `pl-PL`, `pl`, `ro-RO`, `ro`, `ru-RU`, `ru`, `sk-SK`, `sk`, `sl-SI`, `sl`, `sv`, `ta-IN`, `ta`, `tl-PH`, `tl`, `tr`, `uk-UA`, `uk`, `zh-CN`, `zh`, `crh-UA`, `crh`, `cs-CZ`, `cs`, `nb`, `no`, `nl-NL`, `de-DE-x-simple-language-DE`, `es-ES`, `it-IT`, `fa-IR`, `sv-SE`, `de-LU`, `fr-FR`, `bg-BG`, `bg`, `he-IL`, `he`, `hi-IN`, `hi`, `vi-VN`, `vi`, `th-TH`, `th`, `bn-BD`, `bn`
+One of the following: `de`, `de-DE`, `de-AT`, `de-CH`, `en`, `en-US`, `en-AU`, `en-GB`, `en-CA`, `en-NZ`, `en-ZA`, `es`, `es-AR`, `fr`, `fr-CA`, `fr-CH`, `fr-BE`, `nl`, `nl-BE`, `pt-AO`, `pt`, `pt-BR`, `pt-MZ`, `pt-PT`, `ar`, `ast-ES`, `ast`, `be-BY`, `be`, `br-FR`, `br`, `ca-ES`, `ca`, `ca-ES-valencia`, `ca-ES-balear`, `da-DK`, `da`, `de-DE-x-simple-language`, `el-GR`, `el`, `eo`, `fa`, `ga-IE`, `ga`, `gl-ES`, `gl`, `it`, `ja-JP`, `ja`, `km-KH`, `km`, `ko-KR`, `ko`, `pl-PL`, `pl`, `ro-RO`, `ro`, `ru-RU`, `ru`, `sk-SK`, `sk`, `sl-SI`, `sl`, `sv`, `ta-IN`, `ta`, `tl-PH`, `tl`, `tr`, `uk-UA`, `uk`, `zh-CN`, `zh`, `crh-UA`, `crh`, `cs-CZ`, `cs`, `nb`, `no`, `nl-NL`, `de-DE-x-simple-language-DE`, `es-ES`, `it-IT`, `fa-IR`, `sv-SE`, `de-LU`, `fr-FR`, `bg-BG`, `bg`, `he-IL`, `he`, `hi-IN`, `hi`, `vi-VN`, `vi`, `th-TH`, `th`, `bn-BD`, `bn`
 
-  Defaults to `"en-US"`.
+Defaults to `"en-US"`.
 </ResponseField>
 
 <ResponseField name="tone_instructions" type="string">
   Set the tone of reviews and chat. Example: 'You must talk like Mr. T. I pity the fool who doesn't!'
 
-  Defaults to `""`.
+Defaults to `""`.
 
-  <Note>Max length: 250</Note>
+<Note>Max length: 250</Note>
 </ResponseField>
 
 <ResponseField name="early_access" type="boolean">
   Enable early-access features.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="enable_free_tier" type="boolean">
   Enable free tier features for users not on a paid plan.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 ## Reviews
@@ -92,129 +93,129 @@ Settings related to reviews.
 <ResponseField name="profile" type="enum">
   Set the review profile: `chill` for lighter feedback, `assertive` for more feedback (which may feel nitpicky).
 
-  One of the following: `chill`, `assertive`
+One of the following: `chill`, `assertive`
 
-  Defaults to `"chill"`.
+Defaults to `"chill"`.
 </ResponseField>
 
 <ResponseField name="request_changes_workflow" type="boolean">
   Automatically approve once CodeRabbit’s comments are resolved and no pre-merge checks are failing. Note: In GitLab, all discussions must be resolved.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="high_level_summary" type="boolean">
   Generate a high-level summary of the changes in the PR description or walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="high_level_summary_instructions" type="string">
   By default, CodeRabbit generates release notes in the description. Use this to customize the summary content and format. Example: 'Create concise release notes as a bullet-point list, followed by a Markdown table showing lines added and removed by each contributing author.' Note: Use `high_level_summary_in_walkthrough` to place the summary in the walkthrough instead of the description.
 
-  Defaults to `""`.
+Defaults to `""`.
 </ResponseField>
 
 <ResponseField name="high_level_summary_placeholder" type="string">
   Placeholder in the PR description that CodeRabbit replaces with the high-level summary. If `high_level_summary` is false, the summary is still generated when this placeholder is present.
 
-  Defaults to `"@coderabbitai summary"`.
+Defaults to `"@coderabbitai summary"`.
 </ResponseField>
 
 <ResponseField name="high_level_summary_in_walkthrough" type="boolean">
   Include the high-level summary in the walkthrough comment.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="auto_title_placeholder" type="string">
   Add this keyword to the PR title to auto-generate a title.
 
-  Defaults to `"@coderabbitai"`.
+Defaults to `"@coderabbitai"`.
 </ResponseField>
 
 <ResponseField name="auto_title_instructions" type="string">
   Auto Title Instructions | Customize how CodeRabbit generates the PR title.
 
-  Defaults to `""`.
+Defaults to `""`.
 </ResponseField>
 
 <ResponseField name="review_status" type="boolean">
   Post review status messages (e.g., when a review is skipped) in the walkthrough summary comment.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="review_details" type="boolean">
   Post review details (ignored files, extra context used, suppressed comments, etc.).
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="commit_status" type="boolean">
   Set the commit status to 'pending' when the review is in progress and 'success' when it is complete.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="fail_commit_status" type="boolean">
   Set the commit status to 'failure' when the PR cannot be reviewed by CodeRabbit for any reason.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="collapse_walkthrough" type="boolean">
   Wrap the walkthrough in a Markdown collapsible section.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="changed_files_summary" type="boolean">
   Include a summary of the changed files in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="sequence_diagrams" type="boolean">
   Include sequence diagrams in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="estimate_code_review_effort" type="boolean">
   Include an estimated code review effort in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="assess_linked_issues" type="boolean">
   Include an assessment of how well the changes address linked issues in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="related_issues" type="boolean">
   Include potentially related issues in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="related_prs" type="boolean">
   Related PRs | Include potentially related PRs in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="suggested_labels" type="boolean">
   Suggest labels based on the changes, and include them in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="labeling_instructions" type="array of object">
   Labeling Instructions | Define allowed labels and when to suggest them. When provided, CodeRabbit suggests only from this list (still informed by prior PRs); when empty, suggestions rely entirely on prior PRs.
 
-  Defaults to `[]`.
+Defaults to `[]`.
 
   <Expandable title="Array Items">
     <ResponseField name="label" type="string">
@@ -228,55 +229,56 @@ Settings related to reviews.
         Max length: 3000
       </Note>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="auto_apply_labels" type="boolean">
   Automatically apply suggested labels to the PR.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="suggested_reviewers" type="boolean">
   Suggest reviewers based on the changes, and include them in the walkthrough.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="auto_assign_reviewers" type="boolean">
   Automatically assign the suggested reviewers to the PR.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="in_progress_fortune" type="boolean">
   Post a fortune message while the review is running.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="poem" type="boolean">
   Generate a poem in the walkthrough comment.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="enable_prompt_for_ai_agents" type="boolean">
   Prompt for AI Agents | Include the '🤖 Prompt for AI Agents' section in inline review comments to provide codegen instructions for AI agents.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="path_filters" type="array of string">
   Specify file patterns to include or exclude in a review using glob patterns (e.g., `!dist/**`, `src/**`). These patterns also apply to 'git sparse-checkout', including specified patterns and ignoring excluded ones (starting with '!') when cloning the repository.
 
-  Defaults to `[]`.
+Defaults to `[]`.
 </ResponseField>
 
 <ResponseField name="path_instructions" type="array of object">
   Path Instructions | Add path-specific guidance for code review.
 
-  Defaults to `[]`.
+Defaults to `[]`.
 
   <Expandable title="Array Items">
     <ResponseField name="path" type="string">
@@ -290,25 +292,26 @@ Settings related to reviews.
         Max length: 20000
       </Note>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="abort_on_close" type="boolean">
   Abort the in-progress review if the PR is closed or merged.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="disable_cache" type="boolean">
   Disable caching of code and dependencies; fetch them fresh on each run.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="auto_review" type="object">
   Configuration for auto review
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Auto review">
     <ResponseField name="enabled" type="boolean">
@@ -358,13 +361,14 @@ Settings related to reviews.
 
       Defaults to `[]`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="finishing_touches" type="object">
   Configuration for finishing touches
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Finishing touches">
     <ResponseField name="docstrings" type="object">
@@ -394,13 +398,14 @@ Settings related to reviews.
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="pre_merge_checks" type="object">
   Configuration for pre merge checks
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Pre merge checks">
     <ResponseField name="docstrings" type="object">
@@ -518,13 +523,14 @@ Settings related to reviews.
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="tools" type="object">
   Tools that provide additional context to code reviews.
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Tools">
     <ResponseField name="ast-grep" type="object">
@@ -1238,6 +1244,7 @@ Settings related to reviews.
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
@@ -1250,19 +1257,19 @@ Configuration for chat
 <ResponseField name="art" type="boolean">
   Generate art in chat responses (ASCII or emoji).
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="auto_reply" type="boolean">
   Let CodeRabbit reply automatically without requiring a mention/tag.
 
-  Defaults to `true`.
+Defaults to `true`.
 </ResponseField>
 
 <ResponseField name="integrations" type="object">
   Configuration for integrations
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Integrations">
     <ResponseField name="jira" type="object">
@@ -1296,6 +1303,7 @@ Configuration for chat
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
@@ -1308,13 +1316,13 @@ Configuration for knowledge base
 <ResponseField name="opt_out" type="boolean">
   Opt Out | Disable knowledge base features that require data retention. Opting out removes any existing stored knowledge base data.
 
-  Defaults to `false`.
+Defaults to `false`.
 </ResponseField>
 
 <ResponseField name="web_search" type="object">
   Configuration for web search
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Web search">
     <ResponseField name="enabled" type="boolean">
@@ -1322,13 +1330,14 @@ Configuration for knowledge base
 
       Defaults to `true`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="code_guidelines" type="object">
   Use your coding guideline documents (see File Patterns) as review criteria.
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Code guidelines">
     <ResponseField name="enabled" type="boolean">
@@ -1342,13 +1351,14 @@ Configuration for knowledge base
 
       Defaults to `[]`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="learnings" type="object">
   Configuration for learnings
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Learnings">
     <ResponseField name="scope" type="enum">
@@ -1358,13 +1368,14 @@ Configuration for knowledge base
 
       Defaults to `"auto"`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="issues" type="object">
   Configuration for issues
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Issues">
     <ResponseField name="scope" type="enum">
@@ -1374,13 +1385,14 @@ Configuration for knowledge base
 
       Defaults to `"auto"`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="jira" type="object">
   Configuration for jira
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Jira">
     <ResponseField name="usage" type="enum">
@@ -1396,13 +1408,14 @@ Configuration for knowledge base
 
       Defaults to `[]`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="linear" type="object">
   Configuration for linear
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Linear">
     <ResponseField name="usage" type="enum">
@@ -1418,13 +1431,14 @@ Configuration for knowledge base
 
       Defaults to `[]`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="pull_requests" type="object">
   Configuration for pull requests
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Pull requests">
     <ResponseField name="scope" type="enum">
@@ -1434,13 +1448,14 @@ Configuration for knowledge base
 
       Defaults to `"auto"`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="mcp" type="object">
   Configuration for mcp
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Mcp">
     <ResponseField name="usage" type="enum">
@@ -1456,6 +1471,7 @@ Configuration for knowledge base
 
       Defaults to `[]`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
@@ -1468,7 +1484,7 @@ Configuration for code generation
 <ResponseField name="docstrings" type="object">
   Docstring Generation | Settings for generating docstrings.
 
-  Defaults to `{"path_instructions":[]}`.
+Defaults to `{"path_instructions":[]}`.
 
   <Expandable title="Docstrings">
     <ResponseField name="language" type="enum">
@@ -1498,13 +1514,14 @@ Configuration for code generation
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="unit_tests" type="object">
   Unit Test Generation | Settings for generating unit tests.
 
-  Defaults to `{"path_instructions":[]}`.
+Defaults to `{"path_instructions":[]}`.
 
   <Expandable title="Unit tests">
     <ResponseField name="path_instructions" type="array of object">
@@ -1526,6 +1543,7 @@ Configuration for code generation
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
@@ -1538,7 +1556,7 @@ Configuration for issue enrichment
 <ResponseField name="auto_enrich" type="object">
   Settings for automatic issue enrichment.
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Auto enrich">
     <ResponseField name="enabled" type="boolean">
@@ -1546,13 +1564,14 @@ Configuration for issue enrichment
 
       Defaults to `false`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="planning" type="object">
   Settings for issue planning.
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Planning">
     <ResponseField name="enabled" type="boolean">
@@ -1580,13 +1599,14 @@ Configuration for issue enrichment
         </ResponseField>
       </Expandable>
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 
 <ResponseField name="labeling" type="object">
   Settings for issue labeling.
 
-  Defaults to `{}`.
+Defaults to `{}`.
 
   <Expandable title="Labeling">
     <ResponseField name="labeling_instructions" type="array of object">
@@ -1614,6 +1634,7 @@ Configuration for issue enrichment
 
       Defaults to `false`.
     </ResponseField>
+
   </Expandable>
 </ResponseField>
 

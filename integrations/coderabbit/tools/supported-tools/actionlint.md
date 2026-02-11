@@ -1,6 +1,7 @@
 # actionlint
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -13,8 +14,8 @@ GitHub Actions workflow files.
 
 We look for `GitHub Action` files specifically in the following directory:
 
-* `.github/workflows/**/*.yml`
-* `.github/workflows/**/*.yaml"`
+- `.github/workflows/**/*.yml`
+- `.github/workflows/**/*.yaml"`
 
 ## Configuration
 
@@ -24,9 +25,9 @@ CodeRabbit will use the default configuration.
 
 CodeRabbit will skip running actionlint when:
 
-* No workflow files are found in `.github/workflows/`.
-* actionlint is already running in GitHub workflows.
+- No workflow files are found in `.github/workflows/`.
+- actionlint is already running in GitHub workflows.
 
 ## Links
 
-* [`actionlint` Configuration](https://github.com/rhysd/actionlint/blob/main/docs/config.md/)
+- [`actionlint` Configuration](https://github.com/rhysd/actionlint/blob/main/docs/config.md/)

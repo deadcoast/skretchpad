@@ -1,6 +1,7 @@
 # Sample Configuration for React Native + Expo
 
 > ## Documentation Index
+>
 > Fetch the complete [documentation-index](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further.
 
@@ -24,7 +25,7 @@ reviews:
     enabled: true
     # Skip auto-review if PR title contains these keywords
     ignore_title_keywords:
-      - "WIP"
+      - 'WIP'
     # Don't auto-review draft PRs
     drafts: false
     # Only auto-review PRs targeting these branches
@@ -64,17 +65,17 @@ reviews:
 
   # Exclude these paths from reviews (build artifacts and dependencies)
   path_filters:
-    - "!**/node_modules/**" # npm dependencies
-    - "!**/android/**" # Native Android build files
-    - "!**/ios/**" # Native iOS build files
-    - "!**/.expo/**" # Expo build cache
-    - "!**/.expo-shared/**" # Expo shared config
-    - "!**/dist/**" # Build output
+    - '!**/node_modules/**' # npm dependencies
+    - '!**/android/**' # Native Android build files
+    - '!**/ios/**' # Native iOS build files
+    - '!**/.expo/**' # Expo build cache
+    - '!**/.expo-shared/**' # Expo shared config
+    - '!**/dist/**' # Build output
 
   # Custom review instructions for specific file patterns
   path_instructions:
     # TypeScript/JavaScript files - main app code
-    - path: "**/*.{ts,tsx,js,jsx}"
+    - path: '**/*.{ts,tsx,js,jsx}'
       instructions: |
         Mobile & Expo best practices:
         - Proper use of Expo APIs and hooks (useRouter, useFonts, useAssets)
@@ -100,7 +101,7 @@ reviews:
         - User-visible strings should be externalized to resource files (i18n)
 
     # Expo app configuration
-    - path: "app.json"
+    - path: 'app.json'
       instructions: |
         Review Expo configuration for:
         - Proper app versioning (version and build numbers in sync)
@@ -111,7 +112,7 @@ reviews:
         - No exposed secrets or API keys in configuration
 
     # EAS (Expo Application Services) build configuration
-    - path: "eas.json"
+    - path: 'eas.json'
       instructions: |
         Review EAS Build/Submit configuration for:
         - Environment-specific configurations (development, preview, production)
@@ -121,7 +122,7 @@ reviews:
         - Distribution settings align with deployment strategy
 
     # Metro bundler configuration (React Native's JavaScript bundler)
-    - path: "metro.config.js"
+    - path: 'metro.config.js'
       instructions: |
         Review Metro bundler configuration for:
         - Asset extensions are properly registered
@@ -130,7 +131,7 @@ reviews:
         - No security issues with resolver configuration
 
     # Test files
-    - path: "**/*.test.{ts,tsx,js,jsx}"
+    - path: '**/*.test.{ts,tsx,js,jsx}'
       instructions: |
         Review test files for:
         - Comprehensive coverage of React Native component behavior
@@ -140,7 +141,7 @@ reviews:
         - Accessibility testing is included
 
     # Asset files (images, fonts, etc.)
-    - path: "assets/**/*"
+    - path: 'assets/**/*'
       instructions: |
         Review asset files for:
         - Image optimization (size and format appropriate for mobile)

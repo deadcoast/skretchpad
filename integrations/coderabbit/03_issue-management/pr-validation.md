@@ -1,6 +1,7 @@
 # PR Validation using Linked Issues
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -24,16 +25,17 @@ A linked issue is one that is explicitly referenced in your pull request descrip
   resolves #123
   ```
 
-  ```bash GitLab theme={null}
-  closes #123
-  fixes #123
-  https://gitlab.com/org/repo/-/issues/123
-  ```
+```bash GitLab theme={null}
+closes #123
+fixes #123
+https://gitlab.com/org/repo/-/issues/123
+```
 
-  ```bash Jira/Linear theme={null}
-  https://company.atlassian.net/browse/PROJ-123
-  https://linear.app/company/issue/DEV-123
-  ```
+```bash Jira/Linear theme={null}
+https://company.atlassian.net/browse/PROJ-123
+https://linear.app/company/issue/DEV-123
+```
+
 </CodeGroup>
 
 When CodeRabbit detects linked issues, it analyzes them against your pull request changes to determine if the requirements are met:
@@ -88,7 +90,7 @@ Write comprehensive descriptions that provide clear technical context:
 
 **Example description:**
 
-```markdown  theme={null}
+```markdown theme={null}
 Problem:
 The configuration system doesn't validate Prisma schema files before deployment,
 leading to potential runtime errors.
@@ -177,19 +179,23 @@ For better traceability:
 CodeRabbit evaluates linked issues through this process:
 
 > STEP 1: "Analyze issue content"
-* Reviews issue titles and descriptions for requirements and context
+
+- Reviews issue titles and descriptions for requirements and context
 
 > STEP 2: "Compare PR changes"
-* Examines the code changes in the pull request
+
+- Examines the code changes in the pull request
 
 > STEP 3: "Validate requirements"
-* Determines if the changes meet the stated objectives
+
+- Determines if the changes meet the stated objectives
 
 > STEP 4: "Provide assessment"
-* Returns one of three possible outcomes:
-  * ✅ **Addressed**: Objective completed (no explanation needed)
-  * ❌ **Not addressed**: Objective not met (explanation provided)
-  * ❓ **Unclear**: Uncertain if objective is met (explanation provided)
+
+- Returns one of three possible outcomes:
+  - ✅ **Addressed**: Objective completed (no explanation needed)
+  - ❌ **Not addressed**: Objective not met (explanation provided)
+  - ❓ **Unclear**: Uncertain if objective is met (explanation provided)
 
 > [!NOTE]
 > Only the issue title and description are considered in the assessment.

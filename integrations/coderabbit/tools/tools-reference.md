@@ -1,6 +1,7 @@
 # Tools Reference
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -18,9 +19,9 @@ CodeRabbit supports integration with **44 static analysis tools**, linters, and 
     Browse all supported tools
   </Card>
 
-  <Card title="Configuration Guide" icon="settings" href="/getting-started/yaml-configuration
-    Learn configuration basics
-  </Card>
+<Card title="Configuration Guide" icon="settings" href="/getting-started/yaml-configuration
+Learn configuration basics
+</Card>
 </CardGroup>
 
 ## Example Configuration
@@ -51,12 +52,13 @@ Enable actionlint | is a static checker for GitHub Actions workflow files. | v1.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    actionlint:
-        enabled: true
+  tools:
+  actionlint:
+    enabled: true
 ```
+
 > [!IMPORTANT]
 > "Ast-grep": "search"
 
@@ -87,17 +89,17 @@ Use ast-grep essentials package.
 
 > [!IMPORTANT]
 > "packages" type="array of string
-Predefined packages to be used.
+> Predefined packages to be used.
 
 - Defaults to \`\`
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    ast-grep:
-        enabled: true
+  tools:
+  ast-grep:
+    enabled: true
 ```
 
 > [!IMPORTANT]
@@ -105,7 +107,9 @@ reviews:
 > Biome is a fast formatter, linter, and analyzer for web projects.
 
 **Configuration Options:**
+
 <!--ResponseField name="enabled" type="boolean"-->
+
 Enable Biome | Biome is a fast formatter, linter, and analyzer for web projects. | Enable Biome integration. | v2.3.13
 
 - Defaults to `true`
@@ -115,9 +119,9 @@ Enable Biome | Biome is a fast formatter, linter, and analyzer for web projects.
 ```yaml
 # theme={null}
 reviews:
-    tools:
-    biome:
-        enabled: true
+  tools:
+  biome:
+    enabled: true
 ```
 
 > [!IMPORTANT]
@@ -127,22 +131,23 @@ reviews:
 **Configuration Options:**
 
 <!-- ResponseField name="enabled" type="boolean"-->
+
 Enable Blinter | Blinter is a linter for Windows batch files that provides comprehensive static analysis to identify syntax errors, security vulnerabilities, performance issues, and style problems. | v1.0.112
 
 - Defaults to `true`
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    blinter:
-        enabled: true
+  tools:
+  blinter:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Brakeman" icon="shield
-Brakeman is a static analysis security vulnerability scanner for Ruby on Rails applications. | v8.0.1
+> "Brakeman" icon="shield
+> Brakeman is a static analysis security vulnerability scanner for Ruby on Rails applications. | v8.0.1
 
 **Configuration Options:**
 
@@ -154,11 +159,11 @@ Enable Brakeman | Brakeman is a static analysis security vulnerability scanner f
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    brakeman:
-        enabled: true
+  tools:
+  brakeman:
+    enabled: true
 ```
 
 > [!IMPORTANT]
@@ -176,11 +181,11 @@ Enable Buf | Buf offers linting for Protobuf files. | v1.64.0
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    buf:
-        enabled: true
+  tools:
+  buf:
+    enabled: true
 ```
 
 > [!IMPORTANT]
@@ -198,16 +203,16 @@ Enable checkmake | checkmake is a linter for Makefiles. | v0.2.2
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    checkmake:
-        enabled: true
+  tools:
+  checkmake:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Checkov" icon="cloud-security
-Checkov is a static code analysis tool for infrastructure-as-code files.
+> "Checkov" icon="cloud-security
+> Checkov is a static code analysis tool for infrastructure-as-code files.
 
 **Configuration Options:**
 
@@ -219,16 +224,16 @@ Enable Checkov | Checkov is a static code analysis tool for infrastructure-as-co
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    checkov:
-        enabled: true
+  tools:
+  checkov:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Circleci" icon="circle
-CircleCI tool is a static checker for CircleCI config files.
+> "Circleci" icon="circle
+> CircleCI tool is a static checker for CircleCI config files.
 
 **Configuration Options:**
 
@@ -240,15 +245,16 @@ Enable CircleCI | CircleCI tool is a static checker for CircleCI config files. |
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    circleci:
-        enabled: true
+  tools:
+  circleci:
+    enabled: true
 ```
+
 > [!IMPORTANT]
->"Clang" icon="tool
-Configuration for Clang to perform static analysis on C and C++ code
+> "Clang" icon="tool
+> Configuration for Clang to perform static analysis on C and C++ code
 
 **Configuration Options:**
 
@@ -260,16 +266,16 @@ Enable Clang for C/C++ static analysis and code quality checks | v14.0.6
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    clang:
-        enabled: true
+  tools:
+  clang:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Clippy" icon="rust
-Clippy is a collection of lints to catch common mistakes and improve your Rust code.
+> "Clippy" icon="rust
+> Clippy is a collection of lints to catch common mistakes and improve your Rust code.
 
 **Configuration Options:**
 
@@ -281,16 +287,16 @@ Enable Clippy | Clippy is a collection of lints to catch common mistakes and imp
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    clippy:
-        enabled: true
+  tools:
+  clippy:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Cppcheck" icon="code
-Cppcheck is a static code analysis tool for the C and C++ programming languages.
+> "Cppcheck" icon="code
+> Cppcheck is a static code analysis tool for the C and C++ programming languages.
 
 **Configuration Options:**
 
@@ -302,21 +308,21 @@ Enable Cppcheck | Cppcheck is a static code analysis tool for the C and C++ prog
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    cppcheck:
-        enabled: true
+  tools:
+  cppcheck:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Detekt" icon="kotlin
-Detekt is a static code analysis tool for Kotlin files.
+> "Detekt" icon="kotlin
+> Detekt is a static code analysis tool for Kotlin files.
 
 **Configuration Options:**
 
 > "enabled" type="boolean
-Enable detekt | detekt is a static code analysis tool for Kotlin files. | v1.23.8
+> Enable detekt | detekt is a static code analysis tool for Kotlin files. | v1.23.8
 
 - Defaults to `true`
 
@@ -326,17 +332,17 @@ Optional path to the detekt configuration file relative to the repository.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    detekt:
-        enabled: true
-        config_file: "detekt.yml"
+  tools:
+  detekt:
+    enabled: true
+    config_file: 'detekt.yml'
 ```
 
 > [!IMPORTANT]
->"Dotenv Lint" icon="file-key
-dotenv-linter is a tool for checking and fixing .env files for problems and best practices
+> "Dotenv Lint" icon="file-key
+> dotenv-linter is a tool for checking and fixing .env files for problems and best practices
 
 **Configuration Options:**
 
@@ -348,16 +354,16 @@ Enable dotenv-linter | dotenv-linter is a tool for checking and fixing .env file
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    dotenvLint:
-        enabled: true
+  tools:
+  dotenvLint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Eslint" icon="code
-ESLint is a static code analysis tool for JavaScript files.
+> "Eslint" icon="code
+> ESLint is a static code analysis tool for JavaScript files.
 
 **Configuration Options:**
 
@@ -369,16 +375,16 @@ Enable ESLint | ESLint is a static code analysis tool for JavaScript files.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    eslint:
-        enabled: true
+  tools:
+  eslint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Flake8" icon="snake
-Flake8 is a Python linter that wraps PyFlakes, pycodestyle and Ned Batchelder's McCabe script.
+> "Flake8" icon="snake
+> Flake8 is a Python linter that wraps PyFlakes, pycodestyle and Ned Batchelder's McCabe script.
 
 **Configuration Options:**
 
@@ -390,16 +396,16 @@ Enable Flake8 | Flake8 is a Python linter that wraps PyFlakes, pycodestyle and N
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    flake8:
-        enabled: true
+  tools:
+  flake8:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Fortitude Lint" icon="tool
-Fortitude is a Fortran linter that checks for code quality and style issues.
+> "Fortitude Lint" icon="tool
+> Fortitude is a Fortran linter that checks for code quality and style issues.
 
 **Configuration Options:**
 
@@ -411,44 +417,46 @@ Enable Fortitude | Fortitude is a Fortran linter that checks for code quality an
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    fortitudeLint:
-        enabled: true
+  tools:
+  fortitudeLint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Github-checks" icon="github
-GitHub Checks integration configuration.
+> "Github-checks" icon="github
+> GitHub Checks integration configuration.
 
 **Configuration Options:**
 
 > "enabled" type="boolean
-Enable GitHub Checks
+> Enable GitHub Checks
+
 ```
 \| Enable integration, defaults to true
 \| Enable GitHub Checks integration.
 ```
+
 - Defaults to `true`
 
 > "timeout_ms" type="number
-Time in milliseconds to wait for all GitHub Checks to conclude. Default 90 seconds, max 15 minutes (900000ms).
+> Time in milliseconds to wait for all GitHub Checks to conclude. Default 90 seconds, max 15 minutes (900000ms).
 
 - Defaults to `90000`.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    github-checks:
-        enabled: true
+  tools:
+  github-checks:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Gitleaks" icon="key
-Gitleaks is a secret scanner.
+> "Gitleaks" icon="key
+> Gitleaks is a secret scanner.
 
 **Configuration Options:**
 
@@ -460,16 +468,16 @@ Enable Gitleaks | Gitleaks is a secret scanner. | Enable Gitleaks integration. |
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    gitleaks:
-        enabled: true
+  tools:
+  gitleaks:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Golangci-lint" icon="go
-golangci-lint is a fast linters runner for Go.
+> "Golangci-lint" icon="go
+> golangci-lint is a fast linters runner for Go.
 
 **Configuration Options:**
 
@@ -485,17 +493,17 @@ Optional path to the golangci-lint configuration file relative to the repository
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    golangci-lint:
-        enabled: true
-        config_file: ".golangci.yml"
+  tools:
+  golangci-lint:
+    enabled: true
+    config_file: '.golangci.yml'
 ```
 
 > [!IMPORTANT]
->"Hadolint" icon="docker
-Hadolint is a Dockerfile linter.
+> "Hadolint" icon="docker
+> Hadolint is a Dockerfile linter.
 
 **Configuration Options:**
 
@@ -507,16 +515,16 @@ Enable Hadolint | Hadolint is a Dockerfile linter. | Enable Hadolint integration
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    hadolint:
-        enabled: true
+  tools:
+  hadolint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Htmlhint" icon="code
-HTMLHint is a static code analysis tool for HTML files.
+> "Htmlhint" icon="code
+> HTMLHint is a static code analysis tool for HTML files.
 
 **Configuration Options:**
 
@@ -528,16 +536,16 @@ Enable HTMLHint | HTMLHint is a static code analysis tool for HTML files. | Enab
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    htmlhint:
-        enabled: true
+  tools:
+  htmlhint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Languagetool" icon="languages
-LanguageTool is a style and grammar checker for 30+ languages.
+> "Languagetool" icon="languages
+> LanguageTool is a style and grammar checker for 30+ languages.
 
 **Configuration Options:**
 
@@ -555,7 +563,7 @@ IDs of rules to be enabled. The rule won't run unless 'level' is set to a level 
 
 > "disabled_rules" type="array of string
 
-IDs of rules to be disabled. Note: EN\_UNPAIRED\_BRACKETS, and EN\_UNPAIRED\_QUOTES are always disabled.
+IDs of rules to be disabled. Note: EN_UNPAIRED_BRACKETS, and EN_UNPAIRED_QUOTES are always disabled.
 
 - Defaults to \`\`
 
@@ -586,17 +594,17 @@ If set to 'picky', additional rules will be activated, i.e. rules that you might
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    languagetool:
-        enabled: true
-        level: "default"
+  tools:
+  languagetool:
+    enabled: true
+    level: 'default'
 ```
 
 > [!IMPORTANT]
->"Luacheck" icon="moon
-Configuration for Lua code linting to ensure code quality
+> "Luacheck" icon="moon
+> Configuration for Lua code linting to ensure code quality
 
 **Configuration Options:**
 
@@ -608,16 +616,16 @@ Enable Lua code linting | Luacheck helps maintain consistent and error-free Lua 
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    luacheck:
-        enabled: true
+  tools:
+  luacheck:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Markdownlint" icon="markdown
-markdownlint-cli2 is a static analysis tool to enforce standards and consistency for Markdown files.
+> "Markdownlint" icon="markdown
+> markdownlint-cli2 is a static analysis tool to enforce standards and consistency for Markdown files.
 
 **Configuration Options:**
 
@@ -629,16 +637,16 @@ Enable markdownlint | markdownlint-cli2 is a static analysis tool to enforce sta
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    markdownlint:
-        enabled: true
+  tools:
+  markdownlint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Osv Scanner" icon="tool
-OSV Scanner is a tool for vulnerability package scanning.
+> "Osv Scanner" icon="tool
+> OSV Scanner is a tool for vulnerability package scanning.
 
 **Configuration Options:**
 
@@ -650,16 +658,16 @@ Enable OSV Scanner | OSV Scanner is a tool for vulnerability package scanning | 
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    osvScanner:
-        enabled: true
+  tools:
+  osvScanner:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Oxc" icon="zap
-Oxlint is a JavaScript/TypeScript linter for OXC written in Rust.
+> "Oxc" icon="zap
+> Oxlint is a JavaScript/TypeScript linter for OXC written in Rust.
 
 **Configuration Options:**
 
@@ -671,16 +679,16 @@ Enable Oxlint | Oxlint is a JavaScript/TypeScript linter for OXC written in Rust
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    oxc:
-        enabled: true
+  tools:
+  oxc:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Phpcs" icon="php
-PHP CodeSniffer is a PHP linter and coding standard checker.
+> "Phpcs" icon="php
+> PHP CodeSniffer is a PHP linter and coding standard checker.
 
 **Configuration Options:**
 
@@ -692,16 +700,16 @@ Enable PHP CodeSniffer | PHP CodeSniffer is a PHP linter and coding standard che
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    phpcs:
-        enabled: true
+  tools:
+  phpcs:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Phpmd" icon="php
-PHPMD is a tool to find potential problems in PHP code.
+> "Phpmd" icon="php
+> PHPMD is a tool to find potential problems in PHP code.
 
 **Configuration Options:**
 
@@ -713,16 +721,16 @@ Enable PHPMD | PHPMD is a tool to find potential problems in PHP code. | v2.15.0
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    phpmd:
-        enabled: true
+  tools:
+  phpmd:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Phpstan" icon="php
-PHPStan is a tool to analyze PHP code.
+> "Phpstan" icon="php
+> PHPStan is a tool to analyze PHP code.
 
 **Configuration Options:**
 
@@ -741,17 +749,17 @@ Level | Specify the [rule level](https://phpstan.org/user-guide/rule-levels) to 
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    phpstan:
-        enabled: true
-        level: "default"
+  tools:
+  phpstan:
+    enabled: true
+    level: 'default'
 ```
 
 > [!IMPORTANT]
->"Pmd" icon="java
-PMD is an extensible multilanguage static code analyzer. It’s mainly concerned with Java.
+> "Pmd" icon="java
+> PMD is an extensible multilanguage static code analyzer. It’s mainly concerned with Java.
 
 **Configuration Options:**
 
@@ -767,17 +775,17 @@ Optional path to the PMD configuration file relative to the repository.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    pmd:
-        enabled: true
-        config_file: "ruleset.xml"
+  tools:
+  pmd:
+    enabled: true
+    config_file: 'ruleset.xml'
 ```
 
 > [!IMPORTANT]
->"Prisma Lint" icon="database
-Configuration for Prisma Schema linting to ensure schema file quality
+> "Prisma Lint" icon="database
+> Configuration for Prisma Schema linting to ensure schema file quality
 
 **Configuration Options:**
 
@@ -789,16 +797,16 @@ Enable Prisma Schema linting | Prisma Schema linting helps maintain consistent a
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    prismaLint:
-        enabled: true
+  tools:
+  prismaLint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Pylint" icon="snake
-Pylint is a Python static code analysis tool.
+> "Pylint" icon="snake
+> Pylint is a Python static code analysis tool.
 
 **Configuration Options:**
 
@@ -810,16 +818,16 @@ Enable Pylint | Pylint is a Python static code analysis tool. | v4.0.4
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    pylint:
-        enabled: true
+  tools:
+  pylint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Regal" icon="shield-check
-Regal is a linter and language server for Rego.
+> "Regal" icon="shield-check
+> Regal is a linter and language server for Rego.
 
 **Configuration Options:**
 
@@ -831,16 +839,16 @@ Enable Regal | Regal is a linter and language server for Rego. | v0.38.1
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    regal:
-        enabled: true
+  tools:
+  regal:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Rubocop" icon="gem
-RuboCop is a Ruby static code analyzer (a.k.a. linter ) and code formatter.
+> "Rubocop" icon="gem
+> RuboCop is a Ruby static code analyzer (a.k.a. linter ) and code formatter.
 
 **Configuration Options:**
 
@@ -852,37 +860,37 @@ Enable RuboCop | RuboCop is a Ruby static code analyzer (a.k.a. linter ) and cod
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    rubocop:
-        enabled: true
+  tools:
+  rubocop:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Ruff" icon="snake
-Ruff is a Python linter and code formatter.
+> "Ruff" icon="snake
+> Ruff is a Python linter and code formatter.
 
 **Configuration Options:**
 
 > "enabled" type="boolean
 
-Enable Ruff | Ruff is a Python linter and code formatter. |  Enable Ruff integration. | v0.14.14
+Enable Ruff | Ruff is a Python linter and code formatter. | Enable Ruff integration. | v0.14.14
 
 - Defaults to `true`
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    ruff:
-        enabled: true
+  tools:
+  ruff:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Semgrep" icon="shield-alert
-Semgrep is a static analysis tool designed to scan code for security vulnerabilities and code quality issues.
+> "Semgrep" icon="shield-alert
+> Semgrep is a static analysis tool designed to scan code for security vulnerabilities and code quality issues.
 
 **Configuration Options:**
 
@@ -898,17 +906,17 @@ Optional path to the Semgrep configuration file relative to the repository.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    semgrep:
-        enabled: true
-        config_file: ".semgrep.yml"
+  tools:
+  semgrep:
+    enabled: true
+    config_file: '.semgrep.yml'
 ```
 
 > [!IMPORTANT]
->"Shellcheck" icon="terminal
-ShellCheck is a static analysis tool that finds bugs in your shell scripts.
+> "Shellcheck" icon="terminal
+> ShellCheck is a static analysis tool that finds bugs in your shell scripts.
 
 **Configuration Options:**
 
@@ -920,16 +928,16 @@ Enable ShellCheck | ShellCheck is a static analysis tool that finds bugs in your
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    shellcheck:
-        enabled: true
+  tools:
+  shellcheck:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Shopify Theme Check" icon="shopping-bag
-Configuration for Shopify Theme Check to ensure theme quality and best practices
+> "Shopify Theme Check" icon="shopping-bag
+> Configuration for Shopify Theme Check to ensure theme quality and best practices
 
 **Configuration Options:**
 
@@ -941,16 +949,16 @@ Enable Shopify Theme Check | A linter for Shopify themes that helps you follow S
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    shopifyThemeCheck:
-        enabled: true
+  tools:
+  shopifyThemeCheck:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Sqlfluff" icon="database
-SQLFluff is an open source, dialect-flexible and configurable SQL linter.
+> "Sqlfluff" icon="database
+> SQLFluff is an open source, dialect-flexible and configurable SQL linter.
 
 **Configuration Options:**
 
@@ -962,16 +970,16 @@ Enable SQLFluff | SQLFluff is an open source, dialect-flexible and configurable 
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    sqlfluff:
-        enabled: true
+  tools:
+  sqlfluff:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Swiftlint" icon="smartphone
-SwiftLint integration configuration object.
+> "Swiftlint" icon="smartphone
+> SwiftLint integration configuration object.
 
 **Configuration Options:**
 
@@ -987,17 +995,17 @@ Optional path to the SwiftLint configuration file relative to the repository. Th
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    swiftlint:
-        enabled: true
-        config_file: ".swiftlint.yml"
+  tools:
+  swiftlint:
+    enabled: true
+    config_file: '.swiftlint.yml'
 ```
 
 > [!IMPORTANT]
->"Tflint" icon="tool
-TFLint is a Terraform linter for finding potential errors and enforcing best practices.
+> "Tflint" icon="tool
+> TFLint is a Terraform linter for finding potential errors and enforcing best practices.
 
 **Configuration Options:**
 
@@ -1009,16 +1017,16 @@ Enable TFLint | TFLint is a Terraform linter for finding potential errors. | v0.
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    tflint:
-        enabled: true
+  tools:
+  tflint:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Trivy" icon="tool
-Trivy is a comprehensive security scanner that detects misconfigurations and secrets in Infrastructure as Code files
+> "Trivy" icon="tool
+> Trivy is a comprehensive security scanner that detects misconfigurations and secrets in Infrastructure as Code files
 
 **Configuration Options:**
 
@@ -1030,16 +1038,16 @@ Enable Trivy for security scanning of IaC files (Terraform, Kubernetes, Docker, 
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    trivy:
-        enabled: true
+  tools:
+  trivy:
+    enabled: true
 ```
 
 > [!IMPORTANT]
->"Yamllint" icon="file-code
-YAMLlint is a linter for YAML files.
+> "Yamllint" icon="file-code
+> YAMLlint is a linter for YAML files.
 
 **Configuration Options:**
 
@@ -1051,11 +1059,11 @@ Enable YAMLlint | YAMLlint is a linter for YAML files. | Enable YAMLlint integra
 
 > **Example Configuration:**
 
-```yaml  theme={null}
+```yaml theme={null}
 reviews:
-    tools:
-    yamllint:
-        enabled: true
+  tools:
+  yamllint:
+    enabled: true
 ```
 
 </AccordionGroup>

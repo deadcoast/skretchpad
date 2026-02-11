@@ -1,6 +1,7 @@
 # Configuration via YAML File
 
 > ## Documentation Index
+>
 > Fetch the complete [documentation-index](https://docs.coderabbit.ai/llms.txt)
 > Use this file to discover all available pages before exploring further.
 >
@@ -19,17 +20,17 @@ In this guide, we will cover the configuration using a YAML file. For reference,
 <Check>
   Move existing UI configuration to a YAML file?
 
-  Use the `@coderabbitai configuration` command on any PR to get the current configuration in a YAML format. You can then copy the configuration to a `.coderabbit.yaml` file in the root of your repository.
+Use the `@coderabbitai configuration` command on any PR to get the current configuration in a YAML format. You can then copy the configuration to a `.coderabbit.yaml` file in the root of your repository.
 </Check>
 
 ### Example Configuration
 
 ```yaml .coderabbit.yaml theme={null}
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-language: "en-US"
+language: 'en-US'
 early_access: false
 reviews:
-  profile: "chill"
+  profile: 'chill'
   request_changes_workflow: false
   high_level_summary: true
   poem: true
@@ -72,7 +73,7 @@ To use shared configuration, you need to:
 1. Create a `.coderabbit.yaml` file and host it in a location that is publicly accessible (e.g., a web server, a public GitHub Gist).
 2. Create a `.coderabbit.yaml` file in the root of your repository with the following content:
 
-```yaml  theme={null}
+```yaml theme={null}
 remote_config:
-  url: "https://your-config-location/.coderabbit.yaml"
+  url: 'https://your-config-location/.coderabbit.yaml'
 ```

@@ -1,6 +1,7 @@
 # Knowledge base
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -33,11 +34,11 @@ Train CodeRabbit to understand your team's specific preferences through natural 
 
 Tell CodeRabbit about general coding standards for your entire repository:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai always remember to enforce camelCase variable naming
 ```
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai we prefer functional components over class components in React
 ```
 
@@ -45,12 +46,12 @@ Tell CodeRabbit about general coding standards for your entire repository:
 
 Add context for specific code patterns by commenting directly on lines:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai do not complain about lack of error handling here,
 it is handled higher up the execution stack
 ```
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai this timeout value is intentionally high for batch operations
 ```
 
@@ -67,17 +68,17 @@ CodeRabbit automatically detects and applies your team's coding standards from p
 <Accordion title="Automatically detected files">
   CodeRabbit scans for these patterns in your repositories:
 
-* **`.cursorrules`** - Cursor AI editor rules
-* **`.github/copilot-instructions.md`** - GitHub Copilot instructions
-* **`CLAUDE.md`** - Claude Code configuration files
-* **`.cursor/rules/`** - Cursor configuration directory
-* **`.windsurfrules`** - Windsurf editor rules
-* **`.clinerules/`** - Cline AI agent configuration
-* **`agent.md`** and **`agents.md`** - AI agent instructions and guidelines
-* **`.rules/`** - Generic team rules directory
+- **`.cursorrules`** - Cursor AI editor rules
+- **`.github/copilot-instructions.md`** - GitHub Copilot instructions
+- **`CLAUDE.md`** - Claude Code configuration files
+- **`.cursor/rules/`** - Cursor configuration directory
+- **`.windsurfrules`** - Windsurf editor rules
+- **`.clinerules/`** - Cline AI agent configuration
+- **`agent.md`** and **`agents.md`** - AI agent instructions and guidelines
+- **`.rules/`** - Generic team rules directory
 
   CodeRabbit applies these rules during code review automatically.
-</Accordion>
+  </Accordion>
 
 This means if you've already configured coding standards for Cursor, Claude, or other AI tools, CodeRabbit will follow the same guidelines. Your team's standards stay consistent across all AI interactions.
 
@@ -98,10 +99,10 @@ This means if you've already configured coding standards for Cursor, Claude, or 
 
 ### Best practices
 
-* **Start with learnings**: Use `@coderabbitai` commands to teach preferences incrementally
-* **Centralize guidelines**: Put team rules in `.cursorrules` or `CLAUDE.md` files at repository root
-* **Be specific**: Clear, actionable guidelines work better than vague preferences
-* **Review and iterate**: Check how CodeRabbit applies learnings and refine as needed
+- **Start with learnings**: Use `@coderabbitai` commands to teach preferences incrementally
+- **Centralize guidelines**: Put team rules in `.cursorrules` or `CLAUDE.md` files at repository root
+- **Be specific**: Clear, actionable guidelines work better than vague preferences
+- **Review and iterate**: Check how CodeRabbit applies learnings and refine as needed
 
 ## Advanced usage
 

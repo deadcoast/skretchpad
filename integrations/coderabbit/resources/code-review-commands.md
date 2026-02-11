@@ -1,6 +1,7 @@
 # Code review commands
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -34,6 +35,7 @@ These commands control CodeRabbit's automatic review behavior for your pull requ
     ```
     @coderabbitai review
     ```
+
   </Accordion>
 
   <Accordion title="@coderabbitai full review" icon="scan">
@@ -52,6 +54,7 @@ These commands control CodeRabbit's automatic review behavior for your pull requ
     ```
     @coderabbitai full review
     ```
+
   </Accordion>
 </AccordionGroup>
 
@@ -74,6 +77,7 @@ These commands control CodeRabbit's automatic review behavior for your pull requ
     ```
     @coderabbitai pause
     ```
+
   </Accordion>
 
   <Accordion title="@coderabbitai resume" icon="play">
@@ -91,6 +95,7 @@ These commands control CodeRabbit's automatic review behavior for your pull requ
     ```
     @coderabbitai resume
     ```
+
   </Accordion>
 
   <Accordion title="@coderabbitai ignore" icon="x-circle">
@@ -113,6 +118,7 @@ These commands control CodeRabbit's automatic review behavior for your pull requ
     <Warning>
       This command must be placed in the PR description, not in comments. To re-enable reviews, remove this text from the description.
     </Warning>
+
   </Accordion>
 </AccordionGroup>
 
@@ -157,6 +163,7 @@ These commands help generate and update PR content and documentation.
     <Info>
       You can change this placeholder to anything you like using the `reviews.high_level_summary_placeholder` configuration option. See the [configuration reference](/reference/configuration#param-high-level-summary-placeholder) for more details.
     </Info>
+
   </Accordion>
 
   <Accordion title="@coderabbitai generate docstrings" icon="book">
@@ -179,6 +186,7 @@ These commands help generate and update PR content and documentation.
     <Note>
       This feature must be enabled in your CodeRabbit configuration under `reviews.finishing_touches.docstrings.enabled`.
     </Note>
+
   </Accordion>
 
   <Accordion title="@coderabbitai generate unit tests" icon="test-tube">
@@ -201,6 +209,7 @@ These commands help generate and update PR content and documentation.
     <Note>
       This feature must be enabled in your CodeRabbit configuration under `reviews.finishing_touches.unit_tests.enabled`.
     </Note>
+
   </Accordion>
 
   <Accordion title="@coderabbitai generate sequence diagram" icon="workflow">
@@ -219,6 +228,7 @@ These commands help generate and update PR content and documentation.
     ```
     @coderabbitai generate sequence diagram
     ```
+
   </Accordion>
 </AccordionGroup>
 
@@ -245,6 +255,7 @@ These commands help generate and update PR content and documentation.
     <Warning>
       This will resolve ALL CodeRabbit comments. Make sure you've actually addressed the feedback before using this command.
     </Warning>
+
   </Accordion>
 </AccordionGroup>
 
@@ -267,6 +278,7 @@ These commands help generate and update PR content and documentation.
     ```
     @coderabbitai configuration
     ```
+
   </Accordion>
 
   <Accordion title="@coderabbitai help" icon="circle-question-mark">
@@ -285,6 +297,7 @@ These commands help generate and update PR content and documentation.
     ```
     @coderabbitai help
     ```
+
   </Accordion>
 </AccordionGroup>
 
@@ -311,10 +324,10 @@ For quick reference, here's a summary of all available commands:
 
 Many of these commands are affected by your CodeRabbit configuration. Key configuration options include:
 
-* **Automatic reviews**: `reviews.auto_review.enabled`
-* **Docstring generation**: `reviews.finishing_touches.docstrings.enabled`
-* **Unit test generation**: `reviews.finishing_touches.unit_tests.enabled`
-* **High-level summaries**: `reviews.high_level_summary`
-* **Sequence diagrams**: `reviews.sequence_diagrams`
+- **Automatic reviews**: `reviews.auto_review.enabled`
+- **Docstring generation**: `reviews.finishing_touches.docstrings.enabled`
+- **Unit test generation**: `reviews.finishing_touches.unit_tests.enabled`
+- **High-level summaries**: `reviews.high_level_summary`
+- **Sequence diagrams**: `reviews.sequence_diagrams`
 
 For complete configuration options, see [Configuration Reference](/reference/configuration).
