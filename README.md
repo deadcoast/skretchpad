@@ -154,7 +154,7 @@ cd src-tauri && cargo check
 
 ## Plugin Manifest
 
-Plugins declare capabilities in `plugin.toml`:
+Plugins declare capabilities in [`plugin.toml`](plugins/git/plugin.toml):
 
 ```toml
 name = "my-plugin"
