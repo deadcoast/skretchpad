@@ -1,0 +1,25 @@
+version = 1
+
+[[analyzers]]
+name = "test-coverage"
+
+[[analyzers]]
+name = "rust"
+
+  [analyzers.meta]
+  msrv = "stable"
+
+[[analyzers]]
+name = "javascript"
+
+  [analyzers.meta]
+  environment = [
+    "vitest",
+    "nodejs"
+  ]
+
+[[code_formatters]]
+name = "prettier"
+
+[[code_formatters]]
+name = "rustfmt"
