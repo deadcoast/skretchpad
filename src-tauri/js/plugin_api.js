@@ -28,7 +28,7 @@ globalThis.skretchpad = {
       try {
         return Deno.core.ops.op_plugin_read_file(path);
       } catch (e) {
-        throw new Error('fs.readFile: ' + e.message);
+        throw new Error(`fs.readFile: ${e?.message ?? e}`);
       }
     },
 
@@ -36,7 +36,7 @@ globalThis.skretchpad = {
       try {
         Deno.core.ops.op_plugin_write_file(path, content);
       } catch (e) {
-        throw new Error('fs.writeFile: ' + e.message);
+        throw new Error(`fs.writeFile: ${e?.message ?? e}`);
       }
     },
 
@@ -44,7 +44,7 @@ globalThis.skretchpad = {
       try {
         return Deno.core.ops.op_plugin_list_files(directory);
       } catch (e) {
-        throw new Error('fs.listFiles: ' + e.message);
+        throw new Error(`fs.listFiles: ${e?.message ?? e}`);
       }
     },
   },
@@ -53,13 +53,13 @@ globalThis.skretchpad = {
     fetch(url, options) {
       try {
         return Deno.core.ops.op_plugin_fetch({
-          url: url,
+          url,
           method: options?.method,
           headers: options?.headers,
           body: options?.body,
         });
       } catch (e) {
-        throw new Error('network.fetch: ' + e.message);
+        throw new Error(`network.fetch: ${e?.message ?? e}`);
       }
     },
   },
@@ -69,7 +69,7 @@ globalThis.skretchpad = {
       try {
         return Deno.core.ops.op_plugin_execute_command(command, args || []);
       } catch (e) {
-        throw new Error('commands.execute: ' + e.message);
+        throw new Error(`commands.execute: ${e?.message ?? e}`);
       }
     },
   },
@@ -79,7 +79,7 @@ globalThis.skretchpad = {
       try {
         Deno.core.ops.op_plugin_show_notification(message, level || 'info');
       } catch (e) {
-        throw new Error('ui.showNotification: ' + e.message);
+        throw new Error(`ui.showNotification: ${e?.message ?? e}`);
       }
     },
 
@@ -87,7 +87,7 @@ globalThis.skretchpad = {
       try {
         Deno.core.ops.op_plugin_set_status_bar(id, text, tooltip || '');
       } catch (e) {
-        throw new Error('ui.setStatusBarItem: ' + e.message);
+        throw new Error(`ui.setStatusBarItem: ${e?.message ?? e}`);
       }
     },
   },
@@ -97,7 +97,7 @@ globalThis.skretchpad = {
       try {
         return Deno.core.ops.op_plugin_get_active_file();
       } catch (e) {
-        throw new Error('editor.getActiveFile: ' + e.message);
+        throw new Error(`editor.getActiveFile: ${e?.message ?? e}`);
       }
     },
 
@@ -105,7 +105,7 @@ globalThis.skretchpad = {
       try {
         return Deno.core.ops.op_plugin_get_editor_content();
       } catch (e) {
-        throw new Error('editor.getContent: ' + e.message);
+        throw new Error(`editor.getContent: ${e?.message ?? e}`);
       }
     },
   },
