@@ -1,0 +1,58 @@
+# coderabbit.yaml
+# Configuration for Code Rabbit AI Assistant
+# Docs: https://docs.coderabbit.ai/docs/coderabbit-yaml
+
+# ============================================================================
+# PROJECT SETTINGS
+# ============================================================================
+
+# Project name
+project_name: "skretchpad"
+
+# Project description 
+project_description: "Fast, Minimal, Feature Rich Text Editor inspired by 80's Compute Aesthetics."
+
+# Project root directory
+project_root: "."
+
+# Project type
+project_type: "application"
+
+# Project language
+project_language: "typescript,rust"
+
+# Project backend language
+project_backend: "rust"
+
+# Project frontend language
+project_frontend: "typescript"
+
+# Project framework
+project_framework: "svelte"
+
+# Project libraries
+project_libraries:
+  - "tauri"
+  - "codemirror"
+  - "deno_core"
+  - "rust"
+
+# Project entry point (optional)
+project_entry_point: "src/main.ts"
+
+# Project tests (optional)
+project_tests:
+  - "npm run test"
+  - "npm run test:rust"
+
+# Project dependencies (optional)
+project_dependencies:
+  - "npm install"
+
+# Project build development (optional)
+project_build_dev:
+  - "npx tauri dev"
+
+# Project run (optional)
+project_run:
+  - "npx tauri run"

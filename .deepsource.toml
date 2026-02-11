@@ -1,0 +1,46 @@
+version = 1
+
+[[analyzers]]
+name = "test-coverage"
+
+[analyzers.meta]
+
+[[analyzers]]
+name = "secrets"
+
+[analyzers.meta]
+
+[[analyzers]]
+name = "rust"
+
+[analyzers.meta]
+runtime_version = ""
+plugins = ["clippy"]
+environment = ["cargo"]
+import_root = "src-tauri/"
+
+[[analyzers]]
+name = "typescript"
+
+[analyzers.meta]
+runtime_version = ""
+import_root = "src/"
+
+[[analyzers]]
+name = "svelte"
+
+[analyzers.meta]
+runtime_version = ""
+import_root = "src/"
+
+[[code_formatters]]
+name = "svelte.svelte-vscode"
+
+[[code_formatters]]
+name = "rust-lang.rust-analyzer"
+
+[[code_formatters]]
+name = "ESLint"
+
+[[code_formatters]]
+name = "prettier"
