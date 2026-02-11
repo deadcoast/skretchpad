@@ -1,32 +1,218 @@
-# coderabbit.yaml
-# Configuration for Code Rabbit AI Assistant
-# Docs: https://docs.coderabbit.ai/docs/coderabbit-yaml
-# yaml-language-server:["$schema=https://coderabbit.ai/integrations/schema.v2.json",[IN_REPO](integrations/schema.v2.json)
-#
-# ============================================================================
-# PROJECT SETTINGS
-# ============================================================================
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit configuration for skretchpad - A minimal, modern text editor
+# https://github.com/deadcoast/skretchpad
+
+language: en-US
 early_access: false
+
 reviews:
-  collapse_walkthrough: false
-  changed_files_summary: false
-  sequence_diagrams: false
-  estimate_code_review_effort: false
-  assess_linked_issues: false
-  auto_title_placeholder: "@coderabbitai"
-  auto_title_instructions: "Generate a title that concisely describes the changes made in the PR."
-  high_level_summary: false
-  high_level_summary_in_walkthrough: false
-  auto_apply_labels: false
-  suggested_reviewers: false
-  in_progress_fortune: false
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  review_status: true
+  commit_status: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
   poem: false
-  enable_prompt_for_ai_agents: false
-  path_filters: ["!dist/**", "src/**"]
+  suggested_labels: true
+  suggested_reviewers: true
+
+  # Labeling instructions based on project structure
+  labeling_instructions:
+    - label: frontend
+      instructions: Apply when the PR contains changes to src/ directory (Svelte components, TypeScript stores, utilities, or styles).
+    - label: backend
+      instructions: Apply when the PR contains changes to src-tauri/ directory (Rust code, Tauri commands, plugin system).
+    - label: plugins
+      instructions: Apply when the PR contains changes to plugins/ directory or plugin-related code.
+    - label: themes
+      instructions: Apply when the PR contains changes to themes/ directory or theme engine code.
+    - label: tests
+      instructions: Apply when the PR contains test files (*.test.ts) or changes to test configuration.
+    - label: docs
+      instructions: Apply when the PR contains documentation changes in docs/ or markdown files.
+    - label: ci
+      instructions: Apply when the PR contains CI/CD configuration changes.
+
+  # Path-specific review instructions
+  path_instructions:
+    - path: "src/**/*.svelte"
+      instructions: |
+        Review Svelte 4 components for:
+        - Proper TypeScript usage with type annotations
+        - Correct reactive declarations ($:) and store subscriptions
+        - Component naming in PascalCase (e.g., StatusBar.svelte)
+        - Accessibility attributes (aria-labels, roles)
+        - Avoid @html unless sanitized with DOMPurify
+    - path: "src/**/*.ts"
+      instructions: |
+        Review TypeScript code for:
+        - Proper type annotations and no 'any' types
+        - Unused variables prefixed with underscore (_)
+        - Utility/store modules using lowercase filenames
+        - nanostores usage patterns for state management
+        - Proper async/await error handling with try/catch
+    - path: "src-tauri/**/*.rs"
+      instructions: |
+        Review Rust code for:
+        - Proper error handling with Result<T, E> and anyhow/thiserror
+        - Memory safety and no unsafe blocks without justification
+        - Async code using tokio patterns correctly
+        - Tauri command signatures matching frontend invocations
+        - Security considerations for plugin sandboxing (deno_core)
+    - path: "src-tauri/src/plugin_system/**"
+      instructions: |
+        Extra scrutiny for plugin system code:
+        - Validate security boundaries and sandbox isolation
+        - Check permission validation in capabilities.rs
+        - Ensure trust verification in trust.rs (ed25519 signatures)
+        - Review API exposure to sandboxed plugins
+    - path: "plugins/**"
+      instructions: |
+        Review plugin code for:
+        - Proper plugin.toml manifest structure
+        - JavaScript using Deno-compatible APIs
+        - No access to restricted capabilities without declaration
+    - path: "themes/**/*.toml"
+      instructions: |
+        Review theme TOML files for:
+        - Valid color values and proper TOML syntax
+        - Complete theme property coverage
+    - path: "**/*.test.ts"
+      instructions: |
+        Review tests for:
+        - Vitest + Testing Library patterns
+        - Proper mocking of Tauri APIs from src/test/mocks/
+        - Coverage of edge cases and error paths
+        - Test file colocated with source or in src/test/
+    - path: "docs/**/*.md"
+      instructions: |
+        Review documentation for:
+        - Clear and accurate technical content
+        - Proper Markdown formatting
+        - Up-to-date code examples
+
+  # Auto-review configuration
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    ignore_title_keywords:
+      - WIP
+      - DO NOT MERGE
+      - DRAFT
+
+  # Pre-merge checks
+  pre_merge_checks:
+    title:
+      mode: warning
+      requirements: "Follow Conventional Commits format: feat:, fix:, docs:, style:, refactor:, perf:, test:, chore:, ci:"
+    description:
+      mode: warning
+
+  # Finishing touches
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+
+  # Tools configuration - enable relevant linters
+  tools:
+    # TypeScript/JavaScript linting (project uses ESLint)
+    eslint:
+      enabled: true
+    biome:
+      enabled: true
+    oxc:
+      enabled: true
+    # Rust linting
+    clippy:
+      enabled: true
+    # Markdown linting for docs
+    markdownlint:
+      enabled: true
+    # YAML linting for config files
+    yamllint:
+      enabled: true
+    # Security scanning
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+    # GitHub Actions (if used)
+    actionlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 180000
+    # AST pattern matching
+    ast-grep:
+      essential_rules: true
+    # Disable irrelevant tools
+    ruff:
+      enabled: false
+    pylint:
+      enabled: false
+    flake8:
+      enabled: false
+    phpstan:
+      enabled: false
+    phpmd:
+      enabled: false
+    phpcs:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    rubocop:
+      enabled: false
+    swiftlint:
+      enabled: false
+    detekt:
+      enabled: false
+
+  # Path filters - exclude generated/vendor files from review
+  path_filters:
+    - "!dist/**"
+    - "!coverage/**"
+    - "!node_modules/**"
+    - "!src-tauri/target/**"
+    - "!src-tauri/gen/**"
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!**/Cargo.lock"
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
   code_guidelines:
-    enabled: false
-    filePatterns: []
-  suggested_labels: false   # Enable or disable the suggestion of labels for the PR
-  labeling_instructions: [] # Define allowed labels and when to suggest them. When provided, CodeRabbit suggests only from this list (still informed by prior PRs); when empty, suggestions rely entirely on prior PRs
-  auto_assign_reviewers: false  # Automatically assign the suggested reviewers to the PR
-  abort_on_close: true  # Abort the in-progress review if the PR is closed or merged
+    enabled: true
+    filePatterns:
+      - "**/AGENTS.md"
+  learnings:
+    scope: auto
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
+
+code_generation:
+  docstrings:
+    language: en-US
+    path_instructions:
+      - path: "src-tauri/**/*.rs"
+        instructions: "Generate Rust doc comments using /// for public items. Include # Examples section for complex functions."
+      - path: "src/**/*.ts"
+        instructions: "Generate TSDoc/JSDoc style comments with @param and @returns annotations."
+  unit_tests:
+    path_instructions:
+      - path: "src/**/*.ts"
+        instructions: "Generate Vitest tests using @testing-library/svelte. Mock Tauri APIs using src/test/mocks/."
+      - path: "src-tauri/**/*.rs"
+        instructions: "Generate Rust unit tests using #[cfg(test)] modules. Use tempfile for file system tests."
