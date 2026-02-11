@@ -60,6 +60,11 @@ const DEFAULT_SCHEME: KeybindingScheme = {
       modifiers: ['Ctrl'],
       command: 'file.open',
     },
+    'Ctrl+Alt+O': {
+      key: 'o',
+      modifiers: ['Ctrl', 'Alt'],
+      command: 'file.openFolder',
+    },
     'Ctrl+S': {
       key: 's',
       modifiers: ['Ctrl'],
@@ -182,6 +187,11 @@ const DEFAULT_SCHEME: KeybindingScheme = {
       key: 'g',
       modifiers: ['Ctrl'],
       command: 'navigation.gotoLine',
+    },
+    'Ctrl+Shift+O': {
+      key: 'o',
+      modifiers: ['Ctrl', 'Shift'],
+      command: 'navigation.gotoSymbol',
     },
     'Ctrl+Tab': {
       key: 'Tab',

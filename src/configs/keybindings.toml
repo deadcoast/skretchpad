@@ -31,7 +31,7 @@ author = "skretchpad"
 "Ctrl+N" = { command = "file.new", description = "New file" }
 "Ctrl+Shift+N" = { command = "file.newWindow", description = "New window" }
 "Ctrl+Shift+W" = { command = "file.closeWindow", description = "Close window" }
-"Ctrl+Alt+O" = { command = "file.openRecent", description = "Open recent file" }
+"Ctrl+Alt+O" = { command = "file.openFolder", description = "Open folder" }
 
 # ----------------------------------------------------------------------------
 # EDIT OPERATIONS

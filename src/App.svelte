@@ -9,6 +9,12 @@
   import SideBar from './components/SideBar.svelte';
   import NotificationToast from './components/NotificationToast.svelte';
   import CommandPalette from './components/CommandPalette.svelte';
+  import type {
+    PaletteExecuteDetail,
+    PaletteFileItem,
+    PaletteMode,
+    PaletteSymbolItem,
+  } from './lib/types/command-palette';
   import SettingsPanel from './components/SettingsPanel.svelte';
   import PluginPermissionDialog from './components/PluginPermissionDialog.svelte';
   import DiffView from './features/diff/DiffView.svelte';
@@ -24,7 +30,7 @@
   import { gitStore } from './lib/stores/git';
   import { open as showOpenDialog } from '@tauri-apps/plugin-dialog';
   import { invoke } from '@tauri-apps/api/core';
-  import { detectLanguage } from './lib/editor-loader';
+  import { detectLanguage, extractSymbolsFromContent } from './lib/editor-loader';
   import { setExplorerRoot } from './lib/stores/explorer';
   import { coercePathString } from './lib/utils/path';
 
@@ -32,6 +38,8 @@
   let menuVisible = true;
   let alwaysOnTop = false;
   let commandPaletteVisible = false;
+  let commandPaletteMode: PaletteMode = 'commands';
+  let commandPaletteInitialQuery = '';
   let settingsVisible = false;
   let sidebarVisible = true;
   let activeSidebarPanel = 'explorer';
@@ -42,6 +50,12 @@
   let minimapVisible = true;
   let splitActive = false;
   let splitDirection: 'horizontal' | 'vertical' = 'horizontal';
+  let workspaceRoot = '';
+  let workspaceFiles: PaletteFileItem[] = [];
+  let workspaceFilesLoading = false;
+  let workspaceFileIndexAt = 0;
+  let workspaceIndexRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  let currentSymbols: PaletteSymbolItem[] = [];
 
   // Diff view state
   let diffViewVisible = false;
@@ -53,6 +67,10 @@
 
   onDestroy(() => {
     gitStore.cleanup();
+    if (workspaceIndexRefreshTimer) {
+      clearTimeout(workspaceIndexRefreshTimer);
+      workspaceIndexRefreshTimer = null;
+    }
   });
 
   // Reactive current file from editor store (used for window title updates)
@@ -93,6 +111,8 @@
     // Initialize git store
     try {
       const workdir = await invoke<string>('get_workspace_root');
+      workspaceRoot = workdir.replace(/\\/g, '/');
+      await refreshWorkspaceFileIndex(workspaceRoot);
       await gitStore.initialize(workdir);
     } catch (err) {
       console.warn('Git initialization skipped:', err);
@@ -182,7 +202,7 @@
       {
         id: 'file.openFolder',
         label: 'Open Folder...',
-        keybinding: 'Ctrl+Shift+O',
+        keybinding: 'Ctrl+Alt+O',
         category: 'File',
       },
       { id: 'file.new', label: 'New File', keybinding: 'Ctrl+N', category: 'File' },
@@ -193,6 +213,12 @@
         id: 'navigation.gotoLine',
         label: 'Go To Line...',
         keybinding: 'Ctrl+G',
+        category: 'Navigation',
+      },
+      {
+        id: 'navigation.gotoSymbol',
+        label: 'Go To Symbol...',
+        keybinding: 'Ctrl+Shift+O',
         category: 'Navigation',
       },
       {
@@ -233,8 +259,19 @@
     }
   }
 
-  function handleCommandExecute(event: CustomEvent<{ commandId: string }>) {
-    const { commandId } = event.detail;
+  function handleCommandExecute(event: CustomEvent<PaletteExecuteDetail | { commandId: string }>) {
+    const payload = event.detail;
+
+    if ('type' in payload && payload.type === 'file') {
+      editorStore.openFile(payload.path);
+      return;
+    }
+    if ('type' in payload && payload.type === 'symbol') {
+      editorRef?.editorCommands?.gotoLine(payload.line);
+      return;
+    }
+
+    const commandId = payload.commandId;
     const commands = editorRef?.editorCommands;
 
     switch (commandId) {
@@ -270,9 +307,10 @@
         break;
       case 'file.new':
         editorStore.createFile();
+        scheduleWorkspaceFileIndexRefresh();
         break;
       case 'file.quickOpen':
-        handleOpenFile();
+        openCommandPalette('files');
         break;
       case 'file.openFolder':
         handleOpenFolder();
@@ -282,6 +320,7 @@
         break;
       case 'file.saveAs':
         editorStore.saveFileAs();
+        scheduleWorkspaceFileIndexRefresh();
         break;
       case 'file.close': {
         const state = editorStore.getActiveFile();
@@ -291,7 +330,7 @@
         break;
       }
       case 'view.commandPalette':
-        commandPaletteVisible = true;
+        openCommandPalette('commands');
         break;
       case 'view.toggleChrome':
         menuVisible = !menuVisible;
@@ -328,6 +367,10 @@
       case 'navigation.gotoLine':
         promptGotoLine();
         break;
+      case 'navigation.gotoSymbol':
+        void refreshCurrentSymbols();
+        openCommandPalette('symbols');
+        break;
       default: {
         const pluginCommand = pluginsStore
           .getCommands()
@@ -358,6 +401,9 @@
       const selectedPath = coercePathString(selected);
       if (selectedPath) {
         await editorStore.openFile(selectedPath);
+        if (workspaceRoot) {
+          scheduleWorkspaceFileIndexRefresh();
+        }
       }
     } catch (err) {
       console.error('Failed to open file:', err);
@@ -371,8 +417,11 @@
         directory: true,
         multiple: false,
       });
-      if (selected && typeof selected === 'string') {
-        setExplorerRoot(selected.replace(/\\/g, '/'));
+      const selectedPath = coercePathString(selected);
+      if (selectedPath) {
+        workspaceRoot = selectedPath.replace(/\\/g, '/');
+        setExplorerRoot(workspaceRoot);
+        await refreshWorkspaceFileIndex(workspaceRoot);
       }
     } catch (err) {
       console.error('Failed to open folder:', err);
@@ -410,6 +459,67 @@
   function openSourceControl() {
     sidebarVisible = true;
     activeSidebarPanel = 'scm';
+  }
+
+  async function refreshWorkspaceFileIndex(root?: string) {
+    const base = (root || workspaceRoot || '').replace(/\\/g, '/');
+    if (!base) return;
+
+    workspaceFilesLoading = true;
+    try {
+      const files = await invoke<string[]>('list_workspace_files', { root: base });
+      workspaceFiles = files.map((relativePath) => {
+        const normalized = relativePath.replace(/\\/g, '/');
+        const path = `${base}/${normalized}`.replace(/\/+/g, '/');
+        const parts = normalized.split('/');
+        const name = parts[parts.length - 1] || normalized;
+        return { path, name, relativePath: normalized };
+      });
+      workspaceFileIndexAt = Date.now();
+    } catch (error) {
+      console.error('Failed to index workspace files:', error);
+      workspaceFiles = [];
+    } finally {
+      workspaceFilesLoading = false;
+    }
+  }
+
+  function scheduleWorkspaceFileIndexRefresh(delayMs = 450) {
+    if (workspaceIndexRefreshTimer) {
+      clearTimeout(workspaceIndexRefreshTimer);
+    }
+    workspaceIndexRefreshTimer = setTimeout(() => {
+      void refreshWorkspaceFileIndex();
+      workspaceIndexRefreshTimer = null;
+    }, delayMs);
+  }
+
+  async function refreshCurrentSymbols() {
+    const content = editorRef?.getContent() || '';
+    const path = $activeFile?.path || '';
+    if (!path || !content) {
+      currentSymbols = [];
+      return;
+    }
+    try {
+      currentSymbols = await extractSymbolsFromContent(path, content);
+    } catch (error) {
+      console.error('Failed to extract symbols:', error);
+      currentSymbols = [];
+    }
+  }
+
+  function openCommandPalette(nextMode: PaletteMode) {
+    if (nextMode === 'symbols') {
+      void refreshCurrentSymbols();
+    } else if (nextMode === 'files' && workspaceFiles.length === 0 && !workspaceFilesLoading) {
+      void refreshWorkspaceFileIndex();
+    } else if (nextMode === 'files' && Date.now() - workspaceFileIndexAt > 5000) {
+      void refreshWorkspaceFileIndex();
+    }
+    commandPaletteMode = nextMode;
+    commandPaletteInitialQuery = nextMode === 'files' ? '#' : nextMode === 'symbols' ? '@' : '>';
+    commandPaletteVisible = true;
   }
 
   function promptGotoLine() {
@@ -460,12 +570,21 @@
   }
 
   // Global keyboard shortcuts
+  function handleWindowFocus() {
+    if (!workspaceRoot) return;
+    scheduleWorkspaceFileIndexRefresh(250);
+  }
+
   function handleKeydown(e: KeyboardEvent) {
     const mod = e.ctrlKey || e.metaKey;
 
     if (mod && e.shiftKey && e.key === 'P') {
       e.preventDefault();
-      commandPaletteVisible = !commandPaletteVisible;
+      if (commandPaletteVisible && commandPaletteMode === 'commands') {
+        commandPaletteVisible = false;
+      } else {
+        openCommandPalette('commands');
+      }
       return;
     }
     if (mod && e.shiftKey && (e.key === 'H' || e.key === 'h')) {
@@ -483,19 +602,29 @@
       sidebarVisible = !sidebarVisible;
       return;
     }
-    if (mod && e.key === 'o') {
+    if (mod && !e.shiftKey && !e.altKey && (e.key === 'o' || e.key === 'O')) {
       e.preventDefault();
       handleOpenFile();
       return;
     }
     if (mod && (e.key === 'p' || e.key === 'P')) {
       e.preventDefault();
-      handleOpenFile();
+      openCommandPalette('files');
       return;
     }
     if (mod && (e.key === 'g' || e.key === 'G')) {
       e.preventDefault();
       promptGotoLine();
+      return;
+    }
+    if (mod && e.shiftKey && !e.altKey && (e.key === 'O' || e.key === 'o')) {
+      e.preventDefault();
+      openCommandPalette('symbols');
+      return;
+    }
+    if (mod && e.altKey && (e.key === 'O' || e.key === 'o')) {
+      e.preventDefault();
+      handleOpenFolder();
       return;
     }
     if (mod && e.key === 'n') {
@@ -546,7 +675,7 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window on:keydown={handleKeydown} on:focus={handleWindowFocus} />
 
 {#if booting}
   <BootScreen on:complete={() => (booting = false)} />
@@ -611,7 +740,14 @@
 
   <StatusBar {menuVisible} on:openSCM={openSourceControl} />
   <NotificationToast />
-  <CommandPalette bind:visible={commandPaletteVisible} on:execute={handleCommandExecute} />
+  <CommandPalette
+    bind:visible={commandPaletteVisible}
+    mode={commandPaletteMode}
+    initialQuery={commandPaletteInitialQuery}
+    {workspaceFiles}
+    symbols={currentSymbols}
+    on:execute={handleCommandExecute}
+  />
   <SettingsPanel bind:visible={settingsVisible} on:close={() => (settingsVisible = false)} />
   {#if $pluginsStore.pendingPermission}
     <PluginPermissionDialog

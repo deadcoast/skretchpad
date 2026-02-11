@@ -23,15 +23,17 @@
 
 ### 1.1 Quick Open / Go To File (`Ctrl+P`)
 Fuzzy file finder over the entire workspace. Index file paths on workspace open, debounced re-index on fs changes. Render in the existing CommandPalette component with a "file mode" variant. Should handle 100k+ files without lag (stream results, virtual scroll)
-Status: `PARTIAL` - `Ctrl+P` now routes to quick-open file dialog (`file.quickOpen`), but indexed fuzzy workspace finder is still pending.
+Status: `PARTIAL` - `Ctrl+P` now opens Command Palette file mode with backend-indexed workspace files and fuzzy matching, plus debounced refresh on key file actions and window-focus resync. Remaining: true filesystem watcher-driven incremental index updates and streaming/virtualized results for very large workspaces.
 
 ### 1.2 Go To Line (`Ctrl+G`)
 Simple numeric input dialog that scrolls CodeMirror to the target line. Keybinding already registered but no UI exists
 Status: `COMPLETE` - `Ctrl+G` now opens Go To Line input and jumps editor cursor/viewport to the requested line.
 Validation: `npm run lint` + `npm run check` + `npm run test -- --run src/components/CommandPalette.test.ts src/components/StatusBar.test.ts src/lib/utils/path.test.ts`
 
-### 1.3 Go To Symbol (`Ctrl+Alt+O` suggested)
+### 1.3 Go To Symbol (`Ctrl+Shift+O`)
 List symbols (functions, classes, headings) in the current file via CodeMirror's syntax tree. No LSP required — parse the CM6 tree directly. Opens in CommandPalette with `@` prefix filter
+Status: `COMPLETE` - `Ctrl+Shift+O` opens symbol mode (`@`) in Command Palette and parses symbols via CodeMirror syntax tree (no LSP), with jump-to-line navigation.
+Validation: `npm run lint` + `npm run check` + `npm run test -- --run src/lib/editor-loader.symbols.test.ts src/components/CommandPalette.test.ts`
 
 ### 1.4 Multi-Cursor Editing
 CodeMirror 6 supports multi-cursor natively. Wire up:

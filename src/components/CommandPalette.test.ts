@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import CommandPalette from './CommandPalette.svelte';
-import { pluginsStore } from '../lib/stores/plugins';
 
 describe('CommandPalette', () => {
   it('does not render when visible is false', () => {
@@ -26,9 +25,9 @@ describe('CommandPalette', () => {
     const { container } = render(CommandPalette, { props: { visible: true } });
     const footer = container.querySelector('.command-palette__footer');
     expect(footer).not.toBeNull();
-    expect(footer!.textContent).toContain('navigate');
-    expect(footer!.textContent).toContain('select');
-    expect(footer!.textContent).toContain('close');
+    expect(footer!.textContent).toContain('commands');
+    expect(footer!.textContent).toContain('files');
+    expect(footer!.textContent).toContain('symbols');
   });
 
   it('dispatches close event on Escape', async () => {
@@ -51,24 +50,34 @@ describe('CommandPalette', () => {
     const empty = container.querySelector('.command-palette__empty');
     const results = container.querySelector('.command-palette__results');
     expect(results).not.toBeNull();
-    // With empty store, should show "No commands found"
+    // With empty store, should show empty-state text
     if (empty) {
-      expect(empty.textContent).toContain('No commands found');
+      expect(empty.textContent).toContain('No results found');
     }
   });
 
-  it('renders plugin commands from store', () => {
-    pluginsStore.registerCommand({
-      id: 'git.status',
-      plugin_id: 'git',
-      label: 'Git Status',
-      category: 'Git',
+  it('executes file results in file mode', async () => {
+    const { container, component } = render(CommandPalette, {
+      props: {
+        visible: true,
+        mode: 'files',
+        workspaceFiles: [
+          { path: '/tmp/a.ts', name: 'a.ts', relativePath: 'src/a.ts' },
+          { path: '/tmp/b.ts', name: 'b.ts', relativePath: 'src/b.ts' },
+        ],
+        initialQuery: '#a',
+      },
     });
 
-    const { container } = render(CommandPalette, { props: { visible: true } });
-    expect(container.textContent).toContain('Git Status');
-    expect(container.textContent).toContain('git.status');
+    const executeSpy = vi.fn();
+    component.$on('execute', executeSpy);
+    const firstItem = container.querySelector('.command-item') as HTMLButtonElement;
+    await fireEvent.click(firstItem);
 
-    pluginsStore.unregisterCommand('git.status');
+    expect(executeSpy).toHaveBeenCalled();
+    expect(executeSpy.mock.calls[0][0].detail).toEqual({
+      type: 'file',
+      path: '/tmp/a.ts',
+    });
   });
 });

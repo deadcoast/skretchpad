@@ -29,6 +29,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::RwLock;
+use walkdir::WalkDir;
 
 // ============================================================================
 // STATE INITIALIZATION
@@ -700,6 +701,60 @@ async fn list_directory(path: String) -> Result<Vec<DirectoryEntry>, String> {
 }
 
 #[tauri::command]
+async fn list_workspace_files(root: String) -> Result<Vec<String>, String> {
+    let root_path = PathBuf::from(&root);
+    if !root_path.exists() {
+        return Err(format!("Workspace root does not exist: {}", root));
+    }
+    if !root_path.is_dir() {
+        return Err(format!("Workspace root is not a directory: {}", root));
+    }
+
+    let mut files = Vec::new();
+    let ignored_dirs = [
+        ".git",
+        "node_modules",
+        "target",
+        "dist",
+        "coverage",
+        ".svelte-kit",
+        ".next",
+        ".turbo",
+    ];
+
+    let iter = WalkDir::new(&root_path)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|entry| {
+            if !entry.file_type().is_dir() {
+                return true;
+            }
+            let name = entry.file_name().to_string_lossy();
+            !ignored_dirs
+                .iter()
+                .any(|ignored| name.eq_ignore_ascii_case(ignored))
+        });
+
+    for entry in iter {
+        let entry = entry.map_err(|e| e.to_string())?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+
+        let full_path = entry.path();
+        let relative = full_path
+            .strip_prefix(&root_path)
+            .map_err(|e| e.to_string())?
+            .to_string_lossy()
+            .replace('\\', "/");
+        files.push(relative);
+    }
+
+    files.sort_by_key(|a| a.to_lowercase());
+    Ok(files)
+}
+
+#[tauri::command]
 async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
     let metadata = tokio::fs::metadata(&path)
         .await
@@ -932,6 +987,7 @@ fn main() {
             save_file,
             get_file_metadata,
             list_directory,
+            list_workspace_files,
             emit_editor_event,
             // Plugin management
             discover_plugins,

@@ -21,6 +21,7 @@ import {
   defaultHighlightStyle,
   HighlightStyle,
   LanguageSupport,
+  syntaxTree,
 } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
@@ -63,6 +64,12 @@ export interface LanguageInfo {
   extensions: string[];
   support?: LanguageSupport;
   loaded: boolean;
+}
+
+export interface EditorSymbol {
+  name: string;
+  kind: string;
+  line: number;
 }
 
 // ============================================================================
@@ -716,6 +723,117 @@ export async function setLanguage(view: EditorView, languageName: string): Promi
 
 export function detectLanguage(filename: string): string | null {
   return languageRegistry.detectLanguage(filename);
+}
+
+function extractNameFromSnippet(snippet: string, kind: string): string | null {
+  const trimmed = snippet.trim();
+  if (!trimmed) return null;
+
+  const patterns: Array<{ kind: string; re: RegExp }> = [
+    { kind: 'function', re: /(?:function|fn|def)\s+([A-Za-z_][\w$]*)/ },
+    { kind: 'class', re: /class\s+([A-Za-z_][\w$]*)/ },
+    { kind: 'interface', re: /interface\s+([A-Za-z_][\w$]*)/ },
+    { kind: 'type', re: /type\s+([A-Za-z_][\w$]*)/ },
+    { kind: 'enum', re: /enum\s+([A-Za-z_][\w$]*)/ },
+    { kind: 'struct', re: /struct\s+([A-Za-z_][\w$]*)/ },
+    { kind: 'trait', re: /trait\s+([A-Za-z_][\w$]*)/ },
+  ];
+
+  for (const { kind: targetKind, re } of patterns) {
+    if (kind === targetKind) {
+      const match = trimmed.match(re);
+      if (match?.[1]) return match[1];
+    }
+  }
+
+  const fallback = trimmed.match(/^([A-Za-z_][\w$]*)\s*[:(]/);
+  return fallback?.[1] ?? null;
+}
+
+const SYMBOL_NODE_KIND: Record<string, string> = {
+  FunctionDeclaration: 'function',
+  FunctionDefinition: 'function',
+  FunctionStatement: 'function',
+  ArrowFunction: 'function',
+  MethodDeclaration: 'method',
+  MethodDefinition: 'method',
+  ClassDeclaration: 'class',
+  ClassDefinition: 'class',
+  InterfaceDeclaration: 'interface',
+  TypeAliasDeclaration: 'type',
+  EnumDeclaration: 'enum',
+  StructItem: 'struct',
+  StructDeclaration: 'struct',
+  TraitDeclaration: 'trait',
+  AtxHeading: 'heading',
+  SetextHeading: 'heading',
+};
+
+export async function extractSymbolsFromContent(
+  filename: string,
+  content: string
+): Promise<EditorSymbol[]> {
+  if (!content.trim()) return [];
+
+  const languageName = detectLanguage(filename);
+  if (!languageName) return [];
+
+  const support = await languageRegistry.loadLanguage(languageName);
+  if (!support) return [];
+
+  const state = EditorState.create({
+    doc: content,
+    extensions: [support],
+  });
+
+  const tree = syntaxTree(state);
+  const cursor = tree.cursor();
+  const symbols: EditorSymbol[] = [];
+  const seen = new Set<string>();
+
+  do {
+    const kind = SYMBOL_NODE_KIND[cursor.type.name];
+    if (!kind) continue;
+
+    const from = cursor.from;
+    const to = Math.min(cursor.to, from + 240);
+    const line = state.doc.lineAt(from).number;
+    const snippet = content.slice(from, to);
+
+    let name = extractNameFromSnippet(snippet, kind);
+    if (kind === 'heading') {
+      const heading = state.doc
+        .lineAt(from)
+        .text.trim()
+        .replace(/^#+\s*/, '');
+      name = heading || name;
+    }
+    if (!name) continue;
+
+    const key = `${kind}:${line}:${name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    symbols.push({ name, kind, line });
+  } while (cursor.next());
+
+  // Markdown grammars can vary by parser package/node names; keep heading extraction resilient.
+  if (languageName === 'markdown' && !symbols.some((s) => s.kind === 'heading')) {
+    const lines = content.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+      const match = lines[i].match(/^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$/);
+      if (!match?.[1]) continue;
+      const name = match[1].trim();
+      if (!name) continue;
+      const line = i + 1;
+      const key = `heading:${line}:${name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      symbols.push({ name, kind: 'heading', line });
+    }
+  }
+
+  symbols.sort((a, b) => a.line - b.line || a.name.localeCompare(b.name));
+  return symbols.slice(0, 800);
 }
 
 export function getAvailableLanguages(): LanguageInfo[] {

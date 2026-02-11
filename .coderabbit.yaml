@@ -1,10 +1,16 @@
 # coderabbit.yaml
 # Configuration for Code Rabbit AI Assistant
 # Docs: https://docs.coderabbit.ai/docs/coderabbit-yaml
+# Schema: https://coderabbit.ai/integrations/schema.v2.json
 
 # ============================================================================
 # PROJECT SETTINGS
 # ============================================================================
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+early_access: true
+reviews:
+  collapse_walkthrough: false
+
 
 # Project name
 project_name: "skretchpad"
