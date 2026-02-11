@@ -589,7 +589,7 @@ export async function retry<T>(
 ): Promise<T> {
   const { maxAttempts = 3, initialDelay = 1000, maxDelay = 10000, factor = 2 } = options;
 
-  let lastError: Error;
+  let lastError: Error | null = null;
   let delay = initialDelay;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -605,7 +605,7 @@ export async function retry<T>(
     }
   }
 
-  throw lastError!;
+  throw lastError ?? new Error('Retry failed without capturing an error');
 }
 
 /**

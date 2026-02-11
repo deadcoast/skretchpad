@@ -32,7 +32,11 @@ describe('keybinding store', () => {
 
   it('scheme switching updates current bindings', () => {
     const state = get(keybindingStore);
-    const vimScheme = state.available.find((s) => s.name === 'Vim')!;
+    const vimScheme = state.available.find((s) => s.name === 'Vim');
+    expect(vimScheme).toBeDefined();
+    if (!vimScheme) {
+      throw new Error('Expected Vim keybinding scheme');
+    }
     keybindingStore.setScheme(vimScheme);
     const updated = get(keybindingStore);
     expect(updated.currentScheme?.name).toBe('Vim');
@@ -41,7 +45,11 @@ describe('keybinding store', () => {
 
   it('switch to Emacs scheme', () => {
     const state = get(keybindingStore);
-    const emacsScheme = state.available.find((s) => s.name === 'Emacs')!;
+    const emacsScheme = state.available.find((s) => s.name === 'Emacs');
+    expect(emacsScheme).toBeDefined();
+    if (!emacsScheme) {
+      throw new Error('Expected Emacs keybinding scheme');
+    }
     keybindingStore.setScheme(emacsScheme);
     const updated = get(keybindingStore);
     expect(updated.currentScheme?.name).toBe('Emacs');
@@ -90,7 +98,11 @@ describe('keybinding store', () => {
 
   it('resetToDefault restores default scheme', () => {
     const state = get(keybindingStore);
-    const vimScheme = state.available.find((s) => s.name === 'Vim')!;
+    const vimScheme = state.available.find((s) => s.name === 'Vim');
+    expect(vimScheme).toBeDefined();
+    if (!vimScheme) {
+      throw new Error('Expected Vim keybinding scheme');
+    }
     keybindingStore.setScheme(vimScheme);
     keybindingStore.resetToDefault();
     expect(get(keybindingStore).currentScheme?.name).toBe('Default');
@@ -102,7 +114,11 @@ describe('keybinding store', () => {
       modifiers: ['Ctrl', 'Shift'],
       command: 'custom.action',
     });
-    const vimScheme = get(keybindingStore).available.find((s) => s.name === 'Vim')!;
+    const vimScheme = get(keybindingStore).available.find((s) => s.name === 'Vim');
+    expect(vimScheme).toBeDefined();
+    if (!vimScheme) {
+      throw new Error('Expected Vim keybinding scheme');
+    }
     keybindingStore.setScheme(vimScheme);
     const state = get(keybindingStore);
     // Custom bindings are merged into current

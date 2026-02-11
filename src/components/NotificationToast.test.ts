@@ -49,7 +49,10 @@ describe('NotificationToast', () => {
 
     const dismissBtn = container.querySelector('.notification-dismiss');
     expect(dismissBtn).not.toBeNull();
-    await fireEvent.click(dismissBtn!);
+    if (!dismissBtn) {
+      throw new Error('Expected dismiss button');
+    }
+    await fireEvent.click(dismissBtn);
 
     // After dismiss, the notification store should be empty
     const { get } = await import('svelte/store');
@@ -66,7 +69,10 @@ describe('NotificationToast', () => {
     const { container } = render(NotificationToast);
     const actionBtn = container.querySelector('.notification-action');
     expect(actionBtn).not.toBeNull();
-    expect(actionBtn!.textContent).toBe('Undo');
+    if (!actionBtn) {
+      throw new Error('Expected action button');
+    }
+    expect(actionBtn.textContent).toBe('Undo');
   });
 
   it('action button calls callback and dismisses', async () => {
@@ -79,7 +85,10 @@ describe('NotificationToast', () => {
 
     const actionBtn = container.querySelector('.notification-action');
     expect(actionBtn).not.toBeNull();
-    await fireEvent.click(actionBtn!);
+    if (!actionBtn) {
+      throw new Error('Expected action button');
+    }
+    await fireEvent.click(actionBtn);
 
     expect(callback).toHaveBeenCalledOnce();
   });

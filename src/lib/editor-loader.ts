@@ -473,16 +473,17 @@ class PluginHooksManager {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   register(hookName: string, handler: (view: EditorView, data: any) => void): () => void {
-    if (!this.hooks.has(hookName)) {
-      this.hooks.set(hookName, []);
-    }
-
     const hook: PluginHook = {
       name: hookName,
       handler,
     };
 
-    this.hooks.get(hookName)!.push(hook);
+    let hookList = this.hooks.get(hookName);
+    if (!hookList) {
+      hookList = [];
+      this.hooks.set(hookName, hookList);
+    }
+    hookList.push(hook);
 
     // Return unregister function
     return () => {
@@ -1115,12 +1116,13 @@ export function highlightTrailingWhitespace(): Extension {
       const match = text.match(/\s+$/);
 
       if (match) {
+        const startIndex = match.index ?? 0;
         const decoration = Decoration.mark({
           class: 'cm-trailing-whitespace',
           attributes: {
             style: 'background-color: rgba(255, 0, 0, 0.2);',
           },
-        }).range(line.from + match.index!, line.to);
+        }).range(line.from + startIndex, line.to);
 
         decorations.push(decoration);
       }

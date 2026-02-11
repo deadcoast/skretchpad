@@ -24,13 +24,20 @@ describe('StatusBar', () => {
     const { container } = render(StatusBar, { props: { menuVisible: true } });
     const bar = container.querySelector('.status-bar');
     expect(bar).not.toBeNull();
+    if (!bar) {
+      throw new Error('Expected status bar element');
+    }
     // When menuVisible=true, should NOT have the minimal class
-    expect(bar!.classList.contains('status-bar--minimal')).toBe(false);
+    expect(bar.classList.contains('status-bar--minimal')).toBe(false);
   });
 
   it('applies minimal class when menuVisible is false', () => {
     const { container } = render(StatusBar, { props: { menuVisible: false } });
     const bar = container.querySelector('.status-bar');
-    expect(bar!.classList.contains('status-bar--minimal')).toBe(true);
+    expect(bar).not.toBeNull();
+    if (!bar) {
+      throw new Error('Expected status bar element');
+    }
+    expect(bar.classList.contains('status-bar--minimal')).toBe(true);
   });
 });

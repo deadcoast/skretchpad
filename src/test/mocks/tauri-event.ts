@@ -5,10 +5,12 @@ type EventCallback = (event: { payload: unknown }) => void;
 const listeners = new Map<string, Set<EventCallback>>();
 
 export const listen = vi.fn(async (event: string, handler: EventCallback) => {
-  if (!listeners.has(event)) {
-    listeners.set(event, new Set());
+  let eventListeners = listeners.get(event);
+  if (!eventListeners) {
+    eventListeners = new Set();
+    listeners.set(event, eventListeners);
   }
-  listeners.get(event)!.add(handler);
+  eventListeners.add(handler);
 
   // Return unlisten function
   return () => {
@@ -24,10 +26,12 @@ export const once = vi.fn(async (event: string, handler: EventCallback) => {
     listeners.get(event)?.delete(wrappedHandler);
   };
 
-  if (!listeners.has(event)) {
-    listeners.set(event, new Set());
+  let eventListeners = listeners.get(event);
+  if (!eventListeners) {
+    eventListeners = new Set();
+    listeners.set(event, eventListeners);
   }
-  listeners.get(event)!.add(wrappedHandler);
+  eventListeners.add(wrappedHandler);
 
   return () => {
     listeners.get(event)?.delete(wrappedHandler);

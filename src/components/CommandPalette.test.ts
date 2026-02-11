@@ -25,9 +25,12 @@ describe('CommandPalette', () => {
     const { container } = render(CommandPalette, { props: { visible: true } });
     const footer = container.querySelector('.command-palette__footer');
     expect(footer).not.toBeNull();
-    expect(footer!.textContent).toContain('commands');
-    expect(footer!.textContent).toContain('files');
-    expect(footer!.textContent).toContain('symbols');
+    if (!footer) {
+      throw new Error('Expected footer element');
+    }
+    expect(footer.textContent).toContain('commands');
+    expect(footer.textContent).toContain('files');
+    expect(footer.textContent).toContain('symbols');
   });
 
   it('dispatches close event on Escape', async () => {
@@ -39,7 +42,11 @@ describe('CommandPalette', () => {
     component.$on('close', closeSpy);
 
     const backdrop = container.querySelector('.command-palette-backdrop');
-    await fireEvent.keyDown(backdrop!, { key: 'Escape' });
+    expect(backdrop).not.toBeNull();
+    if (!backdrop) {
+      throw new Error('Expected command palette backdrop');
+    }
+    await fireEvent.keyDown(backdrop, { key: 'Escape' });
 
     expect(closeSpy).toHaveBeenCalled();
   });

@@ -767,10 +767,12 @@ export const commandsByCategory = derived(pluginsStore, ($plugins) => {
 
   for (const command of commands) {
     const category = command.category || 'Other';
-    if (!grouped.has(category)) {
-      grouped.set(category, []);
+    let bucket = grouped.get(category);
+    if (!bucket) {
+      bucket = [];
+      grouped.set(category, bucket);
     }
-    grouped.get(category)!.push(command);
+    bucket.push(command);
   }
 
   return grouped;
