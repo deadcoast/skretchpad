@@ -27,6 +27,9 @@ jobs:
 
       - run: npm ci
 
+      - name: CodeRabbit config check
+        run: npm run coderabbit:check
+
       - name: ESLint
         run: npm run lint
 

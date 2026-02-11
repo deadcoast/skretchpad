@@ -6,12 +6,10 @@
 >
 > Turn issues into comprehensive Coding Plans ready for your favorite coding agent or IDE copilot. Works with Jira, Linear, GitHub, and GitLab!
 
-<Note>
-  This feature is currently in open beta. We are actively improving it based on
-  your feedback. If you encounter any issues or have suggestions, please share
-  them on our [Discord community](https://discord.gg/coderabbit) or reach out to
-  our [support team](https://www.coderabbit.ai/contact-us/support).
-</Note>
+---
+
+> [!NOTE]
+> This feature is currently in open beta. We are actively improving it based on your feedback. If you encounter any issues or have suggestions, please share them on our [Discord community](https://discord.gg/coderabbit) or reach out to our [support team](https://www.coderabbit.ai/contact-us/support).
 
 ## Overview
 

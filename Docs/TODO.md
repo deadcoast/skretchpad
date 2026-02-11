@@ -23,7 +23,7 @@
 
 ### 1.1 Quick Open / Go To File (`Ctrl+P`)
 Fuzzy file finder over the entire workspace. Index file paths on workspace open, debounced re-index on fs changes. Render in the existing CommandPalette component with a "file mode" variant. Should handle 100k+ files without lag (stream results, virtual scroll)
-Status: `PARTIAL` - `Ctrl+P` now opens Command Palette file mode with backend-indexed workspace files and fuzzy matching, plus debounced refresh on key file actions and window-focus resync. Remaining: true filesystem watcher-driven incremental index updates and streaming/virtualized results for very large workspaces.
+Status: `PARTIAL` - `Ctrl+P` now opens Command Palette file mode with backend-indexed workspace files, fuzzy matching, and live filesystem watcher-driven incremental updates. Remaining: streaming/virtualized results for very large workspaces.
 
 ### 1.2 Go To Line (`Ctrl+G`)
 Simple numeric input dialog that scrolls CodeMirror to the target line. Keybinding already registered but no UI exists

@@ -28,8 +28,8 @@ Defines app bootstrap (`main.ts`) and the main desktop shell (`App.svelte`) that
 
 ## Notes
 
-- [app-svelte](App.svelte) is the canonical command-dispatch layer.
-- [main-ts](main.ts) remains intentionally minimal (Svelte mount only).
+- [app-svelte](src/App.svelte) is the canonical command-dispatch layer.
+- [main-ts](src/main.ts) remains intentionally minimal (Svelte mount only).
 
 ## References
 

@@ -15,12 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Runtime memory telemetry path**: Worker exposes V8 heap usage sampling used by sandbox memory-limit checks.
 - **Trust/security test coverage expansion**: Added signed fixture verification/tamper tests, key revocation checks, trusted key file validation, and atomic key-set validation tests.
 - **Sandbox memory test coverage expansion**: Added worker heap telemetry test and sustained memory-growth limit test.
+- **CodeRabbit config validator**: Added `npm run coderabbit:check` to validate `.coderabbit.yaml` against `integrations/schema.v2.json` and verify required integration snapshot directories.
+- **CodeRabbit integration alias docs**: Added non-numbered navigation aliases under `integrations/coderabbit/` that point to canonical snapshot directories.
 
 ### Changed
 
 - **Git architecture convergence**: Legacy `plugins/git` and `plugins/git-status` scripts are now explicitly treated as example plugins and are not auto-activated by default; Rust/store Git remains canonical.
 - **Plugin manifest labeling**: Git plugin manifest descriptions now clearly indicate legacy/example status.
 - **Documentation parity**: Updated remediation/status/architecture docs to reflect trust cryptography, key lifecycle persistence, runtime memory telemetry, and git runtime policy.
+- **CI unification**: Main CI now runs `npm run coderabbit:check` during frontend linting to keep review config and integration layout consistent.
 
 ## [0.1.0] - 2026-02-10
 

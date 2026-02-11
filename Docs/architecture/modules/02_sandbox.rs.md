@@ -187,7 +187,7 @@ src-tauri/src/main.rs
    - Validates: Plugin directory structure
    - Returns: PluginManifest instances
 
-4. [manager-rs](src-tauri/src/plugin_system/manager.r`) (400-600 LOC)
+4. [manager-rs](src-tauri/src/plugin_system/manager.rs) (400-600 LOC)
    - Uses: SandboxRegistry
    - Manages: Plugin lifecycle (load/activate/deactivate)
    - Coordinates: Between loader, sandbox, and API

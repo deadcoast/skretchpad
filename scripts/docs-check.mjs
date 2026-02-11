@@ -39,18 +39,50 @@ function normalizeLinkTarget(rawTarget) {
     target = target.slice(1, -1).trim();
   }
 
+  // Links sometimes wrap file paths in backticks for readability.
+  if (target.startsWith('`') && target.endsWith('`')) {
+    target = target.slice(1, -1).trim();
+  }
+
   if (/^(https?:|mailto:|#)/i.test(target)) return null;
 
   const firstToken = target.split(/\s+/)[0];
   const withoutHash = firstToken.split('#')[0];
   if (!withoutHash) return null;
 
+  // Ignore glob-like references used in docs as patterns, not concrete links.
+  if (withoutHash.includes('*')) return null;
+
   return withoutHash.replace(/\\/g, '/');
 }
 
 function resolveDocPath(fromFile, relTarget) {
+  const rootPrefixes = [
+    'Docs/',
+    'src/',
+    'src-tauri/',
+    'plugins/',
+    'themes/',
+    'integrations/',
+    '.github/',
+    'scripts/',
+  ];
+  const rootFiles = new Set([
+    'README.md',
+    'package.json',
+    'vite.config.ts',
+    'svelte.config.js',
+    'tsconfig.json',
+    'tsconfig.node.json',
+    'FUTURE-FEATURES.md',
+    'AGENTS.md',
+  ]);
+
   if (relTarget.startsWith('/')) {
     return relTarget.slice(1);
+  }
+  if (rootPrefixes.some((prefix) => relTarget.startsWith(prefix)) || rootFiles.has(relTarget)) {
+    return path.posix.normalize(relTarget);
   }
   const fromDir = path.posix.dirname(fromFile);
   return path.posix.normalize(path.posix.join(fromDir, relTarget));
@@ -80,7 +112,7 @@ function checkLinks(markdownFiles, trackedFiles) {
       if (!target) continue;
 
       const resolved = resolveDocPath(mdFile, target);
-      if (trackedSet.has(resolved)) continue;
+      if (trackedSet.has(resolved) || fs.existsSync(resolved)) continue;
 
       const candidates = lowerMap.get(resolved.toLowerCase()) || [];
       if (candidates.length > 0) {

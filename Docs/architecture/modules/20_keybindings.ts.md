@@ -17,7 +17,7 @@ Maintains keybinding schemes, parsing/formatting helpers, command resolution, an
 
 ## Notes
 
-- App shell currently wires a subset of global shortcuts directly in [app-svelte](App.svelte); this store remains the broader keybinding model.
+- App shell currently wires a subset of global shortcuts directly in [app-svelte](src/App.svelte); this store remains the broader keybinding model.
 
 ## References
 

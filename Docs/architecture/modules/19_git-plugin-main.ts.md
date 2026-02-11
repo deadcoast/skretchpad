@@ -17,7 +17,7 @@ Current local git plugin entrypoint loaded by plugin runtime.
 
 ## Notes
 
-- This document supersedes older planning references to [git-plugin-main.ts](plugins/git/main.ts)
+- This document supersedes older planning references to [git-plugin-main.js](plugins/git/main.js)
 
 ## References
 

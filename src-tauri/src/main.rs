@@ -464,6 +464,37 @@ impl HotReloadRegistry {
     }
 }
 
+struct WorkspaceWatchState {
+    root: String,
+    watcher: notify::RecommendedWatcher,
+}
+
+struct WorkspaceWatcherRegistry {
+    state: tokio::sync::Mutex<Option<WorkspaceWatchState>>,
+}
+
+impl WorkspaceWatcherRegistry {
+    fn new() -> Self {
+        Self {
+            state: tokio::sync::Mutex::new(None),
+        }
+    }
+}
+
+#[derive(serde::Serialize, Clone)]
+struct WorkspaceFileChangeEntry {
+    path: String,
+    exists: bool,
+    is_file: bool,
+}
+
+#[derive(serde::Serialize, Clone)]
+struct WorkspaceFilesChangedEvent {
+    root: String,
+    kind: String,
+    entries: Vec<WorkspaceFileChangeEntry>,
+}
+
 #[tauri::command]
 async fn enable_plugin_hot_reload(
     plugin_id: String,
@@ -585,6 +616,96 @@ async fn disable_plugin_hot_reload(
     let mut watchers = hot_reload.watchers.lock().await;
     if watchers.remove(&plugin_id).is_some() {
         println!("[hot-reload] Stopped watching plugin: {}", plugin_id);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+async fn start_workspace_file_watch(
+    root: String,
+    app_handle: AppHandle,
+    workspace_watchers: State<'_, Arc<WorkspaceWatcherRegistry>>,
+) -> Result<(), String> {
+    use notify::{Event, EventKind, RecursiveMode, Watcher};
+
+    let canonical_root = std::fs::canonicalize(&root)
+        .map_err(|e| format!("Failed to canonicalize workspace root '{}': {}", root, e))?;
+    if !canonical_root.is_dir() {
+        return Err(format!(
+            "Workspace root is not a directory: {}",
+            canonical_root.display()
+        ));
+    }
+    let canonical_root_str = canonical_root.to_string_lossy().replace('\\', "/");
+
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<Event>(256);
+    let event_root = canonical_root_str.clone();
+    let handle = app_handle.clone();
+
+    tokio::spawn(async move {
+        while let Some(event) = rx.recv().await {
+            let mut entries = Vec::new();
+            for path in &event.paths {
+                let normalized = path.to_string_lossy().replace('\\', "/");
+                let metadata = tokio::fs::symlink_metadata(path).await.ok();
+                entries.push(WorkspaceFileChangeEntry {
+                    path: normalized,
+                    exists: metadata.is_some(),
+                    is_file: metadata.map(|m| m.is_file()).unwrap_or(false),
+                });
+            }
+            if entries.is_empty() {
+                continue;
+            }
+            let payload = WorkspaceFilesChangedEvent {
+                root: event_root.clone(),
+                kind: format!("{:?}", event.kind),
+                entries,
+            };
+            let _ = handle.emit("workspace:files-changed", payload);
+        }
+    });
+
+    let watcher_tx = tx.clone();
+    let mut watcher = notify::recommended_watcher(move |res: Result<Event, notify::Error>| {
+        if let Ok(event) = res {
+            match event.kind {
+                EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_) => {
+                    let _ = watcher_tx.blocking_send(event);
+                }
+                _ => {}
+            }
+        }
+    })
+    .map_err(|e| format!("Failed to create workspace watcher: {}", e))?;
+
+    watcher
+        .watch(canonical_root.as_ref(), RecursiveMode::Recursive)
+        .map_err(|e| {
+            format!(
+                "Failed to watch workspace '{}': {}",
+                canonical_root.display(),
+                e
+            )
+        })?;
+
+    let mut guard = workspace_watchers.state.lock().await;
+    *guard = Some(WorkspaceWatchState {
+        root: canonical_root_str,
+        watcher,
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn stop_workspace_file_watch(
+    workspace_watchers: State<'_, Arc<WorkspaceWatcherRegistry>>,
+) -> Result<(), String> {
+    let mut guard = workspace_watchers.state.lock().await;
+    if let Some(state) = guard.take() {
+        let _ = state.root;
+        let _ = state.watcher;
     }
     Ok(())
 }
@@ -826,6 +947,7 @@ fn main() {
             let audit_logger = Arc::new(AuditLogger::new(10000));
             let watcher_registry = Arc::new(FileWatcherRegistry::new());
             let hot_reload_registry = Arc::new(HotReloadRegistry::new());
+            let workspace_watcher_registry = Arc::new(WorkspaceWatcherRegistry::new());
             let mut tv = TrustVerifier::new();
             if let Ok(path) = trusted_keys_file(app.handle()) {
                 if let Err(e) = tv.load_from_file(&path) {
@@ -846,6 +968,7 @@ fn main() {
             app.manage(watcher_registry.clone());
             app.manage(editor_state.clone());
             app.manage(hot_reload_registry.clone());
+            app.manage(workspace_watcher_registry.clone());
             app.manage(trust_verifier.clone());
             app.manage(worker_registry.clone());
 
@@ -988,6 +1111,8 @@ fn main() {
             get_file_metadata,
             list_directory,
             list_workspace_files,
+            start_workspace_file_watch,
+            stop_workspace_file_watch,
             emit_editor_event,
             // Plugin management
             discover_plugins,

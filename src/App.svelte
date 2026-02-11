@@ -20,6 +20,7 @@
   import DiffView from './features/diff/DiffView.svelte';
   import BootScreen from './components/BootScreen.svelte';
   import { onMount, onDestroy } from 'svelte';
+  import { listen, type UnlistenFn } from '@tauri-apps/api/event';
   import { get } from 'svelte/store';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { themeStore } from './lib/stores/theme';
@@ -55,7 +56,31 @@
   let workspaceFilesLoading = false;
   let workspaceFileIndexAt = 0;
   let workspaceIndexRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  let workspaceWatchUnlisten: UnlistenFn | null = null;
   let currentSymbols: PaletteSymbolItem[] = [];
+
+  const WORKSPACE_IGNORED_DIRS = new Set([
+    '.git',
+    'node_modules',
+    'target',
+    'dist',
+    'coverage',
+    '.svelte-kit',
+    '.next',
+    '.turbo',
+  ]);
+
+  interface WorkspaceFileChangeEntry {
+    path: string;
+    exists: boolean;
+    is_file: boolean;
+  }
+
+  interface WorkspaceFilesChangedEvent {
+    root: string;
+    kind: string;
+    entries: WorkspaceFileChangeEntry[];
+  }
 
   // Diff view state
   let diffViewVisible = false;
@@ -67,6 +92,13 @@
 
   onDestroy(() => {
     gitStore.cleanup();
+    if (workspaceWatchUnlisten) {
+      workspaceWatchUnlisten();
+      workspaceWatchUnlisten = null;
+    }
+    invoke('stop_workspace_file_watch').catch((error) => {
+      console.warn('Failed to stop workspace file watcher:', error);
+    });
     if (workspaceIndexRefreshTimer) {
       clearTimeout(workspaceIndexRefreshTimer);
       workspaceIndexRefreshTimer = null;
@@ -113,6 +145,7 @@
       const workdir = await invoke<string>('get_workspace_root');
       workspaceRoot = workdir.replace(/\\/g, '/');
       await refreshWorkspaceFileIndex(workspaceRoot);
+      await startWorkspaceFileWatcher(workspaceRoot);
       await gitStore.initialize(workdir);
     } catch (err) {
       console.warn('Git initialization skipped:', err);
@@ -422,6 +455,7 @@
         workspaceRoot = selectedPath.replace(/\\/g, '/');
         setExplorerRoot(workspaceRoot);
         await refreshWorkspaceFileIndex(workspaceRoot);
+        await startWorkspaceFileWatcher(workspaceRoot);
       }
     } catch (err) {
       console.error('Failed to open folder:', err);
@@ -492,6 +526,104 @@
       void refreshWorkspaceFileIndex();
       workspaceIndexRefreshTimer = null;
     }, delayMs);
+  }
+
+  function normalizePath(path: string): string {
+    return path.replace(/\\/g, '/').replace(/\/+/g, '/');
+  }
+
+  function relativeToWorkspace(absolutePath: string): string | null {
+    const root = normalizePath(workspaceRoot);
+    const abs = normalizePath(absolutePath);
+    const rootLower = root.toLowerCase();
+    const absLower = abs.toLowerCase();
+    if (absLower === rootLower) return '';
+    if (!absLower.startsWith(`${rootLower}/`)) return null;
+    return abs.slice(root.length + 1);
+  }
+
+  function isIgnoredRelativePath(relativePath: string): boolean {
+    return relativePath
+      .split('/')
+      .filter(Boolean)
+      .some((segment) => WORKSPACE_IGNORED_DIRS.has(segment.toLowerCase()));
+  }
+
+  function upsertWorkspaceFile(absolutePath: string) {
+    const relativePath = relativeToWorkspace(absolutePath);
+    if (!relativePath || isIgnoredRelativePath(relativePath)) return;
+    const normalizedRelative = normalizePath(relativePath);
+    const name = normalizedRelative.split('/').pop() || normalizedRelative;
+    const normalizedAbsolute = `${normalizePath(workspaceRoot)}/${normalizedRelative}`.replace(
+      /\/+/g,
+      '/'
+    );
+
+    const next = [...workspaceFiles];
+    const index = next.findIndex(
+      (item) => item.relativePath.toLowerCase() === normalizedRelative.toLowerCase()
+    );
+    const item = { path: normalizedAbsolute, name, relativePath: normalizedRelative };
+    if (index >= 0) {
+      next[index] = item;
+    } else {
+      next.push(item);
+    }
+    next.sort((a, b) =>
+      a.relativePath.localeCompare(b.relativePath, undefined, { sensitivity: 'base' })
+    );
+    workspaceFiles = next;
+  }
+
+  function removeWorkspacePath(absolutePath: string) {
+    const relativePath = relativeToWorkspace(absolutePath);
+    if (relativePath === null) return;
+    const normalizedRelative = normalizePath(relativePath);
+    if (!normalizedRelative) {
+      workspaceFiles = [];
+      return;
+    }
+    const targetLower = normalizedRelative.toLowerCase();
+    workspaceFiles = workspaceFiles.filter((item) => {
+      const current = item.relativePath.toLowerCase();
+      return current !== targetLower && !current.startsWith(`${targetLower}/`);
+    });
+  }
+
+  function handleWorkspaceFilesChanged(payload: WorkspaceFilesChangedEvent) {
+    if (!workspaceRoot) return;
+    const payloadRoot = normalizePath(payload.root);
+    if (payloadRoot.toLowerCase() !== normalizePath(workspaceRoot).toLowerCase()) return;
+
+    const kind = payload.kind.toLowerCase();
+    const requiresRescan = kind.includes('name(') || kind.includes('rename');
+    if (requiresRescan) {
+      scheduleWorkspaceFileIndexRefresh(120);
+      return;
+    }
+
+    for (const entry of payload.entries) {
+      if (!entry?.path) continue;
+      if (entry.exists && entry.is_file) {
+        upsertWorkspaceFile(entry.path);
+      } else {
+        removeWorkspacePath(entry.path);
+      }
+    }
+    workspaceFileIndexAt = Date.now();
+  }
+
+  async function startWorkspaceFileWatcher(root: string) {
+    if (!root) return;
+    if (!workspaceWatchUnlisten) {
+      workspaceWatchUnlisten = await listen<WorkspaceFilesChangedEvent>(
+        'workspace:files-changed',
+        (event) => {
+          handleWorkspaceFilesChanged(event.payload);
+        }
+      );
+    }
+    await invoke('start_workspace_file_watch', { root });
   }
 
   async function refreshCurrentSymbols() {
@@ -570,11 +702,6 @@
   }
 
   // Global keyboard shortcuts
-  function handleWindowFocus() {
-    if (!workspaceRoot) return;
-    scheduleWorkspaceFileIndexRefresh(250);
-  }
-
   function handleKeydown(e: KeyboardEvent) {
     const mod = e.ctrlKey || e.metaKey;
 
@@ -675,7 +802,7 @@
   }
 </script>
 
-<svelte:window on:keydown={handleKeydown} on:focus={handleWindowFocus} />
+<svelte:window on:keydown={handleKeydown} />
 
 {#if booting}
   <BootScreen on:complete={() => (booting = false)} />
