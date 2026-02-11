@@ -16,16 +16,22 @@
   export let depth: number = 0;
   export let activePath: string | null = null;
   export let onFileClick: (path: string) => void;
+  export let collapseToken = 0;
 
   let expanded = false;
   let children: DirEntry[] = [];
   let loaded = false;
   let loading = false;
   let error: string | null = null;
+  let lastCollapseToken = collapseToken;
 
   $: isActive = activePath === entry.path;
   $: paddingLeft = 8 + depth * 16;
   $: fileVisual = getFileVisual(entry.name, entry.is_dir);
+  $: if (collapseToken !== lastCollapseToken) {
+    lastCollapseToken = collapseToken;
+    expanded = false;
+  }
 
   async function toggle() {
     if (!entry.is_dir) {
@@ -115,7 +121,7 @@
         </div>
       {:else}
         {#each children as child (child.path)}
-          <svelte:self entry={child} depth={depth + 1} {activePath} {onFileClick} />
+          <svelte:self entry={child} depth={depth + 1} {activePath} {onFileClick} {collapseToken} />
         {/each}
         {#if children.length === 0}
           <div class="tree-item__empty" style="padding-left: {paddingLeft + 16}px">

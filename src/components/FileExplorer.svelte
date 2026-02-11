@@ -21,6 +21,7 @@
   let entries: DirEntry[] = [];
   let loading = true;
   let error: string | null = null;
+  let collapseToken = 0;
 
   $: activePath = $activeTab?.file.path ?? null;
 
@@ -71,19 +72,33 @@
       loading = false;
     }
   }
+
+  function collapseAll() {
+    collapseToken += 1;
+  }
 </script>
 
 <div class="file-explorer" role="tree" aria-label="File Explorer">
   <div class="file-explorer__header">
     <span class="file-explorer__root-name" title={rootPath}>{rootName}</span>
-    <button
-      class="file-explorer__refresh"
-      on:click={refresh}
-      title="Refresh"
-      aria-label="Refresh file explorer"
-    >
-      {@html icons.sync}
-    </button>
+    <div class="file-explorer__actions">
+      <button
+        class="file-explorer__action"
+        on:click={collapseAll}
+        title="Collapse all folders"
+        aria-label="Collapse all folders"
+      >
+        {@html icons.chevronUp}
+      </button>
+      <button
+        class="file-explorer__action"
+        on:click={refresh}
+        title="Refresh"
+        aria-label="Refresh file explorer"
+      >
+        {@html icons.sync}
+      </button>
+    </div>
   </div>
 
   <div class="file-explorer__tree">
@@ -98,7 +113,13 @@
       <div class="file-explorer__status">Empty workspace</div>
     {:else}
       {#each entries as entry (entry.path)}
-        <FileTreeItem {entry} depth={0} {activePath} onFileClick={handleFileClick} />
+        <FileTreeItem
+          {entry}
+          depth={0}
+          {activePath}
+          onFileClick={handleFileClick}
+          {collapseToken}
+        />
       {/each}
     {/if}
   </div>
@@ -135,7 +156,13 @@
     white-space: nowrap;
   }
 
-  .file-explorer__refresh {
+  .file-explorer__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .file-explorer__action {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -153,12 +180,12 @@
     flex-shrink: 0;
   }
 
-  .file-explorer__refresh :global(svg) {
+  .file-explorer__action :global(svg) {
     width: 14px;
     height: 14px;
   }
 
-  .file-explorer__refresh:hover {
+  .file-explorer__action:hover {
     color: var(--palette-cyan, #75ffcf);
     background: var(--button-hover, rgba(255, 255, 255, 0.06));
   }

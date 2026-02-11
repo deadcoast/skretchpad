@@ -164,7 +164,7 @@ const DEFAULT_SCHEME: KeybindingScheme = {
     'Ctrl+P': {
       key: 'p',
       modifiers: ['Ctrl'],
-      command: 'view.togglePin',
+      command: 'file.quickOpen',
     },
     'Ctrl+,': {
       key: ',',

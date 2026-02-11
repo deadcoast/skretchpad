@@ -174,6 +174,12 @@
       },
       { id: 'file.open', label: 'Open File', keybinding: 'Ctrl+O', category: 'File' },
       {
+        id: 'file.quickOpen',
+        label: 'Quick Open File...',
+        keybinding: 'Ctrl+P',
+        category: 'File',
+      },
+      {
         id: 'file.openFolder',
         label: 'Open Folder...',
         keybinding: 'Ctrl+Shift+O',
@@ -183,6 +189,12 @@
       { id: 'file.save', label: 'Save File', keybinding: 'Ctrl+S', category: 'File' },
       { id: 'file.saveAs', label: 'Save As...', keybinding: 'Ctrl+Shift+S', category: 'File' },
       { id: 'file.close', label: 'Close File', keybinding: 'Ctrl+W', category: 'File' },
+      {
+        id: 'navigation.gotoLine',
+        label: 'Go To Line...',
+        keybinding: 'Ctrl+G',
+        category: 'Navigation',
+      },
       {
         id: 'view.commandPalette',
         label: 'Command Palette',
@@ -259,6 +271,9 @@
       case 'file.new':
         editorStore.createFile();
         break;
+      case 'file.quickOpen':
+        handleOpenFile();
+        break;
       case 'file.openFolder':
         handleOpenFolder();
         break;
@@ -309,6 +324,9 @@
         break;
       case 'view.openSettings':
         settingsVisible = true;
+        break;
+      case 'navigation.gotoLine':
+        promptGotoLine();
         break;
       default: {
         const pluginCommand = pluginsStore
@@ -394,6 +412,14 @@
     activeSidebarPanel = 'scm';
   }
 
+  function promptGotoLine() {
+    const raw = window.prompt('Go to line:', '');
+    if (raw === null) return;
+    const line = Number.parseInt(raw.trim(), 10);
+    if (!Number.isFinite(line) || line < 1) return;
+    editorRef?.editorCommands?.gotoLine(line);
+  }
+
   async function openDiffFromSCM(e: CustomEvent<{ path: string; staged: boolean }>) {
     const { path, staged } = e.detail;
     try {
@@ -460,6 +486,16 @@
     if (mod && e.key === 'o') {
       e.preventDefault();
       handleOpenFile();
+      return;
+    }
+    if (mod && (e.key === 'p' || e.key === 'P')) {
+      e.preventDefault();
+      handleOpenFile();
+      return;
+    }
+    if (mod && (e.key === 'g' || e.key === 'G')) {
+      e.preventDefault();
+      promptGotoLine();
       return;
     }
     if (mod && e.key === 'n') {

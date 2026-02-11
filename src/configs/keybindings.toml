@@ -81,7 +81,7 @@ author = "skretchpad"
 
 [schemes.default.view]
 "Ctrl+Shift+H" = { command = "view.toggleChrome", description = "Toggle chrome" }
-"Ctrl+P" = { command = "view.togglePin", description = "Toggle pin mode" }
+"Ctrl+P" = { command = "file.quickOpen", description = "Quick open file" }
 "Ctrl+," = { command = "view.openSettings", description = "Open settings" }
 "Ctrl+Shift+P" = { command = "view.commandPalette", description = "Command palette" }
 "Ctrl+B" = { command = "view.toggleSidebar", description = "Toggle sidebar" }

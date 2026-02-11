@@ -172,7 +172,9 @@ For HTML/CSS/JSX files, integrate Emmet abbreviation expansion. `div.container>u
 
 ## 8. UI / UX Polish (P2)
 
-### 8.1 Welcome Tab
+### 8.1 Welcome Tab - **MIGRATING THE SIMULATED BOOT DRIVE**
+> First, this is where the boot drive should live, its uninterruptive there, adding it as a simulated loading screen was fantastic, and i see what it will look like in the future, but for now lets keep the app launching faster with it inside the Welcome Tab.
+
 On launch with no open files, show a welcome tab with:
 - Recent files/workspaces
 - Quick actions (Open Folder, New File, Open Settings)

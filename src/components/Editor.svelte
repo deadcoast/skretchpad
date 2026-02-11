@@ -34,6 +34,7 @@
     setLineNumbers,
     setTabSize,
     setFontSize,
+    gotoLine as gotoLineInEditor,
   } from '../lib/editor-loader';
   import { icons } from '../lib/icons/index';
   import { themeStore, type Theme } from '../lib/stores/theme';
@@ -775,6 +776,12 @@
     cmMoveLineDown(editorView);
   }
 
+  function gotoLine(lineNumber: number) {
+    if (!editorView) return;
+    gotoLineInEditor(editorView, lineNumber);
+    updateEditorState();
+  }
+
   // ============================================================================
   // CLEANUP
   // ============================================================================
@@ -908,6 +915,7 @@
     deleteLine,
     moveLinesUp,
     moveLinesDown,
+    gotoLine,
   };
 </script>
 
