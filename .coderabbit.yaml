@@ -1,64 +1,32 @@
 # coderabbit.yaml
 # Configuration for Code Rabbit AI Assistant
 # Docs: https://docs.coderabbit.ai/docs/coderabbit-yaml
-# Schema: https://coderabbit.ai/integrations/schema.v2.json
-
+# yaml-language-server:["$schema=https://coderabbit.ai/integrations/schema.v2.json",[IN_REPO](integrations/schema.v2.json)
+#
 # ============================================================================
 # PROJECT SETTINGS
 # ============================================================================
-# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-early_access: true
+early_access: false
 reviews:
   collapse_walkthrough: false
-
-
-# Project name
-project_name: "skretchpad"
-
-# Project description 
-project_description: "Fast, Minimal, Feature Rich Text Editor inspired by 80's Compute Aesthetics."
-
-# Project root directory
-project_root: "."
-
-# Project type
-project_type: "application"
-
-# Project language
-project_language: "typescript,rust"
-
-# Project backend language
-project_backend: "rust"
-
-# Project frontend language
-project_frontend: "typescript"
-
-# Project framework
-project_framework: "svelte"
-
-# Project libraries
-project_libraries:
-  - "tauri"
-  - "codemirror"
-  - "deno_core"
-  - "rust"
-
-# Project entry point (optional)
-project_entry_point: "src/main.ts"
-
-# Project tests (optional)
-project_tests:
-  - "npm run test"
-  - "npm run test:rust"
-
-# Project dependencies (optional)
-project_dependencies:
-  - "npm install"
-
-# Project build development (optional)
-project_build_dev:
-  - "npx tauri dev"
-
-# Project run (optional)
-project_run:
-  - "npx tauri run"
+  changed_files_summary: false
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  auto_title_placeholder: "@coderabbitai"
+  auto_title_instructions: "Generate a title that concisely describes the changes made in the PR."
+  high_level_summary: false
+  high_level_summary_in_walkthrough: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+  enable_prompt_for_ai_agents: false
+  path_filters: ["!dist/**", "src/**"]
+  code_guidelines:
+    enabled: false
+    filePatterns: []
+  suggested_labels: false   # Enable or disable the suggestion of labels for the PR
+  labeling_instructions: [] # Define allowed labels and when to suggest them. When provided, CodeRabbit suggests only from this list (still informed by prior PRs); when empty, suggestions rely entirely on prior PRs
+  auto_assign_reviewers: false  # Automatically assign the suggested reviewers to the PR
+  abort_on_close: true  # Abort the in-progress review if the PR is closed or merged
