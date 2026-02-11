@@ -9,8 +9,6 @@ v0.1.0 | Inspired by Retro Compute Design and Modern Speed.
 
 <div align="center">
 
-
-
 Tauri 2.0 &middot; Svelte 4 &middot; CodeMirror 6 &middot; Rust &middot; deno_core V8
 
 ---
