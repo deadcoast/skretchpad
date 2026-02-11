@@ -54,9 +54,9 @@ globalThis.skretchpad = {
       try {
         return Deno.core.ops.op_plugin_fetch({
           url: url,
-          method: options && options.method,
-          headers: options && options.headers,
-          body: options && options.body,
+          method: options?.method,
+          headers: options?.headers,
+          body: options?.body,
         });
       } catch (e) {
         throw new Error('network.fetch: ' + e.message);
