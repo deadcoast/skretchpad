@@ -3,12 +3,13 @@
  ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄
 ███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██
 ▄▄██▀ ██ ██ ██ ██ ██▄▄▄   ██  ▀████ ██ ██ ██    ██▀██ ████▀
-v0.1.0
+-----------------------------------------------------------
+v0.1.0 | Inspired by Retro Compute Design and Modern Speed.
 ```
 
 <div align="center">
 
-Fast, Minimal, Feature Rich Text Editor inspired by 80's Compute Aesthetics.
+
 
 Tauri 2.0 &middot; Svelte 4 &middot; CodeMirror 6 &middot; Rust &middot; deno_core V8
 
