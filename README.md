@@ -3,7 +3,7 @@
  ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄
 ███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██
 ▄▄██▀ ██ ██ ██ ██ ██▄▄▄   ██  ▀████ ██ ██ ██    ██▀██ ████▀
-v0.1.0 | Fast, Feature Rich Text Editor inspired by Retro Compute Design.
+v0.1.0 | Inspired by Retro Compute Design and Modern Speed.
 ```
 
 <div align="center">
