@@ -553,4 +553,26 @@ mod tests {
             _ => panic!("Expected Success"),
         }
     }
+
+    #[test]
+    fn test_get_memory_usage_sync_reports_heap_usage() {
+        let mut runtime = deno_core::JsRuntime::new(deno_core::RuntimeOptions::default());
+        runtime
+            .execute_script(
+                "mem_test.js",
+                deno_core::FastString::Static(
+                    "globalThis.__mem = new Array(50_000).fill('x'.repeat(32));",
+                ),
+            )
+            .unwrap();
+
+        let result = PluginWorker::get_memory_usage_sync(&mut runtime);
+        match result {
+            WorkerResponse::Success(v) => {
+                let used = v.as_u64().unwrap_or(0);
+                assert!(used > 0);
+            }
+            WorkerResponse::Error(e) => panic!("Unexpected error: {}", e),
+        }
+    }
 }

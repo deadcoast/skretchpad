@@ -471,6 +471,23 @@ mod tests {
     }
 
     #[test]
+    fn test_operation_tracker_sustained_growth_hits_memory_limit() {
+        let limits = ResourceLimits {
+            max_memory: 20,
+            max_cpu_time: Duration::from_secs(5),
+            max_operations: 100,
+        };
+        let mut tracker = OperationTracker::new();
+
+        for used in [4usize, 8, 12, 16, 19] {
+            assert!(tracker.record_operation(&limits, used).is_ok());
+        }
+
+        let err = tracker.record_operation(&limits, 21).unwrap_err();
+        assert!(matches!(err, PluginError::MemoryLimitExceeded { .. }));
+    }
+
+    #[test]
     fn test_memory_limit_exceeded_error_fields() {
         let err = PluginError::MemoryLimitExceeded {
             used: 60_000_000,

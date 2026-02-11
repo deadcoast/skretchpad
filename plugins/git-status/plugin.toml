@@ -2,7 +2,7 @@
 name = "git-status"
 version = "0.1.0"
 author = "skretchpad"
-description = "Lightweight git branch and status display in the status bar"
+description = "Legacy status-bar example plugin; core Git UX is provided by Rust/store integration."
 main = "main.js"
 trust = "first-party"
 

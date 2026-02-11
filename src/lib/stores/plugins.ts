@@ -88,6 +88,10 @@ export interface PluginsStoreState {
   error: string | null;
 }
 
+export interface TrustedKeysState {
+  keys: string[];
+}
+
 // ============================================================================
 // PLUGINS STORE
 // ============================================================================
@@ -324,6 +328,34 @@ function createPluginsStore() {
         state.commands.set(command.id, command);
         return { ...state };
       });
+    },
+
+    /**
+     * Get persisted trusted signer keys.
+     */
+    async listTrustedKeys(): Promise<string[]> {
+      return invoke<string[]>('list_trusted_keys');
+    },
+
+    /**
+     * Add a trusted signer key and persist it.
+     */
+    async addTrustedKey(key: string): Promise<void> {
+      await invoke('add_trusted_key', { key });
+    },
+
+    /**
+     * Remove a trusted signer key and persist the updated set.
+     */
+    async removeTrustedKey(key: string): Promise<boolean> {
+      return invoke<boolean>('remove_trusted_key', { key });
+    },
+
+    /**
+     * Atomically replace all trusted signer keys.
+     */
+    async setTrustedKeys(keys: string[]): Promise<void> {
+      await invoke('set_trusted_keys', { keys });
     },
 
     /**

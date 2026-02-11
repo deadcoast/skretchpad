@@ -178,6 +178,21 @@ impl TrustVerifier {
         self.trusted_keys.remove(key)
     }
 
+    pub fn set_trusted_keys(&mut self, keys: Vec<String>) -> Result<(), String> {
+        let mut next = HashSet::new();
+        for key in keys {
+            if decode_public_key(&key).is_none() {
+                return Err(
+                    "Trusted key list contains an invalid Ed25519 public key (base64 or hex)"
+                        .to_string(),
+                );
+            }
+            next.insert(key);
+        }
+        self.trusted_keys = next;
+        Ok(())
+    }
+
     pub fn trusted_keys(&self) -> Vec<String> {
         let mut keys: Vec<String> = self.trusted_keys.iter().cloned().collect();
         keys.sort();
@@ -449,5 +464,111 @@ trust = "verified"
         let mut loaded = TrustVerifier::new();
         loaded.load_from_file(&path).unwrap();
         assert_eq!(loaded.trusted_keys(), vec![key]);
+    }
+
+    #[test]
+    fn test_signed_plugin_fixture_verification_and_tamper() {
+        let tmp = TempDir::new().unwrap();
+        let plugin_dir = tmp.path().join("fixture-plugin");
+        std::fs::create_dir_all(&plugin_dir).unwrap();
+        std::fs::write(
+            plugin_dir.join("plugin.toml"),
+            r#"
+name = "fixture-plugin"
+version = "1.0.0"
+main = "main.js"
+source = "https://example.com/fixture-plugin"
+trust = "verified"
+"#,
+        )
+        .unwrap();
+        std::fs::write(plugin_dir.join("main.js"), "console.log('fixture v1');").unwrap();
+
+        let manifest = crate::plugin_system::loader::PluginManifest {
+            name: "fixture-plugin".to_string(),
+            version: "1.0.0".to_string(),
+            description: String::new(),
+            author: String::new(),
+            license: String::new(),
+            main: "main.js".to_string(),
+            capabilities: PluginCapabilities::default(),
+            permissions: None,
+            ui: None,
+            dependencies: vec![],
+            source: "https://example.com/fixture-plugin".to_string(),
+            signature: None,
+            trust: TrustLevel::Verified,
+            hooks: None,
+            commands: None,
+        };
+
+        let timestamp = SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(777);
+        let payload =
+            build_plugin_signature_payload("fixture-plugin", &plugin_dir, &manifest, timestamp)
+                .unwrap();
+
+        let signing_key = SigningKey::from_bytes(&[33u8; 32]);
+        let verify_key = base64::engine::general_purpose::STANDARD
+            .encode(signing_key.verifying_key().to_bytes());
+        let signature = signing_key.sign(&payload);
+        let sig = PluginSignature {
+            public_key: verify_key.clone(),
+            signature: signature.to_bytes().to_vec(),
+            timestamp,
+        };
+
+        let mut verifier = TrustVerifier::new();
+        verifier.add_trusted_key(verify_key).unwrap();
+        assert!(verifier.verify_signature(&sig, &payload));
+
+        std::fs::write(plugin_dir.join("main.js"), "console.log('fixture v2');").unwrap();
+        let tampered_payload =
+            build_plugin_signature_payload("fixture-plugin", &plugin_dir, &manifest, timestamp)
+                .unwrap();
+        assert!(!verifier.verify_signature(&sig, &tampered_payload));
+    }
+
+    #[test]
+    fn test_key_revocation_blocks_existing_signature() {
+        let signing_key = SigningKey::from_bytes(&[55u8; 32]);
+        let public_key = base64::engine::general_purpose::STANDARD
+            .encode(signing_key.verifying_key().to_bytes());
+        let payload = br#"{"plugin":"revocation"}"#;
+        let signature = signing_key.sign(payload);
+        let sig = PluginSignature::new(public_key.clone(), signature.to_bytes().to_vec());
+
+        let mut verifier = TrustVerifier::new();
+        verifier.add_trusted_key(public_key.clone()).unwrap();
+        assert!(verifier.verify_signature(&sig, payload));
+
+        assert!(verifier.remove_trusted_key(&public_key));
+        assert!(!verifier.verify_signature(&sig, payload));
+    }
+
+    #[test]
+    fn test_load_trusted_keys_rejects_invalid_key_material() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("trusted_keys.json");
+        std::fs::write(&path, r#"["invalid-key-material"]"#).unwrap();
+
+        let mut verifier = TrustVerifier::new();
+        let err = verifier.load_from_file(&path).unwrap_err();
+        assert!(err.contains("invalid Ed25519 key"));
+    }
+
+    #[test]
+    fn test_set_trusted_keys_is_atomic_on_invalid_input() {
+        let signing_key = SigningKey::from_bytes(&[77u8; 32]);
+        let valid_key = base64::engine::general_purpose::STANDARD
+            .encode(signing_key.verifying_key().to_bytes());
+        let mut verifier = TrustVerifier::new();
+        verifier.add_trusted_key(valid_key.clone()).unwrap();
+
+        let previous = verifier.trusted_keys();
+        let err = verifier
+            .set_trusted_keys(vec!["invalid-key-material".to_string()])
+            .unwrap_err();
+        assert!(err.contains("invalid Ed25519 public key"));
+        assert_eq!(verifier.trusted_keys(), previous);
     }
 }

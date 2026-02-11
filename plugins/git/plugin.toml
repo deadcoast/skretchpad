@@ -2,6 +2,7 @@
 name = "git"
 version = "1.0.0"
 author = "skretchpad"
+description = "Legacy example plugin for sandbox command hooks; core Git UX is provided by Rust/store integration."
 main = "main.js"
 trust = "first-party"
 

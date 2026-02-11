@@ -422,12 +422,28 @@ async fn list_trusted_keys(
     Ok(v.trusted_keys())
 }
 
+#[tauri::command]
+async fn set_trusted_keys(
+    keys: Vec<String>,
+    app: AppHandle,
+    verifier: State<'_, Arc<RwLock<TrustVerifier>>>,
+) -> Result<(), String> {
+    let mut v = verifier.write().await;
+    v.set_trusted_keys(keys)?;
+    let path = trusted_keys_file(&app)?;
+    v.save_to_file(&path)
+}
+
 fn trusted_keys_file(app: &AppHandle) -> Result<PathBuf, String> {
     let app_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| format!("Failed to resolve app data directory: {}", e))?;
     Ok(app_dir.join("trusted_keys.json"))
+}
+
+fn is_legacy_git_plugin(plugin_id: &str) -> bool {
+    matches!(plugin_id, "git" | "git-status")
 }
 
 // ============================================================================
@@ -798,12 +814,19 @@ fn main() {
                         }
                         println!("  Loaded plugin: {}", plugin_id);
 
-                        // Auto-activate first-party plugins
+                        // Auto-activate first-party plugins, except legacy git script plugins.
                         if let Some(info) = manager.loader().get(&plugin_id) {
                             if matches!(
                                 info.manifest.trust,
                                 plugin_system::trust::TrustLevel::FirstParty
                             ) {
+                                if is_legacy_git_plugin(&plugin_id) {
+                                    println!(
+                                        "  Skipping auto-activation for legacy git plugin '{}'; Rust/store Git is canonical",
+                                        plugin_id
+                                    );
+                                    continue;
+                                }
                                 match manager.activate(&plugin_id).await {
                                     Ok(()) => {
                                         println!("  Activated plugin: {} (first-party)", plugin_id);
@@ -930,6 +953,7 @@ fn main() {
             add_trusted_key,
             remove_trusted_key,
             list_trusted_keys,
+            set_trusted_keys,
             get_worker_info,
             register_plugin_worker,
             // Filesystem operations

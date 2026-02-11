@@ -13,6 +13,7 @@ Current local git plugin entrypoint loaded by plugin runtime.
 - Registers hook handlers through plugin runtime API.
 - Integrates with available plugin bridge commands/events.
 - Serves as minimal first-party plugin baseline, not a full TypeScript Git client implementation.
+- Remains loadable for development/demo, but is not auto-activated by default in app startup.
 
 ## Notes
 
