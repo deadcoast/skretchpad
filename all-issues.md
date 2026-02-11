@@ -8,7 +8,8 @@
 > Occurrences: 21
 
 - Search occurrences in a file path
-- Forbidden non-null assertion
+
+Forbidden non-null assertion
 
 > src/lib/editor-loader.ts | JS-0339
 ```typescript
@@ -22,6 +23,7 @@
 ```
 
 Forbidden non-null assertion
+
 > src/lib/editor-loader.ts | JS-0339
 
 ```typescript
@@ -86,6 +88,7 @@ function isColorValid(name: string): name is AccentedColor {
 ```
 
 Bad Practice
+
 ```typescript
 // a user named "injuly" may not exist in the DB
 const injuly: User | null = db.getUserByName("injuly");
@@ -95,6 +98,7 @@ const pfp = injuly!.profilePicture;
 ```
 
 Recommended
+
 ```typescript
 const injuly: User | null = db.getUserByName("injuly");
 const pfp = injuly?.profilePicture; // pfp: Image | undefined
@@ -102,8 +106,11 @@ const pfp = injuly?.profilePicture; // pfp: Image | undefined
 // OR:
 
 const pfp_ = injuly ? injuly.pfp : defaultPfp; // pfp: Image
+```
+
 Alternatively:
 
+```typescript
 function isUserValid(userObj: User | null | undefined ): userObj is User {
   return Boolean(userObj) && validate(userObj);
 }
@@ -123,7 +130,8 @@ if (isUserValid(injuly)) {
 > Occurrences: 21
 
 - Search occurrences in a file path
-- Forbidden non-null assertion
+
+Forbidden non-null assertion
 
 > src/components/CommandPalette.test.ts | JS-0339
 ```typescript
@@ -163,6 +171,7 @@ Forbidden non-null assertion
 ```
 
 Forbidden non-null assertion
+
 > src/main.ts | JS-0339
 ```typescript
 import App from './App.svelte';
@@ -195,7 +204,8 @@ Forbidden non-null assertion
 > Occurrences: 21
 
 - Search occurrences in a file path
-- Forbidden non-null assertion
+
+Forbidden non-null assertion
 
 > src/lib/stores/ui.ts | JS-0339
 ```typescript
@@ -342,7 +352,8 @@ Forbidden non-null assertion
 > Occurrences: 21
 
 - Search occurrences in a file path
-- Forbidden non-null assertion
+
+Forbidden non-null assertion
 
 > src/lib/stores/keybindings.test.ts | JS-0339
 ```typescript
@@ -390,6 +401,7 @@ Forbidden non-null assertion
     expect(callback).toHaveBeenCalledOnce();
   });
 ```
+
 Forbidden non-null assertion
 
 > src/components/NotificationToast.test.ts | JS-0339
