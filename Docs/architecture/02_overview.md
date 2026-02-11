@@ -40,7 +40,7 @@ Rust command handlers (main.rs + plugin_system/api.rs + git.rs + theme_engine.rs
 - 19 Svelte component files
 - 6 built-in themes
 - 2 local plugins
-- 327 frontend tests and 181 Rust tests passing
+- 327 frontend tests and 191 Rust tests passing
 
 ## Canonical References
 

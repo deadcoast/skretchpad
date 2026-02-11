@@ -1115,10 +1115,13 @@ notifications = true
 "git.branch" = { key = "Ctrl+B", label = "Branch Manager" }
 ```
 
-### Git Plugin Implementation
+### Git Plugin Implementation (Historical Design Reference)
+
+The following TypeScript class is a historical design sketch from earlier planning.  
+Current runtime plugin entrypoint is `plugins/git/main.js` and current-state behavior is documented in `Docs/architecture/modules/19_git-plugin-main.ts.md`.
 
 ```typescript
-// plugins/git/main.ts
+// historical sketch (planned): plugins/git/main.ts
 import type { Plugin, PluginContext, StatusBarItem } from '@skretchpad/plugin-api';
 
 interface GitStatus {

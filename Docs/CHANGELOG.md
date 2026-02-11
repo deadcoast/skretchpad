@@ -5,6 +5,23 @@ All notable changes to skretchpad will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Cryptographic signature verification**: Ed25519 verification now validates signed plugin payloads bound to plugin manifest and entrypoint hashes before activation.
+- **Trusted key lifecycle commands**: Added `list_trusted_keys` and `set_trusted_keys` (atomic replacement) alongside persisted `add_trusted_key`/`remove_trusted_key` flows.
+- **Typed frontend trust management accessors**: `pluginsStore` now exposes trusted key list/add/remove/set APIs.
+- **Runtime memory telemetry path**: Worker exposes V8 heap usage sampling used by sandbox memory-limit checks.
+- **Trust/security test coverage expansion**: Added signed fixture verification/tamper tests, key revocation checks, trusted key file validation, and atomic key-set validation tests.
+- **Sandbox memory test coverage expansion**: Added worker heap telemetry test and sustained memory-growth limit test.
+
+### Changed
+
+- **Git architecture convergence**: Legacy `plugins/git` and `plugins/git-status` scripts are now explicitly treated as example plugins and are not auto-activated by default; Rust/store Git remains canonical.
+- **Plugin manifest labeling**: Git plugin manifest descriptions now clearly indicate legacy/example status.
+- **Documentation parity**: Updated remediation/status/architecture docs to reflect trust cryptography, key lifecycle persistence, runtime memory telemetry, and git runtime policy.
+
 ## [0.1.0] - 2026-02-10
 
 ### Added
