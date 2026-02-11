@@ -1075,7 +1075,7 @@ export function destroyEditor(view: EditorView): void {
 /*
  * Extension to show line length indicator
  */
-export function lineLengthIndicator(maxLength: number = 80): Extension {
+export function lineLengthIndicator(maxLength = 80): Extension {
   return EditorView.decorations.of((view) => {
     const decorations = [];
     const { from, to } = view.viewport;
