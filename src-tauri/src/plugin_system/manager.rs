@@ -404,8 +404,8 @@ impl PluginManager {
     pub fn get_all_statuses(&self) -> Vec<PluginStatus> {
         self.loader
             .get_all()
-            .iter()
-            .filter_map(|(id, _info)| self.get_status(id))
+            .keys()
+            .filter_map(|id| self.get_status(id))
             .collect()
     }
 
