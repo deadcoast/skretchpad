@@ -1,4 +1,5 @@
 # ----
+
 ```
  ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄  ▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄▄▄ ▄▄ ▄▄ ▄▄▄▄   ▄▄▄  ▄▄▄▄
 ███▄▄ ██▄█▀ ██▄█▄ ██▄▄    ██  ██▀▀▀ ██▄██ ██▄█▀ ██▀██ ██▀██
@@ -40,7 +41,7 @@ Skretchpad is a desktop text editor that prioritizes three things: **speed**, **
 ### Prerequisites
 
 | Tool     | Version     | Purpose               |
-|----------|-------------|-----------------------|
+| -------- | ----------- | --------------------- |
 | Node.js  | 18+         | Frontend toolchain    |
 | Rust     | 1.80+       | Backend compilation   |
 | Cargo    | (with Rust) | Dependency management |
@@ -98,9 +99,11 @@ npx svelte-check --tsconfig ./tsconfig.json
 # Rust backend
 cd src-tauri && cargo check
 ```
+
 ## Features
 
 ### Plugin System
+
 ![plugin-boot](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/plugin-boot.png)
 
 - Sandboxed V8 runtime per plugin (deno_core 0.230)
@@ -113,6 +116,7 @@ cd src-tauri && cargo check
 - Full lifecycle: activate/deactivate/reload/unload with event emission
 
 ### Editor
+
 ![milkytext-rust](https://github.com/deadcoast/skretchpad/blob/main/Docs/assets/png/milkytext-rust.png)
 
 - CodeMirror 6 with compartment-based hot-swapping
@@ -122,6 +126,7 @@ cd src-tauri && cargo check
 - Undo, redo, toggle comment, duplicate/delete/move lines, find & replace
 
 ### Interface
+
 - Glass morphism with backdrop blur and transparency
 - Minimal mode -- eye icon strips chrome and status bar to transparent, leaving only text
 - Native window controls (minimize, maximize, close) with drag region
@@ -143,6 +148,7 @@ cd src-tauri && cargo check
 - Retro boot sequence on launch with plugin status confirmation
 
 ### Theme Engine
+
 - TOML files as single source of truth -- Rust parses, frontend renders
 - 16-color ANSI palette + semantic colors + UI hierarchy
 - 85+ CSS variables injected at runtime via `applyThemeToDocument()`
@@ -180,7 +186,7 @@ notifications = true
 The sandbox bridge exposes 9 ops to plugin JS code:
 
 | Op           | Capability | Description                      |
-|--------------|------------|----------------------------------|
+| ------------ | ---------- | -------------------------------- |
 | `fs_read`    | filesystem | Read files within workspace      |
 | `fs_write`   | filesystem | Write files within workspace     |
 | `fs_list`    | filesystem | List directory contents          |
@@ -194,7 +200,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 ## Keyboard Shortcuts
 
 | Shortcut           | Action                       |
-|--------------------|------------------------------|
+| ------------------ | ---------------------------- |
 | `Ctrl+Shift+P`     | Command palette              |
 | `Ctrl+O`           | Open file                    |
 | `File->OpenFolder` | Open folder                  |
@@ -219,7 +225,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 ## Documentation
 
 | Document                                                            | Description                 |
-|---------------------------------------------------------------------|-----------------------------|
+| ------------------------------------------------------------------- | --------------------------- |
 | [Architecture Overview](Docs/architecture/02_overview.md)           | System design and data flow |
 | [Tech Stack](Docs/architecture/core/01_techstack.md)                | Dependencies and rationale  |
 | [Technical Details](Docs/architecture/core/02_technical-details.md) | Implementation specifics    |
@@ -233,7 +239,7 @@ The sandbox bridge exposes 9 ops to plugin JS code:
 ## Stack
 
 | Layer      | Technology          | Role                                |
-|------------|---------------------|-------------------------------------|
+| ---------- | ------------------- | ----------------------------------- |
 | Runtime    | Tauri 2.0           | Native desktop shell, IPC, file I/O |
 | Frontend   | Svelte 4            | Reactive UI components              |
 | Editor     | CodeMirror 6        | Text editing, syntax, extensions    |
