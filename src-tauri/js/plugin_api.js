@@ -8,16 +8,16 @@
 globalThis.__hooks__ = {};
 
 // Plugin lifecycle registration
-globalThis.registerHook = function(hookName, handler) {
+globalThis.registerHook = function (hookName, handler) {
   globalThis.__hooks__[hookName] = handler;
 };
 
 // Convenience aliases for common hooks
-globalThis.onActivate = function(handler) {
+globalThis.onActivate = function (handler) {
   globalThis.__hooks__.activate = handler;
 };
 
-globalThis.onDeactivate = function(handler) {
+globalThis.onDeactivate = function (handler) {
   globalThis.__hooks__.deactivate = handler;
 };
 

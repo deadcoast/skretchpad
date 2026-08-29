@@ -33,10 +33,16 @@ registerHook('on_file_save', function () {
   try {
     var result = skretchpad.commands.execute('git', ['status', '--porcelain']);
     if (result?.stdout) {
-      var lines = result.stdout.split('\n').filter(function (l) { return l.trim(); });
+      var lines = result.stdout.split('\n').filter(function (l) {
+        return l.trim();
+      });
       var changes = lines.length;
       if (changes > 0) {
-        skretchpad.ui.setStatusBarItem('git-changes', 'changes: ' + changes, changes + ' changed files');
+        skretchpad.ui.setStatusBarItem(
+          'git-changes',
+          'changes: ' + changes,
+          changes + ' changed files'
+        );
       }
     }
   } catch (e) {
