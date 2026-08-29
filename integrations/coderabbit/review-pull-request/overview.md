@@ -1,6 +1,7 @@
 # Overview
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -81,19 +82,19 @@ CodeRabbit categorizes its feedback into different types and severity levels to 
 
 CodeRabbit provides three types of review feedback:
 
-* ⚠️ **Potential issue** - Identifies potential bugs, security vulnerabilities, or problematic code patterns
-* 🛠️ **Refactor suggestion** - Recommends code improvements for maintainability, performance, or best practices
-* 🧹 **Nitpick** - Suggests minor style or formatting improvements (only in Assertive mode)
+- ⚠️ **Potential issue** - Identifies potential bugs, security vulnerabilities, or problematic code patterns
+- 🛠️ **Refactor suggestion** - Recommends code improvements for maintainability, performance, or best practices
+- 🧹 **Nitpick** - Suggests minor style or formatting improvements (only in Assertive mode)
 
 ### Severity levels
 
 Each review comment is assigned a severity level to indicate its importance:
 
-* 🔴 **Critical** - Severe issues that could cause system failures, security breaches, or data loss
-* 🟠 **Major** - Significant problems that impact functionality or performance
-* 🟡 **Minor** - Issues that should be addressed but don't critically impact the system
-* 🔵 **Trivial** - Low-impact suggestions for code quality improvements
-* ⚪ **Info** - Informational comments or context without requiring action
+- 🔴 **Critical** - Severe issues that could cause system failures, security breaches, or data loss
+- 🟠 **Major** - Significant problems that impact functionality or performance
+- 🟡 **Minor** - Issues that should be addressed but don't critically impact the system
+- 🔵 **Trivial** - Low-impact suggestions for code quality improvements
+- ⚪ **Info** - Informational comments or context without requiring action
 
 ### Review triggers and events
 
@@ -132,6 +133,7 @@ Once CodeRabbit reviews your pull request, you can engage in dynamic conversatio
     ```md  theme={null}
     @coderabbitai Why did you suggest using a factory pattern here?
     ```
+
   </Tab>
 
   <Tab title="Review control" icon="pause-circle">
@@ -142,6 +144,7 @@ Once CodeRabbit reviews your pull request, you can engage in dynamic conversatio
     @coderabbitai resume
     @coderabbitai resolve
     ```
+
   </Tab>
 
   <Tab title="Code generation" icon="sparkles">
@@ -150,6 +153,7 @@ Once CodeRabbit reviews your pull request, you can engage in dynamic conversatio
     ```md  theme={null}
     @coderabbitai generate docstrings
     ```
+
   </Tab>
 </Tabs>
 

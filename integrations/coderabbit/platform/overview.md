@@ -1,6 +1,7 @@
 # AI Code Review
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -49,9 +50,9 @@ Use CodeRabbit wherever you work. Integrate with your Git platform and issue tra
 
 Our docs are organized into four tabs to help you find what you need:
 
-* [**CodeRabbit Platform**](/) — Everything about pull request reviews, planning, commands, and code quality tools
-* [**IDE Review Extension**](/ide/) — Use CodeRabbit in VS Code, Cursor, and Windsurf
-* [**Command-Line Review Tool**](/cli/) — Integrate the CLI with Claude Code, Cursor, Codex, Gemini, and more
-* [**Management**](/management/) — Subscription plans, user roles, reports, and integrations with tools like Jira
+- [**CodeRabbit Platform**](/) — Everything about pull request reviews, planning, commands, and code quality tools
+- [**IDE Review Extension**](/ide/) — Use CodeRabbit in VS Code, Cursor, and Windsurf
+- [**Command-Line Review Tool**](/cli/) — Integrate the CLI with Claude Code, Cursor, Codex, Gemini, and more
+- [**Management**](/management/) — Subscription plans, user roles, reports, and integrations with tools like Jira
 
 The Platform Overview section walks you through CodeRabbit's architecture and the tools that power it. If you're new to CodeRabbit, check out the [Quickstart](/getting-started/quickstart) to get your first project reviewed in under 5 minutes, or follow the [Hands-on Guide](/guide/) for a step-by-step walkthrough of setup and key features.

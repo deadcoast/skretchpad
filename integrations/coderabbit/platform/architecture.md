@@ -1,6 +1,7 @@
 # The System Behind Every Review Comment
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -14,11 +15,11 @@ While other tools just scan your changed code, CodeRabbit **orchestrates an enti
 
 Behind each comment lies:
 
-* **Sandboxed cloud execution** with your full repository cloned for isolated analysis
-* **Multi-dimensional code analysis** combining 40+ static analyzers, linters and SAST tools
-* **Agentic exploration** that autonomously investigates your codebase for context
-* **Specialized AI agents** working in parallel: Review, Verification, Chat, Pre-Merge Checks, and Finishing Touches
-* **Living memory** that learns from your feedback, PRs, issues, and coding guidelines
-* **Enterprise integrations** connecting your entire development workflow
+- **Sandboxed cloud execution** with your full repository cloned for isolated analysis
+- **Multi-dimensional code analysis** combining 40+ static analyzers, linters and SAST tools
+- **Agentic exploration** that autonomously investigates your codebase for context
+- **Specialized AI agents** working in parallel: Review, Verification, Chat, Pre-Merge Checks, and Finishing Touches
+- **Living memory** that learns from your feedback, PRs, issues, and coding guidelines
+- **Enterprise integrations** connecting your entire development workflow
 
 **That's why CodeRabbit doesn't just review code, it understands it.**

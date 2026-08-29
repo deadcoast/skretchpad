@@ -1,6 +1,7 @@
 # Pull Request Reviews
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -32,9 +33,9 @@
 
 CodeRabbit reviews new pull requests automatically and updates its feedback as you push new commits—focusing on what changed.
 
-* **New PRs**: Full analysis of all changes with detailed findings
-* **New commits**: Incremental reviews that track what's new since the last review
-* **Every update**: Fresh insights without repeating resolved comments
+- **New PRs**: Full analysis of all changes with detailed findings
+- **New commits**: Incremental reviews that track what's new since the last review
+- **Every update**: Fresh insights without repeating resolved comments
 
 Zero config to start: just open a PR and get the results! This documentation will guide you through review instructions, focus areas, and review style tuning to make the outcome even better.
 
@@ -48,10 +49,10 @@ No more hunting through issue trackers to understand what a PR should accomplish
 
 While your linters catch style issues and security scanners flag known vulnerabilities, CodeRabbit understands context:
 
-* Detects bugs that static analyzers miss
-* Suggests architecture improvements based on your full repository
-* Identifies performance bottlenecks in your logic
-* Points out maintainability issues before they compound
+- Detects bugs that static analyzers miss
+- Suggests architecture improvements based on your full repository
+- Identifies performance bottlenecks in your logic
+- Points out maintainability issues before they compound
 
 Think of it as an experienced teammate who's always available for that first review. The same second!
 
@@ -59,7 +60,7 @@ Think of it as an experienced teammate who's always available for that first rev
 
 Every review comment is the start of a conversation. Reply to ask for clarification, request code examples, or discuss alternatives:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai Suggest a better approach for this error handling
 ```
 

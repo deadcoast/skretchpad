@@ -1,6 +1,7 @@
 # Manage code reviews
 
 > ## Documentation Index
+>
 > Fetch the complete documentation index at: <https://docs.coderabbit.ai/llms.txt>
 > Use this file to discover all available pages before exploring further.
 >
@@ -24,13 +25,13 @@ You can tell CodeRabbit to pause its automatic reviews of a pull request. If you
 
 To pause automated reviews of a pull request, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai pause
 ```
 
 To resume automated reviews after pausing them, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai resume
 ```
 
@@ -38,7 +39,7 @@ To resume automated reviews after pausing them, post the following comment to th
 
 To disable automatic code reviews for a pull request, add the following line anywhere in the pull request description:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai ignore
 ```
 
@@ -57,19 +58,19 @@ To enable automatic reviews on that pull request, delete "`@coderabbitai ignore`
 
 You can ask CodeRabbit to perform a code review at any time. This can be useful when you have paused automated code reviews. Manually requested reviews have two types:
 
-* A *full review* disregards any comments that CodeRabbit has already made on this pull request, and generates a complete review of the entire pull request.
+- A _full review_ disregards any comments that CodeRabbit has already made on this pull request, and generates a complete review of the entire pull request.
 
-* An *incremental review* takes all comments that CodeRabbit has made since its most recent full review into consideration, and generates a review of only the new changes.
+- An _incremental review_ takes all comments that CodeRabbit has made since its most recent full review into consideration, and generates a review of only the new changes.
 
 To manually request a full review, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai full review
 ```
 
 To manually request an incremental review, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai review
 ```
 
@@ -77,7 +78,7 @@ To manually request an incremental review, post the following comment to the pul
 
 To have CodeRabbit mark all of its previous comments as resolved, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai resolve
 ```
 
@@ -89,7 +90,7 @@ The commands in this section request CodeRabbit to generate and post updated inf
 
 To have CodeRabbit update the generated summary of the branch’s proposed changes to the pull request’s description, post the following comment:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai summary
 ```
 
@@ -99,7 +100,7 @@ CodeRabbit updates the summary text to the description under the heading "Summar
 
 To have CodeRabbit post a comment that contains a sequence diagram which visualizes the history of the pull request under review, post the following comment:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai generate sequence diagram
 ```
 
@@ -111,7 +112,7 @@ The commands in this section request CodeRabbit to display its own configuration
 
 To have CodeRabbit post a comment listing out its current configuration with your repository, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai configuration
 ```
 
@@ -119,6 +120,6 @@ To have CodeRabbit post a comment listing out its current configuration with you
 
 To have CodeRabbit post a comment to the pull request with a quick-reference guide to its own commands and other features, post the following comment to the pull request:
 
-```md  theme={null}
+```md theme={null}
 @coderabbitai help
 ```
