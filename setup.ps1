@@ -55,6 +55,57 @@ $Script:CH_DBR  = [char]0x255D
 $Script:CH_FULL = [char]0x2588
 $Script:CH_LITE = [char]0x2591
 
+# Spinner / progress-bar animation
+$Script:CH_DIM  = [char]0x2581    # ▁ (lower one-eighth block -- progress bar empty cell)
+
+$Script:SpinnerFrames = @(
+    [string][char]0x2593           # ▓
+    [string][char]0x2592           # ▒
+    [string][char]0x2591           # ░
+)
+$Script:SpinnerInterval  = 100    # ms per frame
+
+$Script:ProgressInterval = 17     # ms per frame
+$_f = [string]$Script:CH_FULL; $_e = [string]$Script:CH_DIM
+$Script:ProgressFrames = @(
+    # Fill phase (accelerating)
+    ($_f *  1) + ($_e * 19)
+    ($_f *  2) + ($_e * 18)
+    ($_f *  3) + ($_e * 17)
+    ($_f *  4) + ($_e * 16)
+    ($_f *  6) + ($_e * 14)
+    ($_f *  6) + ($_e * 14)
+    ($_f *  7) + ($_e * 13)
+    ($_f *  8) + ($_e * 12)
+    ($_f *  9) + ($_e * 11)
+    ($_f *  9) + ($_e * 11)
+    ($_f * 10) + ($_e * 10)
+    ($_f * 11) + ($_e *  9)
+    ($_f * 13) + ($_e *  7)
+    ($_f * 14) + ($_e *  6)
+    ($_f * 16) + ($_e *  4)
+    ($_f * 17) + ($_e *  3)
+    ($_f * 19) + ($_e *  1)
+    ($_f * 20)
+    ($_f * 20)
+    # Empty phase (decelerating)
+    ($_e *  1) + ($_f * 19)
+    ($_e *  2) + ($_f * 18)
+    ($_e *  3) + ($_f * 17)
+    ($_e *  5) + ($_f * 15)
+    ($_e *  6) + ($_f * 14)
+    ($_e *  8) + ($_f * 12)
+    ($_e * 10) + ($_f * 10)
+    ($_e * 12) + ($_f *  8)
+    ($_e * 14) + ($_f *  6)
+    ($_e * 15) + ($_f *  5)
+    ($_e * 16) + ($_f *  4)
+    ($_e * 17) + ($_f *  3)
+    ($_e * 19) + ($_f *  1)
+    ($_e * 20)
+)
+$_f = $_e = $null
+
 # Version requirements
 $Script:RequiredNodeMajor = 18
 
@@ -380,6 +431,116 @@ function Format-ProgressBar {
     $empty  = $Width - $filled
     $bar = ([string]::new($Script:CH_FULL, $filled)) + ([string]::new($Script:CH_LITE, $empty))
     return $bar
+}
+
+function Invoke-AnimatedProcess {
+    <#
+    .SYNOPSIS
+        Runs an external command with a live spinner or progress-bar animation.
+    .DESCRIPTION
+        Launches the command via cmd.exe /c in a child process, captures stdout
+        and stderr asynchronously, and renders an animated indicator on the
+        current console line until the process exits.
+
+        -UseProgressBar  switches from the 3-frame gradient spinner (▓▒░)
+                         to the full material-style indeterminate progress bar.
+                         The spinner character is prepended as a "portal" --
+                         the bar appears to stream out of the gradient.
+    #>
+    param(
+        [string]$Label,
+        [string]$Command,
+        [string]$WorkingDirectory = $Script:ProjectRoot,
+        [switch]$UseProgressBar
+    )
+
+    $frames   = if ($UseProgressBar) { $Script:ProgressFrames } else { $Script:SpinnerFrames }
+    $interval = if ($UseProgressBar) { $Script:ProgressInterval } else { $Script:SpinnerInterval }
+
+    # --- start child process ------------------------------------------------
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName               = "cmd.exe"
+    $psi.Arguments              = "/c $Command"
+    $psi.WorkingDirectory       = $WorkingDirectory
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError  = $true
+    $psi.UseShellExecute        = $false
+    $psi.CreateNoWindow         = $true
+
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
+
+    # async output collection (avoids pipe-buffer deadlock)
+    $stdoutBuf = New-Object System.Text.StringBuilder
+    $stderrBuf = New-Object System.Text.StringBuilder
+
+    $stdoutEvt = $null; $stderrEvt = $null
+
+    try {
+        $stdoutEvt = Register-ObjectEvent $proc OutputDataReceived -Action {
+            if ($null -ne $Event.SourceEventArgs.Data) {
+                $Event.MessageData.AppendLine($Event.SourceEventArgs.Data)
+            }
+        } -MessageData $stdoutBuf
+
+        $stderrEvt = Register-ObjectEvent $proc ErrorDataReceived -Action {
+            if ($null -ne $Event.SourceEventArgs.Data) {
+                $Event.MessageData.AppendLine($Event.SourceEventArgs.Data)
+            }
+        } -MessageData $stderrBuf
+
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $proc.Start() | Out-Null
+        $proc.BeginOutputReadLine()
+        $proc.BeginErrorReadLine()
+
+        # --- animation loop -------------------------------------------------
+        $frameIdx = 0
+        $clearLen = 80
+
+        while (-not $proc.HasExited) {
+            $frame   = $frames[$frameIdx % $frames.Count]
+            $timeStr = "{0:mm\:ss}" -f $sw.Elapsed
+
+            if ($UseProgressBar) {
+                $spinIdx = [math]::Floor($frameIdx / 6) % $Script:SpinnerFrames.Count
+                $spinner = $Script:SpinnerFrames[$spinIdx]
+                $display = "$spinner$frame $Label  $timeStr"
+            } else {
+                $display = "$frame $Label  $timeStr"
+            }
+
+            Write-Host "`r    $($display.PadRight($clearLen))" -NoNewline -ForegroundColor DarkGray
+            Start-Sleep -Milliseconds $interval
+            $frameIdx++
+        }
+
+        $proc.WaitForExit()   # flush remaining async output
+        $sw.Stop()
+    }
+    finally {
+        if ($stdoutEvt) {
+            Unregister-Event -SourceIdentifier $stdoutEvt.Name -ErrorAction SilentlyContinue
+            Remove-Job $stdoutEvt -Force -ErrorAction SilentlyContinue
+        }
+        if ($stderrEvt) {
+            Unregister-Event -SourceIdentifier $stderrEvt.Name -ErrorAction SilentlyContinue
+            Remove-Job $stderrEvt -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # clear animation line
+    Write-Host "`r$(' ' * ($clearLen + 4))`r" -NoNewline
+
+    $exitCode = $proc.ExitCode
+    $duration = $sw.Elapsed
+    $proc.Dispose()
+
+    return @{
+        Output   = $stdoutBuf.ToString() + "`n" + $stderrBuf.ToString()
+        ExitCode = $exitCode
+        Duration = $duration
+    }
 }
 
 # ============================================================================
@@ -763,17 +924,16 @@ if ($nodeModulesExist -and -not $Force) {
 }
 
 Write-Host ""
-Write-Host "    Installing..." -ForegroundColor DarkGray
 Write-Log "Running npm install..."
 
-$npmInstallResult = $null
-$npmInstallDuration = Measure-StepDuration {
-    $Script:npmInstallResult = & npm install --prefix $ProjectRoot 2>&1 | Out-String
-}
+$animResult = Invoke-AnimatedProcess -Label "npm install" `
+    -Command "npm install --prefix `"$ProjectRoot`"" -UseProgressBar
+$Script:npmInstallResult = $animResult.Output
+$npmInstallDuration = $animResult.Duration
 
 Write-Log "npm install output: $($Script:npmInstallResult)"
 
-if ($LASTEXITCODE -eq 0) {
+if ($animResult.ExitCode -eq 0) {
     $durStr = "$([math]::Round($npmInstallDuration.TotalSeconds, 1))s"
     Write-Status "npm install" "success" $durStr "pass"
 
@@ -879,15 +1039,13 @@ if ($SkipRustBuild) {
 } elseif (-not (Test-CommandExists "cargo")) {
     Write-Status "cargo check" "SKIPPED" "cargo not found" "skip"
 } else {
-    Write-Host "    Running cargo check..." -ForegroundColor DarkGray
     Write-Log "Running cargo check..."
 
-    $cargoOutput = $null
-    $cargoDuration = Measure-StepDuration {
-        Push-Location (Join-Path $ProjectRoot "src-tauri")
-        $Script:cargoOutput = & cargo check 2>&1 | Out-String
-        Pop-Location
-    }
+    $animResult = Invoke-AnimatedProcess -Label "cargo check" `
+        -Command "cargo check" `
+        -WorkingDirectory (Join-Path $ProjectRoot "src-tauri") -UseProgressBar
+    $Script:cargoOutput = $animResult.Output
+    $cargoDuration = $animResult.Duration
 
     Write-Log "cargo check output: $($Script:cargoOutput)"
 
@@ -939,17 +1097,16 @@ if ($SkipFrontendBuild) {
 } elseif (-not (Test-CommandExists "npm")) {
     Write-Status "vite build" "SKIPPED" "npm not found" "skip"
 } else {
-    Write-Host "    Running vite build..." -ForegroundColor DarkGray
     Write-Log "Running npm run build..."
 
-    $buildOutput = $null
-    $buildDuration = Measure-StepDuration {
-        $Script:buildOutput = & npm run build --prefix $ProjectRoot 2>&1 | Out-String
-    }
+    $animResult = Invoke-AnimatedProcess -Label "vite build" `
+        -Command "npm run build --prefix `"$ProjectRoot`"" -UseProgressBar
+    $Script:buildOutput = $animResult.Output
+    $buildDuration = $animResult.Duration
 
     Write-Log "vite build output: $($Script:buildOutput)"
 
-    if ($LASTEXITCODE -eq 0) {
+    if ($animResult.ExitCode -eq 0) {
         $moduleMatch = [regex]::Match($Script:buildOutput, "(\d+)\s+modules?\s+transformed")
         $modules = if ($moduleMatch.Success) { $moduleMatch.Groups[1].Value } else { "?" }
         $durStr = "$([math]::Round($buildDuration.TotalSeconds, 1))s"
@@ -987,8 +1144,10 @@ if ($SkipFrontendBuild) {
 
     # Svelte type check
     Write-Host ""
-    Write-Host "    Running svelte-check..." -ForegroundColor DarkGray
-    $svelteCheckOutput = & npx svelte-check --tsconfig (Join-Path $ProjectRoot "tsconfig.json") 2>&1 | Out-String
+
+    $animResult = Invoke-AnimatedProcess -Label "svelte-check" `
+        -Command "npx svelte-check --tsconfig `"$(Join-Path $ProjectRoot 'tsconfig.json')`""
+    $svelteCheckOutput = $animResult.Output
     Write-Log "svelte-check output: $svelteCheckOutput"
 
     $svelteErrors   = ([regex]::Matches($svelteCheckOutput, "Error:")).Count
